@@ -91,11 +91,12 @@
             "settings": {
               "contextPath": "/Saude_Dashboard",
               "variantManagement": "Page",
+              "initialLoad": "Enabled",
               "controlConfiguration": {
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
-                    "type": "ResponsiveTable",
-                    "selectionMode": "None"
+                    "type": "AnalyticalTable",
+                    "enableExport": true
                   }
                 }
               },
@@ -103,16 +104,15 @@
                 "paths": [
                   {
                     "primary": [
-                      { "annotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant" }
+                      { "annotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant" }
                     ],
                     "secondary": [
-                      { "annotationPath": "com.sap.vocabularies.UI.v1.LineItem" }
+                      { "annotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant" }
                     ],
                     "defaultPath": "both"
                   }
                 ]
-              },
-              "initialLoad": "Enabled"
+              }
             }
           }
         },
