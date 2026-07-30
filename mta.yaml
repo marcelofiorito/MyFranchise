@@ -190,12 +190,14 @@ resources:
 
   # ─────────────────────────────────────────────────────────
   # AI Core (GenAI Hub — recomendações)
+  # REUSA a instância existente 'default_aicore' (plano extended) já
+  # compartilhada por outros apps GenAI neste space. Criar uma nova
+  # instância aicore falhou para outro projeto (sales-order-aicore).
   # ─────────────────────────────────────────────────────────
   - name: myfranchise-aicore
-    type: org.cloudfoundry.managed-service
+    type: org.cloudfoundry.existing-service
     parameters:
-      service: aicore
-      service-plan: standard
+      service-name: default_aicore
 
   # ─────────────────────────────────────────────────────────
   # Build Work Zone (launchpad / portal)
