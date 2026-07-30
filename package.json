@@ -23,36 +23,36 @@
   "cds": {
     "requires": {
       "db": {
-        "kind": "sqlite",
-        "credentials": {
-          "url": ":memory:"
-        },
-        "[production]": {
-          "kind": "hana-cloud"
+        "kind": "hana-cloud",
+        "[development]": {
+          "kind": "sqlite",
+          "credentials": {
+            "url": ":memory:"
+          }
         }
       },
       "auth": {
-        "kind": "mocked",
-        "users": {
-          "gestor": {
-            "password": "gestor",
-            "roles": [
-              "Franqueadora_Gestor"
-            ]
-          },
-          "roberto": {
-            "password": "roberto",
-            "roles": [
-              "Franqueado"
-            ],
-            "attr": {
-              "unidade_ID": "u147",
-              "cluster": "STD"
+        "kind": "xsuaa",
+        "[development]": {
+          "kind": "mocked",
+          "users": {
+            "gestor": {
+              "password": "gestor",
+              "roles": [
+                "Franqueadora_Gestor"
+              ]
+            },
+            "roberto": {
+              "password": "roberto",
+              "roles": [
+                "Franqueado"
+              ],
+              "attr": {
+                "unidade_ID": "u147",
+                "cluster": "STD"
+              }
             }
           }
-        },
-        "[production]": {
-          "kind": "xsuaa"
         }
       },
       "destinations": true,
