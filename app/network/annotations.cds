@@ -13,6 +13,8 @@ annotate service.Saude_Dashboard with @(
   ID           @Analytics.Measure: false;
   scoreSaude   @Aggregation.default: #AVG;
   compliancePct @Aggregation.default: #AVG;
+  // Dimensão do chart: código + texto (padrão sflight status/statusName)
+  scoreCriticality @Common.Text: criticalityText @Common.TextArrangement: #TextOnly;
 };
 
 annotate service.Saude_Dashboard with @(

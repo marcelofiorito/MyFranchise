@@ -120,7 +120,14 @@ view Saude_Dashboard as select from Saude_Unidade {
   performancePct,
   qtdAlertasAlta,
   qtdAlertasMedia,
-  scoreCriticality
+  scoreCriticality,
+  // Texto da criticidade para o chart agrupar/rotular (padrão sflight: dimensão + texto)
+  case scoreCriticality
+    when 1 then 'Crítico'
+    when 2 then 'Atenção'
+    when 3 then 'Saudável'
+    else 'N/D'
+  end                    as criticalityText : String(20)
 };
 
 

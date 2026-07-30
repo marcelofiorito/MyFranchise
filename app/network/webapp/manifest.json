@@ -95,8 +95,8 @@
               "controlConfiguration": {
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
-                    "type": "AnalyticalTable",
-                    "enableExport": true
+                    "type": "ResponsiveTable",
+                    "selectionMode": "None"
                   }
                 }
               },
