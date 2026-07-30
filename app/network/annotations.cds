@@ -6,6 +6,16 @@ using FranqueadoraService as service from '../../srv/service';
 // ═════════════════════════════════════════════════════════════
 
 annotate service.Saude_Dashboard with @(
+  Aggregation.CustomAggregate #scoreSaude : 'Edm.Decimal',
+  Aggregation.CustomAggregate #compliancePct : 'Edm.Decimal',
+  Common.SemanticKey : [ID]
+) {
+  ID           @Analytics.Measure: false;
+  scoreSaude   @Aggregation.default: #AVG;
+  compliancePct @Aggregation.default: #AVG;
+};
+
+annotate service.Saude_Dashboard with @(
 
   UI.HeaderInfo: {
     TypeName       : '{i18n>Unidades}',
