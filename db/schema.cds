@@ -39,21 +39,21 @@ entity Franqueados : cuid, managed {
   responsavel : String(100) @title : '{i18n>Franqueados_responsavel}';
   email       : String(255) @title : '{i18n>Franqueados_email}';
   telefone    : String(20)  @title : '{i18n>Franqueados_telefone}';
-  status      : Association to StatusFranqueado;
+  status      : Association to StatusFranqueado @title : '{i18n>Franqueados_status}';
   unidades    : Composition of many Unidades on unidades.franqueado = $self;
 }
 
 entity Unidades : cuid, managed {
   codigo       : String(20)  @title : '{i18n>Unidades_codigo}';
   nome         : String(100) @title : '{i18n>Unidades_nome}';
-  franqueado   : Association to Franqueados;
+  franqueado   : Association to Franqueados @title : '{i18n>Franqueados}';
   endereco     : String(255) @title : '{i18n>Unidades_endereco}';
   cidade       : String(100) @title : '{i18n>Unidades_cidade}';
   estado       : String(2)   @title : '{i18n>Unidades_estado}';
-  regiao       : Association to Regiao;
-  cluster      : Association to Cluster;
+  regiao       : Association to Regiao @title : '{i18n>Unidades_regiao}';
+  cluster      : Association to Cluster @title : '{i18n>Unidades_cluster}';
   dataAbertura : Date        @title : '{i18n>Unidades_dataAbertura}';
-  status       : Association to StatusUnidade;
+  status       : Association to StatusUnidade @title : '{i18n>Unidades_status}';
   // Navegação para entidades filhas via OData $expand — sem back-associations
   // para evitar problemas de resolveView no CAP 10 durante o deploy.
   // Use: /Unidades('u147')?$expand=saude,kpis,alertas,desvios
@@ -73,7 +73,7 @@ entity KPI_Unidade : cuid, managed {
   crescimentoMoM : Decimal(5,2)   @title : '{i18n>KPI_Unidade_crescimentoMoM}';
   crescimentoYoY : Decimal(5,2)   @title : '{i18n>KPI_Unidade_crescimentoYoY}';
   nps            : Decimal(4,1)   @title : '{i18n>KPI_Unidade_nps}';
-  statusKPI      : Association to StatusKPI;
+  statusKPI      : Association to StatusKPI @title : '{i18n>KPI_Unidade_statusKPI}';
 }
 
 /**
@@ -93,11 +93,11 @@ entity Saude_Unidade : cuid, managed {
 }
 
 entity Alertas : cuid, managed {
-  unidade       : Association to Unidades;
-  tipo          : Association to TipoAlerta;
-  severidade    : Association to Severidade;
+  unidade       : Association to Unidades @title : '{i18n>Unidades}';
+  tipo          : Association to TipoAlerta @title : '{i18n>Alertas_tipo}';
+  severidade    : Association to Severidade @title : '{i18n>Alertas_severidade}';
   descricao     : String(500) @title : '{i18n>Alertas_descricao}';
-  status        : Association to StatusAlerta;
+  status        : Association to StatusAlerta @title : '{i18n>Alertas_status}';
   dataGeracao   : DateTime    @title : '{i18n>Alertas_dataGeracao}';
   dataResolucao : DateTime    @title : '{i18n>Alertas_dataResolucao}';
 }
@@ -106,7 +106,7 @@ entity Alertas : cuid, managed {
  * Médias anonimizadas da rede por cluster e período.
  */
 entity Benchmark_Cluster : cuid, managed {
-  cluster          : Association to Cluster;
+  cluster          : Association to Cluster @title : '{i18n>Unidades_cluster}';
   periodo          : String(6)     @title : '{i18n>KPI_Unidade_periodo}';
   faturamentoMedio : Decimal(15,2) @title : '{i18n>Benchmark_Cluster_faturamentoMedio}';
   ticketMedioMedio : Decimal(10,2) @title : '{i18n>Benchmark_Cluster_ticketMedioMedio}';
@@ -125,13 +125,13 @@ entity Catalogos : cuid, managed {
   descricao      : String(500) @title : '{i18n>Catalogos_descricao}';
   vigenciaInicio : Date        @title : '{i18n>Catalogos_vigenciaInicio}';
   vigenciaFim    : Date        @title : '{i18n>Catalogos_vigenciaFim}';
-  status         : Association to StatusCatalogo;
+  status         : Association to StatusCatalogo @title : '{i18n>Catalogos_status}';
   itens          : Composition of many ItensCatalogo
                      on itens.catalogo = $self;
 }
 
 entity ItensCatalogo : cuid, managed {
-  catalogo      : Association to Catalogos;
+  catalogo      : Association to Catalogos @title : '{i18n>Catalogos}';
   sku           : String(50)    @title : '{i18n>ItensCatalogo_sku}';
   nomeProduto   : String(150)   @title : '{i18n>ItensCatalogo_nomeProduto}';
   categoria     : String(100)   @title : '{i18n>ItensCatalogo_categoria}';
@@ -142,7 +142,7 @@ entity ItensCatalogo : cuid, managed {
 }
 
 entity VendaPraticada : cuid, managed {
-  unidade        : Association to Unidades;
+  unidade        : Association to Unidades @title : '{i18n>Unidades}';
   periodo        : String(6)    @title : '{i18n>KPI_Unidade_periodo}';
   sku            : String(50)   @title : '{i18n>ItensCatalogo_sku}';
   nomeProduto    : String(150)  @title : '{i18n>ItensCatalogo_nomeProduto}';
@@ -152,15 +152,15 @@ entity VendaPraticada : cuid, managed {
 }
 
 entity Desvios : cuid, managed {
-  unidade              : Association to Unidades;
-  tipo                 : Association to TipoDesvio;
+  unidade              : Association to Unidades @title : '{i18n>Unidades}';
+  tipo                 : Association to TipoDesvio @title : '{i18n>Desvios_tipo}';
   sku                  : String(50)    @title : '{i18n>ItensCatalogo_sku}';
   nomeProduto          : String(150)   @title : '{i18n>ItensCatalogo_nomeProduto}';
   precoAutorizado      : Decimal(10,2) @title : '{i18n>Desvios_precoAutorizado}';
   precoPraticado       : Decimal(10,2) @title : '{i18n>VendaPraticada_precoPraticado}';
   percentualDesvio     : Decimal(5,2)  @title : '{i18n>Desvios_percentualDesvio}';
-  severidade           : Association to Severidade;
-  status               : Association to StatusDesvio;
+  severidade           : Association to Severidade @title : '{i18n>Desvios_severidade}';
+  status               : Association to StatusDesvio @title : '{i18n>Desvios_status}';
   dataDeteccao         : DateTime      @title : '{i18n>Desvios_dataDeteccao}';
   dataResolucao        : DateTime      @title : '{i18n>Desvios_dataResolucao}';
   // 1=vermelho (Alta), 2=amarelo (Media), 3=verde (Baixa)
@@ -173,7 +173,7 @@ entity Desvios : cuid, managed {
  * Regras configuráveis pela franqueadora — lidas em runtime pelo service handler.
  */
 entity RegrasCompliance : cuid, managed {
-  tipo              : Association to TipoDesvio;
+  tipo              : Association to TipoDesvio @title : '{i18n>Desvios_tipo}';
   limiarMedia_pct   : Decimal(5,2) @title : '{i18n>RegrasCompliance_limiarMedia_pct}';
   limiarAlta_pct    : Decimal(5,2) @title : '{i18n>RegrasCompliance_limiarAlta_pct}';
   prazoCorrecao_dias: Integer      @title : '{i18n>RegrasCompliance_prazoCorrecao_dias}';
@@ -181,11 +181,11 @@ entity RegrasCompliance : cuid, managed {
 }
 
 entity NotificacoesCompliance : cuid, managed {
-  desvio             : Association to Desvios;
-  unidade            : Association to Unidades;
+  desvio             : Association to Desvios @title : '{i18n>Desvios}';
+  unidade            : Association to Unidades @title : '{i18n>Unidades}';
   dataEnvio          : DateTime    @title : '{i18n>NotificacoesCompliance_dataEnvio}';
   prazoCorrecao      : Date        @title : '{i18n>NotificacoesCompliance_prazoCorrecao}';
-  status             : Association to StatusNotificacao;
+  status             : Association to StatusNotificacao @title : '{i18n>NotificacoesCompliance_status}';
   comentarioResposta : String(500) @title : '{i18n>NotificacoesCompliance_comentarioResposta}';
 }
 
@@ -198,12 +198,12 @@ entity NotificacoesCompliance : cuid, managed {
  * Recomendações geradas por job diário via AI Core + GenAI Hub.
  */
 entity Recomendacoes : cuid, managed {
-  unidade     : Association to Unidades;
-  tipo        : Association to TipoRecomendacao;
+  unidade     : Association to Unidades @title : '{i18n>Unidades}';
+  tipo        : Association to TipoRecomendacao @title : '{i18n>Recomendacoes_tipo}';
   titulo      : String(150)   @title : '{i18n>Recomendacoes_titulo}';
   descricao   : String(2000)  @title : '{i18n>Recomendacoes_descricao}';
-  prioridade  : Association to Prioridade;
-  status      : Association to StatusRecomendacao;
+  prioridade  : Association to Prioridade @title : '{i18n>Recomendacoes_prioridade}';
+  status      : Association to StatusRecomendacao @title : '{i18n>Recomendacoes_status}';
   dataGeracao : DateTime      @title : '{i18n>Recomendacoes_dataGeracao}';
   dataValidade: DateTime      @title : '{i18n>Recomendacoes_dataValidade}';
 }
@@ -214,10 +214,10 @@ entity Recomendacoes : cuid, managed {
 // ═══════════════════════════════════════════════════════════
 
 entity ProcessosOnboarding : cuid, managed {
-  unidade              : Association to Unidades;
+  unidade              : Association to Unidades @title : '{i18n>Unidades}';
   dataInicio           : Date        @title : '{i18n>ProcessosOnboarding_dataInicio}';
   dataPrevisaoAbertura : Date        @title : '{i18n>ProcessosOnboarding_dataPrevisaoAbertura}';
-  status               : Association to StatusOnboarding;
+  status               : Association to StatusOnboarding @title : '{i18n>ProcessosOnboarding_status}';
   percentualConclusao  : Decimal(5,2)@title : '{i18n>ProcessosOnboarding_percentualConclusao}';
   // 1=vermelho (Suspenso/Cancelado), 2=amarelo (EmAndamento), 3=verde (Concluido)
   statusCriticality    : Integer     @title : '{i18n>ProcessosOnboarding_statusCriticality}' @Core.Computed: true;
@@ -237,10 +237,10 @@ entity EtapasOnboarding : cuid, managed {
 }
 
 entity TarefasOnboarding : cuid, managed {
-  processo          : Association to ProcessosOnboarding;
-  etapa             : Association to EtapasOnboarding;
+  processo          : Association to ProcessosOnboarding @title : '{i18n>ProcessosOnboarding}';
+  etapa             : Association to EtapasOnboarding @title : '{i18n>EtapasOnboarding}';
   nome              : String(100) @title : '{i18n>TarefasOnboarding_nome}';
-  status            : Association to StatusTarefa;
+  status            : Association to StatusTarefa @title : '{i18n>TarefasOnboarding_status}';
   // 1=vermelho (Vencida/Bloqueada), 2=amarelo (EmAndamento), 3=verde (Concluida)
   tarefaCriticality : Integer     @title : '{i18n>TarefasOnboarding_tarefaCriticality}' @Core.Computed: true;
   responsavel       : String(100) @title : '{i18n>TarefasOnboarding_responsavel}';
@@ -254,19 +254,19 @@ entity TarefasOnboarding : cuid, managed {
 }
 
 entity DocumentosOnboarding : cuid, managed {
-  tarefa     : Association to TarefasOnboarding;
+  tarefa     : Association to TarefasOnboarding @title : '{i18n>TarefasOnboarding}';
   nome       : String(100) @title : '{i18n>DocumentosOnboarding_nome}';
-  tipo       : Association to TipoDocumento;
-  status     : Association to StatusDocumento;
+  tipo       : Association to TipoDocumento @title : '{i18n>DocumentosOnboarding_tipo}';
+  status     : Association to StatusDocumento @title : '{i18n>DocumentosOnboarding_status}';
   url        : String(500) @title : '{i18n>DocumentosOnboarding_url}';
   dataEnvio  : DateTime    @title : '{i18n>DocumentosOnboarding_dataEnvio}';
   comentario : String(500) @title : '{i18n>DocumentosOnboarding_comentario}';
 }
 
 entity AprovacoesOnboarding : cuid, managed {
-  tarefa      : Association to TarefasOnboarding;
+  tarefa      : Association to TarefasOnboarding @title : '{i18n>TarefasOnboarding}';
   aprovador   : String(100) @title : '{i18n>AprovacoesOnboarding_aprovador}';
-  status      : Association to StatusAprovacao;
+  status      : Association to StatusAprovacao @title : '{i18n>AprovacoesOnboarding_status}';
   comentario  : String(500) @title : '{i18n>AprovacoesOnboarding_comentario}';
   dataDecisao : DateTime    @title : '{i18n>AprovacoesOnboarding_dataDecisao}';
 }
@@ -277,9 +277,9 @@ entity AprovacoesOnboarding : cuid, managed {
 // ═══════════════════════════════════════════════════════════
 
 entity Contratos_Franquia : cuid, managed {
-  unidade        : Association to Unidades;
+  unidade        : Association to Unidades @title : '{i18n>Unidades}';
   dataInicio     : Date         @title : '{i18n>Contratos_Franquia_dataInicio}';
   dataVencimento : Date         @title : '{i18n>Contratos_Franquia_dataVencimento}';
-  status         : Association to StatusContrato;
+  status         : Association to StatusContrato @title : '{i18n>Contratos_Franquia_status}';
   valorRoyalties : Decimal(15,2)@title : '{i18n>Contratos_Franquia_valorRoyalties}';
 }
