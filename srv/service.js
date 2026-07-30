@@ -27,8 +27,49 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       await this._recalcularSaude(req.data.unidade_ID, { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade });
     });
 
+    // Gera o código da unidade automaticamente (padrão uXXXX) quando não informado
+    this.before('CREATE', Unidades, async (req) => {
+      if (!req.data.codigo) {
+        req.data.codigo = await this._proximoCodigoUnidade(Unidades);
+      }
+    });
+
     return super.init();
   }
+
+  /**
+   * Gera o próximo código de unidade no padrão uXXXX (u0001, u0002, ...).
+   *
+   * ⚠️ IMPLEMENTAÇÃO DEV (opção B): lê o maior código atual e incrementa.
+   * Funciona em SQLite e é suficiente para desenvolvimento/demo, MAS em
+   * ambiente multi-instância (Cloud Foundry) duas instâncias podem ler o
+   * mesmo "último" e gerar códigos duplicados.
+   *
+   * 🔻 TROCAR NA MIGRAÇÃO PARA HANA:
+   *   Substituir por uma SEQUENCE nativa do HANA para garantir unicidade
+   *   sob concorrência. Exemplo:
+   *     -- db/src/unidade-seq.hdbsequence  (ou via CREATE SEQUENCE)
+   *     CREATE SEQUENCE MYFRANCHISE_UNIDADE_SEQ START WITH 1000 INCREMENT BY 1;
+   *   E no handler:
+   *     const [{ NEXT }] = await cds.run(
+   *       `SELECT MYFRANCHISE_UNIDADE_SEQ.NEXTVAL AS NEXT FROM DUMMY`);
+   *     return 'u' + String(NEXT).padStart(4, '0');
+   *   A sequence do banco é atômica — elimina o risco de colisão.
+   */
+  async _proximoCodigoUnidade(Unidades) {
+    // Busca o maior código no padrão uXXXX (ignora códigos legados como "147")
+    const unidades = await SELECT.from(Unidades).columns('codigo');
+    let maxNum = 0;
+    for (const u of unidades) {
+      const m = /^u(\d+)$/.exec(u.codigo ?? '');
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (n > maxNum) maxNum = n;
+      }
+    }
+    return 'u' + String(maxNum + 1).padStart(4, '0');
+  }
+
 
   async _detectarDesvios(venda, { ItensCatalogo, RegrasCompliance, Desvios }) {
     const itemCatalogo = await SELECT.one(ItensCatalogo)
