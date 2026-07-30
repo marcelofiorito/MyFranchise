@@ -92,6 +92,38 @@ entity Saude_Unidade : cuid, managed {
   scoreCriticality  : Integer       @title : '{i18n>Saude_Unidade_scoreCriticality}' @Core.Computed: true;
 }
 
+/**
+ * View analítica para o Painel da Rede (Analytical List Page).
+ * Agregável por cluster/região/criticidade — permite chart de distribuição.
+ */
+@Aggregation.ApplySupported: {
+  Transformations       : ['aggregate', 'groupby', 'filter'],
+  GroupableProperties   : [codigo, nome, cidade, cluster_code, regiao_code, scoreCriticality],
+  AggregatableProperties: [
+    { Property: scoreSaude },
+    { Property: compliancePct },
+    { Property: performancePct },
+    { Property: qtdAlertasAlta },
+    { Property: qtdAlertasMedia }
+  ]
+}
+@Analytics.entity: true
+view Saude_Dashboard as select from Saude_Unidade {
+  key ID,
+  unidade.codigo         as codigo,
+  unidade.nome           as nome,
+  unidade.cidade         as cidade,
+  unidade.cluster.code   as cluster_code,
+  unidade.regiao.code    as regiao_code,
+  scoreSaude,
+  compliancePct,
+  performancePct,
+  qtdAlertasAlta,
+  qtdAlertasMedia,
+  scoreCriticality
+};
+
+
 entity Alertas : cuid, managed {
   unidade       : Association to Unidades @title : '{i18n>Unidades}';
   tipo          : Association to TipoAlerta @title : '{i18n>Alertas_tipo}';

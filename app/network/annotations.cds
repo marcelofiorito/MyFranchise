@@ -1,8 +1,80 @@
 using FranqueadoraService as service from '../../srv/service';
 
+// ═════════════════════════════════════════════════════════════
+// PAINEL DA REDE — Analytical List Page (view Saude_Dashboard)
+// View agregável (@Aggregation.ApplySupported) → suporta chart
+// ═════════════════════════════════════════════════════════════
+
+annotate service.Saude_Dashboard with @(
+
+  UI.HeaderInfo: {
+    TypeName       : '{i18n>Unidades}',
+    TypeNamePlural : '{i18n>lbl_network_unidadesDaRede}',
+    Title          : { Value: nome },
+    Description    : { Value: cidade }
+  },
+
+  UI.SelectionFields: [ cluster_code, regiao_code, scoreCriticality ],
+
+  UI.LineItem: [
+    { Value: codigo,       Label: '{i18n>lbl_network_loja}'   },
+    { Value: nome,         Label: '{i18n>Unidades_nome}'      },
+    { Value: cidade,       Label: '{i18n>Unidades_cidade}'    },
+    { Value: cluster_code, Label: '{i18n>Unidades_cluster}'   },
+    { Value: regiao_code,  Label: '{i18n>Unidades_regiao}'    },
+    {
+      Value      : scoreSaude,
+      Label      : '{i18n>Saude_Unidade_scoreSaude}',
+      Criticality: scoreCriticality,
+      CriticalityRepresentation: #WithIcon
+    },
+    { Value: compliancePct,   Label: '{i18n>Saude_Unidade_compliancePct}'   },
+    { Value: performancePct,  Label: '{i18n>Saude_Unidade_performancePct}'  },
+    { Value: qtdAlertasAlta,  Label: '{i18n>Saude_Unidade_qtdAlertasAlta}'  },
+    { Value: qtdAlertasMedia, Label: '{i18n>Saude_Unidade_qtdAlertasMedia}' }
+  ],
+
+  // Medidas agregadas para o chart
+  Analytics.AggregatedProperties: [
+    {
+      Name                : 'scoreMedio',
+      AggregationMethod   : 'average',
+      AggregatableProperty: scoreSaude,
+      ![@Common.Label]    : '{i18n>Saude_Unidade_scoreSaude}'
+    },
+    {
+      Name                : 'totalUnidades',
+      AggregationMethod   : 'countdistinct',
+      AggregatableProperty: ID,
+      ![@Common.Label]    : '{i18n>lbl_network_unidadesDaRede}'
+    }
+  ],
+
+  UI.PresentationVariant: {
+    SortOrder     : [{ Property: scoreSaude, Descending: false }],
+    Visualizations: ['@UI.Chart', '@UI.LineItem']
+  },
+
+  UI.Chart: {
+    ChartType    : #Donut,
+    Title        : '{i18n>lbl_network_chartTitle}',
+    Measures     : [ totalUnidades ],
+    MeasureAttributes: [{
+      $Type  : 'UI.ChartMeasureAttributeType',
+      Measure: totalUnidades,
+      Role   : #Axis1
+    }],
+    Dimensions   : [ scoreCriticality ],
+    DimensionAttributes: [{
+      $Type    : 'UI.ChartDimensionAttributeType',
+      Dimension: scoreCriticality,
+      Role     : #Category
+    }]
+  }
+);
+
 // ─────────────────────────────────────────────────────────────
-// PAINEL DA REDE — Analytical List Page
-// EntitySet: Saude_Unidade
+// (legado) Saude_Unidade — mantido para referência/navegação
 // ─────────────────────────────────────────────────────────────
 
 annotate service.Saude_Unidade with @(

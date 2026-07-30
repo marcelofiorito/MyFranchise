@@ -89,9 +89,22 @@
           "name": "sap.fe.templates.ListReport",
           "options": {
             "settings": {
-              "entitySet": "Saude_Unidade",
+              "entitySet": "Saude_Dashboard",
               "initialLoad": true,
-              "variantManagement": "Page"
+              "variantManagement": "Page",
+              "views": {
+                "paths": [
+                  {
+                    "primary": [
+                      { "annotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant" }
+                    ],
+                    "secondary": [
+                      { "annotationPath": "com.sap.vocabularies.UI.v1.LineItem" }
+                    ],
+                    "defaultPath": "both"
+                  }
+                ]
+              }
             }
           }
         },

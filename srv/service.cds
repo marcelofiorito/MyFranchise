@@ -18,6 +18,9 @@ service FranqueadoraService {
   entity Saude_Unidade    as projection on mf.Saude_Unidade;
 
   @readonly
+  entity Saude_Dashboard  as projection on mf.Saude_Dashboard;
+
+  @readonly
   entity KPI_Unidade      as projection on mf.KPI_Unidade;
 
   entity Alertas          as projection on mf.Alertas;
