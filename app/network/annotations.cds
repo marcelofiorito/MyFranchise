@@ -34,37 +34,29 @@ annotate service.Saude_Dashboard with @(
     { Value: qtdAlertasMedia, Label: '{i18n>Saude_Unidade_qtdAlertasMedia}' }
   ],
 
-  // Medidas agregadas para o chart
-  Analytics.AggregatedProperties: [
-    {
-      Name                : 'scoreMedio',
-      AggregationMethod   : 'average',
-      AggregatableProperty: scoreSaude,
-      ![@Common.Label]    : '{i18n>Saude_Unidade_scoreSaude}'
-    },
-    {
-      Name                : 'totalUnidades',
-      AggregationMethod   : 'countdistinct',
-      AggregatableProperty: ID,
-      ![@Common.Label]    : '{i18n>lbl_network_unidadesDaRede}'
-    }
-  ],
+  // Medida agregada (padrão oficial: AggregatedProperty singular + qualifier)
+  Analytics.AggregatedProperty #totalUnidades: {
+    Name                : 'totalUnidades',
+    AggregationMethod   : 'countdistinct',
+    AggregatableProperty: ID,
+    ![@Common.Label]    : '{i18n>lbl_network_unidadesDaRede}'
+  },
 
   UI.PresentationVariant: {
-    SortOrder     : [{ Property: scoreSaude, Descending: false }],
+    Total         : [ scoreSaude ],
     Visualizations: ['@UI.Chart', '@UI.LineItem']
   },
 
   UI.Chart: {
-    ChartType    : #Donut,
-    Title        : '{i18n>lbl_network_chartTitle}',
-    Measures     : [ totalUnidades ],
+    Title           : '{i18n>lbl_network_chartTitle}',
+    ChartType       : #Donut,
+    DynamicMeasures : [ '@Analytics.AggregatedProperty#totalUnidades' ],
+    Dimensions      : [ scoreCriticality ],
     MeasureAttributes: [{
-      $Type  : 'UI.ChartMeasureAttributeType',
-      Measure: totalUnidades,
-      Role   : #Axis1
+      $Type          : 'UI.ChartMeasureAttributeType',
+      DynamicMeasure : '@Analytics.AggregatedProperty#totalUnidades',
+      Role           : #Axis1
     }],
-    Dimensions   : [ scoreCriticality ],
     DimensionAttributes: [{
       $Type    : 'UI.ChartDimensionAttributeType',
       Dimension: scoreCriticality,
