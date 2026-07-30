@@ -1,0 +1,8 @@
+ID,unidade_ID,tipo_code,sku,nomeProduto,precoAutorizado,precoPraticado,percentualDesvio,severidade_code,status_code,dataDeteccao
+desvio-001,u147,PRECO,SKU-004,Tênis Casual,315.0,269.9,-14.3,ALTA,NOTIFICADO,2026-07-01T08:00:00Z
+desvio-002,u147,PRECO,SKU-011,Boné Aba Curva,79.0,60.0,-24.1,ALTA,NOTIFICADO,2026-07-01T08:00:00Z
+desvio-003,u147,PRECO,SKU-003,Vestido Midi,269.0,229.9,-8.8,MEDIA,NOTIFICADO,2026-07-01T08:00:00Z
+desvio-004,u147,MIX,SKU-999,Short Genérico Sem Marca,0.0,49.9,0.0,ALTA,ABERTO,2026-07-01T08:00:00Z
+desvio-005,u178,PRECO,SKU-006,Jaqueta Jeans,355.0,320.0,-9.9,MEDIA,RESOLVIDO,2026-06-10T10:00:00Z
+desvio-006,u289,MIX,SKU-888,Produto Importado Não Autorizado,0.0,89.9,0.0,ALTA,RESOLVIDO,2026-05-20T14:00:00Z
+desvio-007,u267,PRECO,SKU-002,Camiseta Básica,69.0,58.0,-15.9,ALTA,EM_CORRECAO,2026-06-28T09:00:00Z

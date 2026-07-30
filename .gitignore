@@ -1,0 +1,9 @@
+node_modules/
+gen/
+.env
+default-env.json
+.cds-services.json
+*.db
+*.sqlite
+.DS_Store
+.playwright-mcp/

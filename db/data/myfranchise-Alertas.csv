@@ -1,0 +1,11 @@
+ID,unidade_ID,tipo_code,severidade_code,descricao,status_code,dataGeracao
+alerta-001,u147,COMPLIANCE,ALTA,Desvio de preço acima de 14% em Tênis Casual (SKU-004),ABERTO,2026-06-15T09:00:00Z
+alerta-002,u147,COMPLIANCE,ALTA,Produto não autorizado no mix: SKU-999 (Short Genérico),ABERTO,2026-06-18T11:30:00Z
+alerta-003,u147,KPI,MEDIA,Faturamento 29% abaixo da média do cluster STD em junho/2026,ABERTO,2026-06-30T23:59:00Z
+alerta-004,u289,KPI,ALTA,NPS abaixo de 40 por 3 meses consecutivos,ABERTO,2026-06-20T10:00:00Z
+alerta-005,u178,COMPLIANCE,MEDIA,Campanha de inverno não implementada — prazo vencido,ABERTO,2026-06-25T14:00:00Z
+alerta-006,u267,KPI,MEDIA,Queda de 12% no ticket médio em relação ao cluster,EM_ANALISE,2026-06-22T09:00:00Z
+alerta-007,u213,CONTRATO,ALTA,Contrato vence em 28 dias — renovação não iniciada,ABERTO,2026-07-01T08:00:00Z
+alerta-008,u201,OPERACIONAL,MEDIA,Atraso de 15 dias no envio de dados de vendas,EM_ANALISE,2026-06-28T10:00:00Z
+alerta-009,u156,COMPLIANCE,BAIXA,Comunicação visual fora do padrão — 2 itens sinalizados,ABERTO,2026-06-29T16:00:00Z
+alerta-010,u245,KPI,BAIXA,Crescimento MoM negativo por 2 meses consecutivos,ABERTO,2026-06-30T12:00:00Z

@@ -1,0 +1,196 @@
+{
+  "_version": "1.65.0",
+
+  "sap.app": {
+    "id": "myfranchise.franchisee",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {
+      "mainService": {
+        "uri": "/franqueado/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "FranchiseePortal-display": {
+          "semanticObject": "FranchiseePortal",
+          "action": "display",
+          "title": "{{appTitle}}",
+          "subTitle": "{{appDescription}}",
+          "icon": "sap-icon://home",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://home" },
+    "fullWidth": true
+  },
+
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {},
+        "sap.ovp": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "myfranchise.franchisee.i18n.i18n" }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "name": "PortalFranqueado",
+          "pattern": ":?query:",
+          "target": "PortalFranqueado"
+        },
+        {
+          "name": "MeusDesviosObjectPage",
+          "pattern": "MeusDesvios({key}):?query:",
+          "target": "MeusDesviosObjectPage"
+        },
+        {
+          "name": "MinhasRecomendacoesObjectPage",
+          "pattern": "MinhasRecomendacoes({key}):?query:",
+          "target": "MinhasRecomendacoesObjectPage"
+        }
+      ],
+      "targets": {
+        "PortalFranqueado": {
+          "type": "Component",
+          "id": "PortalFranqueado",
+          "name": "sap.fe.templates.OverviewPage",
+          "options": {
+            "settings": {
+              "entitySet": "MeusKPIs"
+            }
+          }
+        },
+        "MeusDesviosObjectPage": {
+          "type": "Component",
+          "id": "MeusDesviosObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": { "entitySet": "MeusDesvios" }
+          }
+        },
+        "MinhasRecomendacoesObjectPage": {
+          "type": "Component",
+          "id": "MinhasRecomendacoesObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": { "entitySet": "MinhasRecomendacoes" }
+          }
+        }
+      }
+    }
+  },
+
+  "sap.ovp": {
+    "globalFilterModel": "",
+    "globalFilterEntityType": "",
+    "enableLiveFilter": true,
+    "cards": {
+      "card00_kpis": {
+        "model": "",
+        "template": "sap.ovp.cards.v4.analytical",
+        "settings": {
+          "title": "Minha Performance",
+          "subTitle": "Últimos 6 meses",
+          "entitySet": "MeusKPIs",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#KPITrend",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#LastPeriod",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
+        }
+      },
+      "card01_saude": {
+        "model": "",
+        "template": "sap.ovp.cards.v4.keyPerformanceIndicator",
+        "settings": {
+          "title": "Score de Saúde",
+          "subTitle": "Comparado à média do cluster",
+          "entitySet": "MinhaSaude",
+          "dataPointAnnotationPath": "com.sap.vocabularies.UI.v1.DataPoint#ScoreSaude",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Current"
+        }
+      },
+      "card02_acoes": {
+        "model": "",
+        "template": "sap.ovp.cards.v4.list",
+        "settings": {
+          "title": "Ações Pendentes",
+          "subTitle": "Requer atenção",
+          "entitySet": "MeusDesvios",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Pendentes",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Abertos",
+          "listFlavor": "bar",
+          "sortBy": "dataDeteccao",
+          "sortOrder": "descending",
+          "listType": "condensed"
+        }
+      },
+      "card03_recomendacoes": {
+        "model": "",
+        "template": "sap.ovp.cards.v4.list",
+        "settings": {
+          "title": "Recomendações",
+          "subTitle": "Geradas pelo assistente AI",
+          "entitySet": "MinhasRecomendacoes",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Recomendacoes",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Novas",
+          "listType": "extended",
+          "sortBy": "prioridade_code",
+          "sortOrder": "ascending"
+        }
+      },
+      "card04_benchmark": {
+        "model": "",
+        "template": "sap.ovp.cards.v4.analytical",
+        "settings": {
+          "title": "Posição na Rede",
+          "subTitle": "Média do meu cluster (anonimizado)",
+          "entitySet": "BenchmarkMeuCluster",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BenchmarkComparativo",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
+        }
+      }
+    }
+  },
+
+  "sap.cloud": {
+    "service": "myfranchise"
+  },
+
+  "sap.fiori": {
+    "registrationIds": ["myfranchise-franchisee-portal"],
+    "archeType": "analytical"
+  }
+}

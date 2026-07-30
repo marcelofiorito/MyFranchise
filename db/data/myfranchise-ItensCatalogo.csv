@@ -1,0 +1,16 @@
+ID,catalogo_ID,sku,nomeProduto,categoria,precoMinimo,precoMaximo,precoSugerido,ativo
+ic-001,cat-2026,SKU-001,Calça Jeans Slim,Calças,199.0,229.0,215.0,true
+ic-002,cat-2026,SKU-002,Camiseta Básica,Camisetas,59.0,79.0,69.0,true
+ic-003,cat-2026,SKU-003,Vestido Midi,Vestidos,249.0,289.0,269.0,true
+ic-004,cat-2026,SKU-004,Tênis Casual,Calçados,289.0,339.0,315.0,true
+ic-005,cat-2026,SKU-005,Bolsa Transversal,Acessórios,159.0,199.0,179.0,true
+ic-006,cat-2026,SKU-006,Jaqueta Jeans,Jaquetas,329.0,379.0,355.0,true
+ic-007,cat-2026,SKU-007,Shorts Cargo,Shorts,129.0,159.0,145.0,true
+ic-008,cat-2026,SKU-008,Blusa Cropped,Blusas,79.0,109.0,95.0,true
+ic-009,cat-2026,SKU-009,Saia Midi Plissada,Saias,189.0,219.0,205.0,true
+ic-010,cat-2026,SKU-010,Chinelo Slide,Calçados,79.0,99.0,89.0,true
+ic-011,cat-2026,SKU-011,Boné Aba Curva,Acessórios,69.0,89.0,79.0,true
+ic-012,cat-2026,SKU-012,Mochila Urban,Bolsas,199.0,239.0,219.0,true
+ic-013,cat-2026,SKU-013,Calça Cargo,Calças,179.0,209.0,195.0,true
+ic-014,cat-2026,SKU-014,Polo Masculina,Camisas,99.0,129.0,115.0,true
+ic-015,cat-2026,SKU-015,Vestido Floral,Vestidos,219.0,259.0,239.0,true

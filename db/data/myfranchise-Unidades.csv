@@ -1,0 +1,21 @@
+ID,codigo,nome,franqueado_ID,endereco,cidade,estado,regiao_code,cluster_code,dataAbertura,status_code
+u023,023,Loja Paulista,f1,"Av. Paulista, 1578",São Paulo,SP,SE,FLG,2019-03-15,ATIVA
+u045,045,Loja Ipanema,f2,"R. Visconde de Pirajá, 414",Rio de Janeiro,RJ,SE,FLG,2020-06-01,ATIVA
+u225,225,Loja Campinas,f1,"Av. José de Souza Campos, 800",Campinas,SP,SE,STD,2021-02-10,ATIVA
+u078,078,Loja Savassi,f3,"R. Fernandes Tourinho, 200",Belo Horizonte,MG,SE,STD,2020-08-20,ATIVA
+u134,134,Loja Floripa,f5,"Av. Beira-Mar Norte, 212",Florianópolis,SC,S,STD,2021-05-12,ATIVA
+u256,256,Loja Ribeirão,f4,"Av. Presidente Vargas, 1600",Ribeirão Preto,SP,SE,STD,2021-11-08,ATIVA
+u092,092,Loja Asa Sul,f4,"SCS Quadra 6, Bloco A",Brasília,DF,CO,STD,2020-10-05,ATIVA
+u295,295,Loja Vitória,f3,"Av. Jerônimo Monteiro, 500",Vitória,ES,SE,STD,2022-03-01,ATIVA
+u115,115,Loja Batel,f5,"R. Saldanha Marinho, 1522",Curitiba,PR,S,STD,2021-01-18,ATIVA
+u234,234,Loja Niterói,f2,"R. Visconde de Uruguai, 380",Niterói,RJ,SE,EXP,2022-07-14,ATIVA
+u278,278,Loja Joinville,f5,"R. das Princesas, 210",Joinville,SC,S,EXP,2022-09-20,ATIVA
+u189,189,Loja Fortaleza,f7,"Av. Monsenhor Tabosa, 740",Fortaleza,CE,NE,EXP,2022-01-10,ATIVA
+u245,245,Loja Santos,f3,"Av. Ana Costa, 555",Santos,SP,SE,EXP,2022-04-05,ATIVA
+u156,156,Loja Salvador,f7,"Av. Tancredo Neves, 1632",Salvador,BA,NE,STD,2021-08-22,ATIVA
+u201,201,Loja Manaus,f8,"Av. Djalma Batista, 1350",Manaus,AM,N,EXP,2022-06-30,ATIVA
+u213,213,Loja Belém,f8,"Av. Visconde de Souza Franco, 776",Belém,PA,N,EXP,2022-08-15,ATIVA
+u267,267,Loja Goiânia,f4,"Av. Anhanguera, 9755",Goiânia,GO,CO,EXP,2022-11-01,ATIVA
+u178,178,Loja Recife,f7,"Av. Boa Viagem, 1000",Recife,PE,NE,STD,2021-03-25,ATIVA
+u289,289,Loja Natal,f8,"Av. Engenheiro Roberto Freire, 1300",Natal,RN,NE,EXP,2023-01-15,ATIVA
+u147,147,Loja Porto Alegre,f6,"Av. Ipiranga, 1080",Porto Alegre,RS,S,STD,2021-07-01,ATIVA

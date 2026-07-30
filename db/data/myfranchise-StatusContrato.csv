@@ -1,0 +1,6 @@
+code,name
+ATIVO,Ativo
+VENCENDO_90DIAS,Vencendo em 90 dias
+VENCENDO_30DIAS,Vencendo em 30 dias
+VENCIDO,Vencido
+RENOVADO,Renovado

@@ -1,0 +1,9 @@
+ID,razaoSocial,cnpj,responsavel,email,telefone,status_code
+f1,Drummond & Cia Ltda,12.345.678/0001-01,Carlos Drummond,carlos@drummondcia.com.br,(11) 99001-0001,ATIVO
+f2,Silva Fashion EIRELI,12.345.678/0002-02,Maria Silva,maria@silvafashion.com.br,(21) 99001-0002,ATIVO
+f3,Santos Moda Ltda,12.345.678/0003-03,João Santos,joao@santosmoda.com.br,(31) 99001-0003,ATIVO
+f4,Ferreira Varejo ME,12.345.678/0004-04,Ana Ferreira,ana@ferreiravarejo.com.br,(61) 99001-0004,ATIVO
+f5,Costa & Filhos Ltda,12.345.678/0005-05,Paulo Costa,paulo@costafilhos.com.br,(41) 99001-0005,ATIVO
+f6,Mendes Retail Ltda,12.345.678/0006-06,Roberto Mendes,roberto@mendesretail.com.br,(51) 99001-0006,ATIVO
+f7,Lima Nordeste EIRELI,12.345.678/0007-07,Fernanda Lima,fernanda@limanordeste.com.br,(71) 99001-0007,ATIVO
+f8,Oliveira Multi Franquias Ltda,12.345.678/0008-08,Marcos Oliveira,marcos@omf.com.br,(11) 99001-0008,ATIVO

@@ -1,0 +1,30 @@
+{
+  "name": "myfranchise",
+  "version": "1.0.0",
+  "description": "RunMyFranchise — Gestão de Redes de Franquias no SAP BTP",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@sap/cds": "^10",
+    "express": "^4.22.2"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^2.1.3"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "dev": "cds watch"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": ":memory:"
+        }
+      },
+      "auth": "dummy"
+    }
+  }
+}

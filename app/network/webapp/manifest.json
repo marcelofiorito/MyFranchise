@@ -1,0 +1,116 @@
+{
+  "_version": "1.65.0",
+
+  "sap.app": {
+    "id": "myfranchise.network",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {
+      "mainService": {
+        "uri": "/franqueadora/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "NetworkPanel-display": {
+          "semanticObject": "NetworkPanel",
+          "action": "display",
+          "title": "{{appTitle}}",
+          "subTitle": "{{appDescription}}",
+          "icon": "sap-icon://org-chart",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://org-chart" },
+    "fullWidth": true
+  },
+
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "myfranchise.network.i18n.i18n" }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "name": "PainelRede",
+          "pattern": ":?query:",
+          "target": "PainelRede"
+        },
+        {
+          "name": "UnidadeObjectPage",
+          "pattern": "Unidades({key}):?query:",
+          "target": "UnidadeObjectPage"
+        }
+      ],
+      "targets": {
+        "PainelRede": {
+          "type": "Component",
+          "id": "PainelRede",
+          "name": "sap.fe.templates.AnalyticalListPage",
+          "options": {
+            "settings": {
+              "entitySet": "Saude_Unidade",
+              "initialLoad": true,
+              "variantManagement": "Page",
+              "defaultTemplateAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionPresentationVariant#default"
+            }
+          }
+        },
+        "UnidadeObjectPage": {
+          "type": "Component",
+          "id": "UnidadeObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "Unidades"
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "sap.cloud": {
+    "service": "myfranchise"
+  },
+
+  "sap.fiori": {
+    "registrationIds": ["myfranchise-network-panel"],
+    "archeType": "analytical"
+  }
+}

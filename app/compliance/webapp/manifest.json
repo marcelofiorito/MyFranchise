@@ -1,0 +1,115 @@
+{
+  "_version": "1.65.0",
+
+  "sap.app": {
+    "id": "myfranchise.compliance",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {
+      "mainService": {
+        "uri": "/franqueadora/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "Compliance-manage": {
+          "semanticObject": "Compliance",
+          "action": "manage",
+          "title": "{{appTitle}}",
+          "subTitle": "{{appDescription}}",
+          "icon": "sap-icon://alert",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://alert" },
+    "fullWidth": true
+  },
+
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "myfranchise.compliance.i18n.i18n" }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "name": "DesviosList",
+          "pattern": ":?query:",
+          "target": "DesviosList"
+        },
+        {
+          "name": "DesvioObjectPage",
+          "pattern": "Desvios({key}):?query:",
+          "target": "DesvioObjectPage"
+        }
+      ],
+      "targets": {
+        "DesviosList": {
+          "type": "Component",
+          "id": "DesviosList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "Desvios",
+              "initialLoad": true,
+              "variantManagement": "Page"
+            }
+          }
+        },
+        "DesvioObjectPage": {
+          "type": "Component",
+          "id": "DesvioObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "Desvios"
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "sap.cloud": {
+    "service": "myfranchise"
+  },
+
+  "sap.fiori": {
+    "registrationIds": ["myfranchise-compliance"],
+    "archeType": "transactional"
+  }
+}

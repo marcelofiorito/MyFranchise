@@ -1,0 +1,4 @@
+ID,desvio_ID,unidade_ID,dataEnvio,prazoCorrecao,status_code,comentarioResposta
+notif-001,desvio-001,u147,2026-07-01T09:00:00Z,2026-07-08,ENVIADA,
+notif-002,desvio-002,u147,2026-07-01T09:00:00Z,2026-07-08,ENVIADA,
+notif-003,desvio-003,u147,2026-07-01T09:15:00Z,2026-07-15,ENVIADA,
