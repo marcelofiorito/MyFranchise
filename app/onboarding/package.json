@@ -1,0 +1,12 @@
+{
+  "name": "myfranchise-onboarding",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:cf": "ui5 build --config ui5.yaml --clean-dest --dest dist/app && cd dist/app && npx bestzip ../onboarding.zip * && cd ../.."
+  },
+  "devDependencies": {
+    "@ui5/cli": "^3",
+    "bestzip": "^2"
+  }
+}

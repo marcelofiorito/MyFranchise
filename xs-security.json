@@ -1,0 +1,53 @@
+{
+  "xsappname": "myfranchise",
+  "tenant-mode": "dedicated",
+  "description": "Security descriptor for RunMyFranchise",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.Franqueadora_Gestor",
+      "description": "Gestor da Franqueadora — acesso completo à rede"
+    },
+    {
+      "name": "$XSAPPNAME.Franqueado",
+      "description": "Franqueado — acesso restrito à própria unidade"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "unidade_ID",
+      "description": "ID da unidade do franqueado",
+      "valueType": "string"
+    },
+    {
+      "name": "cluster",
+      "description": "Cluster da unidade do franqueado",
+      "valueType": "string"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "Franqueadora_Gestor",
+      "description": "Gestor da Franqueadora",
+      "scope-references": ["$XSAPPNAME.Franqueadora_Gestor"],
+      "attribute-references": []
+    },
+    {
+      "name": "Franqueado",
+      "description": "Franqueado",
+      "scope-references": ["$XSAPPNAME.Franqueado"],
+      "attribute-references": ["unidade_ID", "cluster"]
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "MyFranchise_Gestor",
+      "description": "RunMyFranchise — Gestor da Franqueadora",
+      "role-template-references": ["$XSAPPNAME.Franqueadora_Gestor"]
+    },
+    {
+      "name": "MyFranchise_Franqueado",
+      "description": "RunMyFranchise — Franqueado",
+      "role-template-references": ["$XSAPPNAME.Franqueado"]
+    }
+  ]
+}

@@ -6,8 +6,11 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@cap-js/hana": "^2.8.0",
     "@sap-ai-sdk/orchestration": "^2.13.0",
     "@sap/cds": "^10",
+    "@sap/hdi-deploy": "^5.7.0",
+    "@sap/xssec": "^4.13.3",
     "express": "^4.22.2"
   },
   "devDependencies": {
@@ -23,6 +26,9 @@
         "kind": "sqlite",
         "credentials": {
           "url": ":memory:"
+        },
+        "[production]": {
+          "kind": "hana-cloud"
         }
       },
       "auth": {
@@ -44,6 +50,9 @@
               "cluster": "STD"
             }
           }
+        },
+        "[production]": {
+          "kind": "xsuaa"
         }
       }
     }

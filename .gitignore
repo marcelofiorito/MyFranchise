@@ -7,3 +7,8 @@ default-env.json
 *.sqlite
 .DS_Store
 .playwright-mcp/
+mta_archives/
+resources/
+*.mtar
+app/*/dist/
+app/*/node_modules/

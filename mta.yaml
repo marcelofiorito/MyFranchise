@@ -1,0 +1,207 @@
+_schema-version: '3.1'
+ID: myfranchise
+version: 1.0.0
+description: RunMyFranchise — Gestão de Redes de Franquias no SAP BTP
+
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+
+modules:
+  # ─────────────────────────────────────────────────────────
+  # 1. Serviço CAP (Node.js) — OData V4
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 512M
+      disk-quota: 1024M
+    build-parameters:
+      builder: npm
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: myfranchise-db
+      - name: myfranchise-auth
+      - name: myfranchise-destination
+      - name: myfranchise-aicore
+
+  # ─────────────────────────────────────────────────────────
+  # 2. Deployer do HANA (cria tabelas + carrega seed data)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 256M
+    requires:
+      - name: myfranchise-db
+
+  # ─────────────────────────────────────────────────────────
+  # 3. Deployer dos apps HTML5 (Fiori Elements) → html5-repo
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-app-deployer
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: myfranchise-html5-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: resources
+      requires:
+        - artifacts:
+            - network.zip
+          name: network
+          target-path: resources/
+        - artifacts:
+            - compliance.zip
+          name: compliance
+          target-path: resources/
+        - artifacts:
+            - franchisee.zip
+          name: franchisee
+          target-path: resources/
+        - artifacts:
+            - onboarding.zip
+          name: onboarding
+          target-path: resources/
+
+  # Sub-módulos de build de cada app Fiori (geram os .zip acima)
+  - name: network
+    type: html5
+    path: app/network
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+  - name: compliance
+    type: html5
+    path: app/compliance
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+  - name: franchisee
+    type: html5
+    path: app/franchisee
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+  - name: onboarding
+    type: html5
+    path: app/onboarding
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+  # ─────────────────────────────────────────────────────────
+  # 4. Deployer de conteúdo do Work Zone (registra os tiles)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-workzone-deployer
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: myfranchise-workzone
+        parameters:
+          content-target: true
+          service-key:
+            name: myfranchise-workzone-key
+            config:
+              content-endpoint: developer
+    parameters:
+      content:
+        subaccount:
+          services: []
+    build-parameters:
+      no-source: true
+
+resources:
+  # ─────────────────────────────────────────────────────────
+  # HANA Cloud (HDI container)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+    properties:
+      hdi-service-name: ${service-name}
+
+  # ─────────────────────────────────────────────────────────
+  # XSUAA (autenticação e autorização — roles/scopes/attrs)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: myfranchise-${org}-${space}
+        tenant-mode: dedicated
+
+  # ─────────────────────────────────────────────────────────
+  # Destination service (para Work Zone consumir os apps)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+
+  # ─────────────────────────────────────────────────────────
+  # HTML5 apps repository (host — armazena os apps)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+  # ─────────────────────────────────────────────────────────
+  # AI Core (GenAI Hub — recomendações)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-aicore
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: aicore
+      service-plan: standard
+
+  # ─────────────────────────────────────────────────────────
+  # Build Work Zone (launchpad / portal)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-workzone
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: build-workzone-standard
+      service-plan: foundation
