@@ -7,14 +7,7 @@
       "target": "/franqueadora/$1",
       "destination": "myfranchise-srv",
       "authenticationType": "xsuaa",
-      "csrfProtection": true
-    },
-    {
-      "source": "^/franqueado/(.*)$",
-      "target": "/franqueado/$1",
-      "destination": "myfranchise-srv",
-      "authenticationType": "xsuaa",
-      "csrfProtection": true
+      "csrfProtection": false
     },
     {
       "source": "^(.*)$",

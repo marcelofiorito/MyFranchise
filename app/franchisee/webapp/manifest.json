@@ -11,7 +11,7 @@
     "description": "{{appDescription}}",
     "dataSources": {
       "mainService": {
-        "uri": "/franqueado/",
+        "uri": "franqueado/",
         "type": "OData",
         "settings": {
           "odataVersion": "4.0"
