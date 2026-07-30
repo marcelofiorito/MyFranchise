@@ -7,6 +7,14 @@
   "odata": {
     "version": "v4"
   },
+  "requires": {
+    "aicore": {
+      "kind": "rest",
+      "[production]": {
+        "vcap": { "label": "aicore" }
+      }
+    }
+  },
   "log": {
     "levels": {
       "cds": "warn"

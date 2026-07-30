@@ -190,16 +190,40 @@ async function gerarParaUnidade(srv, unidadeId) {
 
   const ctx = { unidade, kpi: kpis[0], benchmark: benchmarks[0], desvios };
 
+  // AI-FIRST: sempre tenta o GenAI Hub primeiro quando o AI Core está disponível.
+  // O fallback por regras só entra se o AI Core não estiver bound OU se a chamada falhar.
+  //
+  // Modo estrito (STRICT_AI): quando ligado, uma falha do GenAI Hub PROPAGA o erro
+  // em vez de cair silenciosamente no fallback. Use em produção/demo para garantir
+  // que você saiba se está realmente usando IA — evita apresentar regras como se
+  // fossem IA sem perceber. Ligado via env AI_RECOMMENDATIONS_STRICT=true.
+  const strict = String(process.env.AI_RECOMMENDATIONS_STRICT || '').toLowerCase() === 'true';
+
   let brutas;
-  const usouAI = aiCoreDisponivel();
-  try {
-    brutas = usouAI ? await gerarViaGenAIHub(ctx) : gerarViaRegras(ctx);
-  } catch (e) {
-    LOG.warn(`GenAI Hub falhou para ${unidadeId} (${e.message}) — usando fallback por regras`);
+  let modoUsado;
+  if (aiCoreDisponivel()) {
+    try {
+      brutas = await gerarViaGenAIHub(ctx);
+      modoUsado = 'GenAI Hub';
+    } catch (e) {
+      if (strict) {
+        LOG.error(`GenAI Hub falhou para ${unidade.nome} e STRICT_AI está ligado — abortando`, e);
+        throw new Error(`Geração via GenAI Hub falhou (modo estrito): ${e.message}`);
+      }
+      LOG.warn(`GenAI Hub falhou para ${unidadeId} (${e.message}) — usando fallback por regras`);
+      brutas = gerarViaRegras(ctx);
+      modoUsado = 'regras (fallback pós-erro)';
+    }
+  } else {
+    if (strict) {
+      LOG.error(`AI Core não está bound e STRICT_AI está ligado — abortando ${unidade.nome}`);
+      throw new Error('AI Core não disponível (modo estrito exige GenAI Hub)');
+    }
     brutas = gerarViaRegras(ctx);
+    modoUsado = 'regras (sem AI Core)';
   }
 
-  LOG.info(`Unidade ${unidade.nome}: ${brutas.length} recomendações (${usouAI ? 'GenAI Hub' : 'regras'})`);
+  LOG.info(`Unidade ${unidade.nome}: ${brutas.length} recomendações (${modoUsado})`);
 
   const agora = new Date();
   const validade = new Date(agora.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 dias
@@ -216,21 +240,33 @@ async function gerarParaUnidade(srv, unidadeId) {
   }));
 
   await INSERT.into(Recomendacoes).entries(entries);
-  return entries.length;
+  return { count: entries.length, modo: modoUsado };
 }
 
 /**
  * Job diário: gera recomendações para todas as unidades ativas.
  * Retorna resumo { unidades, recomendacoes, modo }.
+ * O `modo` reportado reflete o que REALMENTE aconteceu:
+ *   - 'GenAI Hub' se todas usaram IA
+ *   - 'regras (fallback)' se nenhuma usou IA
+ *   - 'misto (IA + fallback)' se houve mistura (ex: AI Core instável)
  */
 async function gerarParaTodas(srv) {
   const { Unidades } = srv.entities;
   const unidades = await SELECT.from(Unidades).columns('ID');
   let total = 0;
+  let usaramAI = 0;
+  let usaramRegras = 0;
   for (const u of unidades) {
-    total += await gerarParaUnidade(srv, u.ID);
+    const { count, modo } = await gerarParaUnidade(srv, u.ID);
+    total += count;
+    if (modo.startsWith('GenAI Hub')) usaramAI++;
+    else usaramRegras++;
   }
-  const modo = aiCoreDisponivel() ? 'GenAI Hub' : 'regras (fallback)';
+
+  const modo = usaramAI && usaramRegras ? `misto (${usaramAI} IA + ${usaramRegras} regras)`
+             : usaramAI                 ? 'GenAI Hub'
+             :                            'regras (fallback)';
   LOG.info(`Job concluído: ${total} recomendações para ${unidades.length} unidades (modo: ${modo})`);
   return { unidades: unidades.length, recomendacoes: total, modo };
 }

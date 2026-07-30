@@ -38,12 +38,8 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
     // Ações de IA — geração de recomendações (AI Core/GenAI Hub ou fallback)
     this.on('gerarRecomendacoes', async (req) => {
       const { unidade_ID } = req.data;
-      const n = await recommendations.gerarParaUnidade(this, unidade_ID);
-      return {
-        unidade_ID,
-        recomendacoes: n,
-        modo: recommendations.aiCoreDisponivel() ? 'GenAI Hub' : 'regras (fallback)'
-      };
+      const { count, modo } = await recommendations.gerarParaUnidade(this, unidade_ID);
+      return { unidade_ID, recomendacoes: count, modo };
     });
 
     this.on('gerarRecomendacoesTodas', async () => {
