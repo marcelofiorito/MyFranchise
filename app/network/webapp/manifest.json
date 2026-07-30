@@ -86,13 +86,12 @@
         "PainelRede": {
           "type": "Component",
           "id": "PainelRede",
-          "name": "sap.fe.templates.AnalyticalListPage",
+          "name": "sap.fe.templates.ListReport",
           "options": {
             "settings": {
               "entitySet": "Saude_Unidade",
               "initialLoad": true,
-              "variantManagement": "Page",
-              "defaultTemplateAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionPresentationVariant#default"
+              "variantManagement": "Page"
             }
           }
         },
