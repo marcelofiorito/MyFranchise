@@ -24,7 +24,23 @@
           "url": ":memory:"
         }
       },
-      "auth": "dummy"
+      "auth": {
+        "kind": "mocked",
+        "users": {
+          "gestor": {
+            "password": "gestor",
+            "roles": ["Franqueadora_Gestor"]
+          },
+          "roberto": {
+            "password": "roberto",
+            "roles": ["Franqueado"],
+            "attr": {
+              "unidade_ID": "u147",
+              "cluster": "STD"
+            }
+          }
+        }
+      }
     }
   }
 }

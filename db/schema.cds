@@ -225,6 +225,8 @@ entity ProcessosOnboarding : cuid, managed {
   dataPrevisaoAbertura : Date        @title : 'Previsão de Abertura';
   status               : Association to StatusOnboarding;
   percentualConclusao  : Decimal(5,2)@title : '% Conclusão';
+  // 1=vermelho (Suspenso/Cancelado), 2=amarelo (EmAndamento), 3=verde (Concluido)
+  statusCriticality    : Integer     @title : 'Criticidade' @Core.Computed: true;
   tarefas              : Composition of many TarefasOnboarding
                            on tarefas.processo = $self;
 }
@@ -246,6 +248,8 @@ entity TarefasOnboarding : cuid, managed {
   etapa          : Association to EtapasOnboarding;
   nome           : String(100) @title : 'Tarefa';
   status         : Association to StatusTarefa;
+  // 1=vermelho (Vencida/Bloqueada), 2=amarelo (EmAndamento), 3=verde (Concluida)
+  tarefaCriticality : Integer  @title : 'Criticidade' @Core.Computed: true;
   responsavel    : String(100) @title : 'Responsável';
   dataVencimento : Date        @title : 'Vencimento';
   dataConclusao  : Date        @title : 'Concluída em';
