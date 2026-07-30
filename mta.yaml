@@ -50,36 +50,8 @@ modules:
       - name: myfranchise-db
 
   # ─────────────────────────────────────────────────────────
-  # 3. Deployer dos apps HTML5 (Fiori Elements) → html5-repo
+  # 3. Build dos 4 apps Fiori (cada um gera dist/<app>.zip)
   # ─────────────────────────────────────────────────────────
-  - name: myfranchise-app-deployer
-    type: com.sap.application.content
-    path: .
-    requires:
-      - name: myfranchise-html5-repo-host
-        parameters:
-          content-target: true
-    build-parameters:
-      build-result: resources
-      requires:
-        - artifacts:
-            - network.zip
-          name: network
-          target-path: resources/
-        - artifacts:
-            - compliance.zip
-          name: compliance
-          target-path: resources/
-        - artifacts:
-            - franchisee.zip
-          name: franchisee
-          target-path: resources/
-        - artifacts:
-            - onboarding.zip
-          name: onboarding
-          target-path: resources/
-
-  # Sub-módulos de build de cada app Fiori (geram os .zip acima)
   - name: network
     type: html5
     path: app/network
@@ -125,7 +97,38 @@ modules:
       supported-platforms: []
 
   # ─────────────────────────────────────────────────────────
-  # 4. Deployer de conteúdo do Work Zone (registra os tiles)
+  # 4. Deployer dos apps HTML5 → html5-repo (+ destination srv-api)
+  # ─────────────────────────────────────────────────────────
+  - name: myfranchise-app-deployer
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: srv-api
+      - name: myfranchise-html5-repo-host
+        parameters:
+          content-target: true
+          config:
+            HTML5Runtime_enabled: true
+    build-parameters:
+      build-result: resources
+      requires:
+        - artifacts: [network.zip]
+          name: network
+          target-path: resources/
+        - artifacts: [compliance.zip]
+          name: compliance
+          target-path: resources/
+        - artifacts: [franchisee.zip]
+          name: franchisee
+          target-path: resources/
+        - artifacts: [onboarding.zip]
+          name: onboarding
+          target-path: resources/
+
+  # ─────────────────────────────────────────────────────────
+  # 5. Deployer de conteúdo do Work Zone (registra content provider)
+  #    Destinations html5-repo + auth com sap.cloud.service — SEM isso
+  #    os apps não aparecem no Content Explorer do Work Zone.
   # ─────────────────────────────────────────────────────────
   - name: myfranchise-workzone-deployer
     type: com.sap.application.content
@@ -138,17 +141,33 @@ modules:
             name: myfranchise-workzone-key
             config:
               content-endpoint: developer
+      - name: myfranchise-html5-repo-host
+        parameters:
+          service-key:
+            name: myfranchise-html5-repo-host-key
+      - name: myfranchise-auth
+        parameters:
+          service-key:
+            name: myfranchise-auth-key
     parameters:
       content:
-        subaccount:
-          services: []
+        instance:
+          existing_destinations_policy: update
+          destinations:
+            - Name: myfranchise-html5-repository
+              ServiceInstanceName: myfranchise-html5-repo-host
+              ServiceKeyName: myfranchise-html5-repo-host-key
+              sap.cloud.service: myfranchise.service
+            - Name: myfranchise-auth
+              Authentication: OAuth2UserTokenExchange
+              ServiceInstanceName: myfranchise-auth
+              ServiceKeyName: myfranchise-auth-key
+              sap.cloud.service: myfranchise.service
     build-parameters:
       no-source: true
 
 resources:
-  # ─────────────────────────────────────────────────────────
-  # HANA Cloud (HDI container)
-  # ─────────────────────────────────────────────────────────
+  # ── HANA Cloud (HDI container) ───────────────────────────
   - name: myfranchise-db
     type: com.sap.xs.hdi-container
     parameters:
@@ -157,9 +176,7 @@ resources:
     properties:
       hdi-service-name: ${service-name}
 
-  # ─────────────────────────────────────────────────────────
-  # XSUAA (autenticação e autorização — roles/scopes/attrs)
-  # ─────────────────────────────────────────────────────────
+  # ── XSUAA (roles/scopes/attrs) ───────────────────────────
   - name: myfranchise-auth
     type: org.cloudfoundry.managed-service
     parameters:
@@ -170,38 +187,30 @@ resources:
         xsappname: myfranchise-${org}-${space}
         tenant-mode: dedicated
 
-  # ─────────────────────────────────────────────────────────
-  # Destination service (para Work Zone consumir os apps)
-  # ─────────────────────────────────────────────────────────
+  # ── Destination (Work Zone consome os apps + srv) ────────
   - name: myfranchise-destination
     type: org.cloudfoundry.managed-service
     parameters:
       service: destination
       service-plan: lite
+    requires:
+      - name: srv-api
 
-  # ─────────────────────────────────────────────────────────
-  # HTML5 apps repository (host — armazena os apps)
-  # ─────────────────────────────────────────────────────────
+  # ── HTML5 apps repository (host) ─────────────────────────
   - name: myfranchise-html5-repo-host
     type: org.cloudfoundry.managed-service
     parameters:
       service: html5-apps-repo
       service-plan: app-host
 
-  # ─────────────────────────────────────────────────────────
-  # AI Core (GenAI Hub — recomendações)
-  # REUSA a instância existente 'default_aicore' (plano extended) já
-  # compartilhada por outros apps GenAI neste space. Criar uma nova
-  # instância aicore falhou para outro projeto (sales-order-aicore).
-  # ─────────────────────────────────────────────────────────
+  # ── AI Core (GenAI Hub) — REUSA default_aicore existente ─
+  # Criar nova instância aicore falha (já há plano extended na subaccount).
   - name: myfranchise-aicore
     type: org.cloudfoundry.existing-service
     parameters:
       service-name: default_aicore
 
-  # ─────────────────────────────────────────────────────────
-  # Build Work Zone (launchpad / portal)
-  # ─────────────────────────────────────────────────────────
+  # ── Build Work Zone (launchpad) ──────────────────────────
   - name: myfranchise-workzone
     type: org.cloudfoundry.managed-service
     parameters:

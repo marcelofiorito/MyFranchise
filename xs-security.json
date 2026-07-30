@@ -28,26 +28,37 @@
     {
       "name": "Franqueadora_Gestor",
       "description": "Gestor da Franqueadora",
-      "scope-references": ["$XSAPPNAME.Franqueadora_Gestor"],
+      "scope-references": [
+        "$XSAPPNAME.Franqueadora_Gestor"
+      ],
       "attribute-references": []
     },
     {
       "name": "Franqueado",
       "description": "Franqueado",
-      "scope-references": ["$XSAPPNAME.Franqueado"],
-      "attribute-references": ["unidade_ID", "cluster"]
+      "scope-references": [
+        "$XSAPPNAME.Franqueado"
+      ],
+      "attribute-references": [
+        "unidade_ID",
+        "cluster"
+      ]
     }
   ],
   "role-collections": [
     {
       "name": "MyFranchise_Gestor",
       "description": "RunMyFranchise — Gestor da Franqueadora",
-      "role-template-references": ["$XSAPPNAME.Franqueadora_Gestor"]
+      "role-template-references": [
+        "$XSAPPNAME.Franqueadora_Gestor"
+      ]
     },
     {
       "name": "MyFranchise_Franqueado",
       "description": "RunMyFranchise — Franqueado",
-      "role-template-references": ["$XSAPPNAME.Franqueado"]
+      "role-template-references": [
+        "$XSAPPNAME.Franqueado"
+      ]
     }
   ]
 }
