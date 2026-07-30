@@ -1,0 +1,4 @@
+ID,unidade_ID,dataInicio,dataPrevisaoAbertura,status_code,percentualConclusao,statusCriticality
+proc-301,u301,2026-06-01,2026-10-01,EM_ANDAMENTO,70,2
+proc-302,u302,2026-05-15,2026-09-15,EM_ANDAMENTO,45,2
+proc-303,u303,2026-07-01,2026-11-20,EM_ANDAMENTO,20,2

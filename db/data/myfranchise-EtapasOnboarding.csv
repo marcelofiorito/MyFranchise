@@ -1,0 +1,7 @@
+ID,nome,descricao,ordem,obrigatoria,prazoEstimado
+etapa-1,Documentação,Contrato de franquia e documentação legal,1,true,15
+etapa-2,Ponto Comercial,Aprovação do ponto e contrato de locação,2,true,30
+etapa-3,Obra e Layout,Reforma conforme padrão da marca,3,true,60
+etapa-4,Estoque Inicial,Pedido e recebimento do estoque inicial,4,true,20
+etapa-5,Treinamento,Treinamento da equipe e do franqueado,5,true,15
+etapa-6,Inauguração,Preparação e evento de inauguração,6,false,7

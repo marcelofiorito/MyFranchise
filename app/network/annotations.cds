@@ -68,8 +68,8 @@ annotate service.Saude_Unidade with @(
     }]
   },
 
-  // ── Gráfico ───────────────────────────────────────────────
-  UI.Chart #ScoreDistribuicao: {
+  // ── Gráfico (SEM qualifier — padrão que funciona no FE 1.150) ──
+  UI.Chart: {
     Title         : '{i18n>lbl_network_chartTitle}',
     ChartType     : #Donut,
     Dimensions    : [scoreCriticality],
@@ -84,18 +84,10 @@ annotate service.Saude_Unidade with @(
     }]
   },
 
-  // ── Presentation Variant (tabela + chart lado a lado) ─────
-  UI.PresentationVariant #default: {
-    Text           : '{i18n>lbl_network_painelDaRede}',
+  // ── Presentation Variant (SEM qualifier) — chart + tabela ─
+  UI.PresentationVariant: {
     SortOrder      : [{ Property: scoreSaude, Descending: false }],
-    Visualizations : ['@UI.LineItem', '@UI.Chart#ScoreDistribuicao']
-  },
-
-  // ── Selection+Presentation Variant padrão (referenciado no manifest) ──
-  UI.SelectionPresentationVariant #default: {
-    Text                : '{i18n>lbl_network_padrao}',
-    SelectionVariant    : ![@UI.SelectionVariant#Criticas],
-    PresentationVariant : ![@UI.PresentationVariant#default]
+    Visualizations : ['@UI.LineItem', '@UI.Chart']
   },
 
   // ── DataPoint para o Score (usado no chart e header) ──────
