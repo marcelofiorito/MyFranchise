@@ -90,21 +90,8 @@
           "options": {
             "settings": {
               "entitySet": "Saude_Unidade",
-              "initialLoad": "Enabled",
-              "variantManagement": "Page",
-              "views": {
-                "paths": [
-                  {
-                    "primary": [
-                      { "annotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant" }
-                    ],
-                    "secondary": [
-                      { "annotationPath": "com.sap.vocabularies.UI.v1.LineItem" }
-                    ],
-                    "defaultPath": "both"
-                  }
-                ]
-              }
+              "initialLoad": true,
+              "variantManagement": "Page"
             }
           }
         },

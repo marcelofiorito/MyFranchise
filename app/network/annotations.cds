@@ -68,7 +68,7 @@ annotate service.Saude_Unidade with @(
     }]
   },
 
-  // ── Gráfico (SEM qualifier — padrão que funciona no FE 1.150) ──
+  // ── Gráfico (mantido para uso futuro; não referenciado no manifest LR) ──
   UI.Chart: {
     Title         : '{i18n>lbl_network_chartTitle}',
     ChartType     : #Donut,
@@ -82,12 +82,6 @@ annotate service.Saude_Unidade with @(
       Measure: scoreSaude,
       Role   : #Axis1
     }]
-  },
-
-  // ── Presentation Variant (SEM qualifier) — chart + tabela ─
-  UI.PresentationVariant: {
-    SortOrder      : [{ Property: scoreSaude, Descending: false }],
-    Visualizations : ['@UI.LineItem', '@UI.Chart']
   },
 
   // ── DataPoint para o Score (usado no chart e header) ──────
