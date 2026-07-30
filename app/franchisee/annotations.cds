@@ -112,6 +112,7 @@ annotate service.MinhasRecomendacoes with @(
     Criticality: prioridadeCrit
   },
 
+  // Lista compacta do card OVP (título + tipo + prioridade colorida).
   UI.LineItem #Recomendacoes: [
     {
       $Type : 'UI.DataFieldForAnnotation',
@@ -119,9 +120,43 @@ annotate service.MinhasRecomendacoes with @(
       Label : '{i18n>Recomendacoes_prioridade}',
       ![@UI.Importance]: #High
     },
-    { Value: titulo,    Label: '{i18n>Recomendacoes}',           ![@UI.Importance]: #High },
-    { Value: descricao, Label: '{i18n>Recomendacoes_descricao}', ![@UI.Importance]: #High }
+    { Value: titulo,    Label: '{i18n>Recomendacoes}', ![@UI.Importance]: #High },
+    { Value: tipo_code, Label: '{i18n>Alertas_tipo}' }
   ],
+
+  // LineItem default — usado pelo List Report do app "Recomendações da IA".
+  UI.LineItem: [
+    {
+      $Type : 'UI.DataFieldForAnnotation',
+      Target: '@UI.DataPoint#Prioridade',
+      Label : '{i18n>Recomendacoes_prioridade}'
+    },
+    { Value: titulo,      Label: '{i18n>Recomendacoes}', ![@UI.Importance]: #High },
+    { Value: tipo_code,   Label: '{i18n>Alertas_tipo}' },
+    { Value: dataGeracao, Label: '{i18n>Recomendacoes_dataGeracao}' }
+  ],
+
+  // Object Page: título + descrição completa da IA (não trunca)
+  UI.HeaderInfo: {
+    TypeName      : '{i18n>Recomendacoes}',
+    TypeNamePlural: '{i18n>Recomendacoes}',
+    Title         : { Value: titulo },
+    Description   : { Value: tipo_code }
+  },
+
+  UI.FieldGroup #Detalhe: {
+    Data: [
+      { Value: descricao,       Label: '{i18n>Recomendacoes_descricao}' },
+      { Value: prioridade_code, Label: '{i18n>Recomendacoes_prioridade}' },
+      { Value: dataGeracao,     Label: '{i18n>Recomendacoes_dataGeracao}' }
+    ]
+  },
+
+  UI.Facets: [{
+    $Type : 'UI.ReferenceFacet',
+    Target: '@UI.FieldGroup#Detalhe',
+    Label : '{i18n>Recomendacoes_descricao}'
+  }],
 
   UI.SelectionVariant #Novas: {
     Text         : '{i18n>lbl_franchisee_varNovas}',

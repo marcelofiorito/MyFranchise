@@ -67,6 +67,9 @@ modules:
         - name: onboarding
           artifacts: [onboarding.zip]
           target-path: app/
+        - name: recommendations
+          artifacts: [recommendations.zip]
+          target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
   - name: network
@@ -99,6 +102,15 @@ modules:
   - name: onboarding
     type: html5
     path: app/onboarding
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: recommendations
+    type: html5
+    path: app/recommendations
     build-parameters:
       build-result: dist
       builder: custom
