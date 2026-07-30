@@ -1,18 +1,21 @@
 {
   "_version": "1.65.0",
-
   "sap.app": {
     "id": "myfranchise.compliance",
     "type": "application",
     "i18n": "i18n/i18n.properties",
-    "applicationVersion": { "version": "1.0.0" },
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
     "title": "{{appTitle}}",
     "description": "{{appDescription}}",
     "dataSources": {
       "mainService": {
         "uri": "/franqueadora/",
         "type": "OData",
-        "settings": { "odataVersion": "4.0" }
+        "settings": {
+          "odataVersion": "4.0"
+        }
       }
     },
     "crossNavigation": {
@@ -31,13 +34,13 @@
       }
     }
   },
-
   "sap.ui": {
     "technology": "UI5",
-    "icons": { "icon": "sap-icon://alert" },
+    "icons": {
+      "icon": "sap-icon://alert"
+    },
     "fullWidth": true
   },
-
   "sap.ui5": {
     "flexEnabled": true,
     "dependencies": {
@@ -61,7 +64,9 @@
       },
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "settings": { "bundleName": "myfranchise.compliance.i18n.i18n" }
+        "settings": {
+          "bundleName": "myfranchise.compliance.i18n.i18n"
+        }
       }
     },
     "routing": {
@@ -103,13 +108,14 @@
       }
     }
   },
-
   "sap.cloud": {
-    "service": "myfranchise"
+    "public": true,
+    "service": "myfranchise.service"
   },
-
   "sap.fiori": {
-    "registrationIds": ["myfranchise-compliance"],
+    "registrationIds": [
+      "myfranchise-compliance"
+    ],
     "archeType": "transactional"
   }
 }

@@ -11,3 +11,18 @@ framework:
     - name: sap.fe.templates
     - name: sap.fe.core
     - name: themelib_sap_horizon
+resources:
+  configuration:
+    propertiesFileSourceEncoding: UTF-8
+builder:
+  resources:
+    excludes:
+      - "/test/**"
+      - "/localService/**"
+  customTasks:
+    - name: ui5-task-zipper
+      afterTask: generateCachebusterInfo
+      configuration:
+        archiveName: onboarding
+        additionalFiles:
+          - xs-app.json

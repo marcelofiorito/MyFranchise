@@ -1,4 +1,4 @@
-_schema-version: '3.1'
+_schema-version: "3.2"
 ID: myfranchise
 version: 1.0.0
 description: RunMyFranchise — Gestão de Redes de Franquias no SAP BTP
@@ -12,55 +12,70 @@ build-parameters:
     - builder: custom
       commands:
         - npm ci
-        - npx cds build --production
+        - npx -p @sap/cds-dk cds build --production
 
 modules:
-  # ─────────────────────────────────────────────────────────
-  # 1. Serviço CAP (Node.js) — OData V4
-  # ─────────────────────────────────────────────────────────
+  # --------------------- SERVER MODULE ------------------------
   - name: myfranchise-srv
     type: nodejs
     path: gen/srv
-    parameters:
-      buildpack: nodejs_buildpack
-      memory: 512M
-      disk-quota: 1024M
-    build-parameters:
-      builder: npm
+    requires:
+      - name: myfranchise-db
+      - name: myfranchise-uaa
+      - name: myfranchise-aicore
     provides:
       - name: srv-api
         properties:
           srv-url: ${default-url}
-    requires:
-      - name: myfranchise-db
-      - name: myfranchise-auth
-      - name: myfranchise-destination
-      - name: myfranchise-aicore
+    build-parameters:
+      builder: npm-ci
+      ignore: ["node_modules/"]
 
-  # ─────────────────────────────────────────────────────────
-  # 2. Deployer do HANA (cria tabelas + carrega seed data)
-  # ─────────────────────────────────────────────────────────
+  # -------------------- DB DEPLOYER (HANA) --------------------
   - name: myfranchise-db-deployer
     type: hdb
     path: gen/db
     parameters:
       buildpack: nodejs_buildpack
-      memory: 256M
     requires:
       - name: myfranchise-db
+    build-parameters:
+      ignore: ["node_modules/"]
 
-  # ─────────────────────────────────────────────────────────
-  # 3. Build dos 4 apps Fiori (cada um gera dist/<app>.zip)
-  # ─────────────────────────────────────────────────────────
+  # ------------------ APPLICATION CONTENT ---------------------
+  # Publica os 4 apps HTML5 no repo (html5-repo-host)
+  - name: myfranchise-appcontent
+    type: com.sap.application.content
+    path: gen
+    requires:
+      - name: myfranchise-destination-service
+      - name: myfranchise-html5-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: network
+          artifacts: [network.zip]
+          target-path: app/
+        - name: compliance
+          artifacts: [compliance.zip]
+          target-path: app/
+        - name: franchisee
+          artifacts: [franchisee.zip]
+          target-path: app/
+        - name: onboarding
+          artifacts: [onboarding.zip]
+          target-path: app/
+
+  # ------------- APPS FIORI (build → dist) --------------------
   - name: network
     type: html5
     path: app/network
     build-parameters:
       build-result: dist
       builder: custom
-      commands:
-        - npm install
-        - npm run build:cf
+      commands: [npm install, npm run build]
       supported-platforms: []
 
   - name: compliance
@@ -69,9 +84,7 @@ modules:
     build-parameters:
       build-result: dist
       builder: custom
-      commands:
-        - npm install
-        - npm run build:cf
+      commands: [npm install, npm run build]
       supported-platforms: []
 
   - name: franchisee
@@ -80,9 +93,7 @@ modules:
     build-parameters:
       build-result: dist
       builder: custom
-      commands:
-        - npm install
-        - npm run build:cf
+      commands: [npm install, npm run build]
       supported-platforms: []
 
   - name: onboarding
@@ -91,64 +102,27 @@ modules:
     build-parameters:
       build-result: dist
       builder: custom
-      commands:
-        - npm install
-        - npm run build:cf
+      commands: [npm install, npm run build]
       supported-platforms: []
 
-  # ─────────────────────────────────────────────────────────
-  # 4. Deployer dos apps HTML5 → html5-repo (+ destination srv-api)
-  # ─────────────────────────────────────────────────────────
-  - name: myfranchise-app-deployer
+  # ------------------ DESTINATION CONTENT ---------------------
+  # Cria os destinations html5-repo + uaa no destination-service
+  - name: myfranchise-destinationcontent
     type: com.sap.application.content
-    path: .
-    requires:
-      - name: srv-api
-      - name: myfranchise-html5-repo-host
-        parameters:
-          content-target: true
-          config:
-            HTML5Runtime_enabled: true
     build-parameters:
-      build-result: resources
-      requires:
-        - artifacts: [network.zip]
-          name: network
-          target-path: resources/
-        - artifacts: [compliance.zip]
-          name: compliance
-          target-path: resources/
-        - artifacts: [franchisee.zip]
-          name: franchisee
-          target-path: resources/
-        - artifacts: [onboarding.zip]
-          name: onboarding
-          target-path: resources/
-
-  # ─────────────────────────────────────────────────────────
-  # 5. Deployer de conteúdo do Work Zone (registra content provider)
-  #    Destinations html5-repo + auth com sap.cloud.service — SEM isso
-  #    os apps não aparecem no Content Explorer do Work Zone.
-  # ─────────────────────────────────────────────────────────
-  - name: myfranchise-workzone-deployer
-    type: com.sap.application.content
-    path: .
+      no-source: true
     requires:
-      - name: myfranchise-workzone
+      - name: myfranchise-uaa
         parameters:
-          content-target: true
           service-key:
-            name: myfranchise-workzone-key
-            config:
-              content-endpoint: developer
+            name: myfranchise-uaa-key
       - name: myfranchise-html5-repo-host
         parameters:
           service-key:
             name: myfranchise-html5-repo-host-key
-      - name: myfranchise-auth
+      - name: myfranchise-destination-service
         parameters:
-          service-key:
-            name: myfranchise-auth-key
+          content-target: true
     parameters:
       content:
         instance:
@@ -158,16 +132,14 @@ modules:
               ServiceInstanceName: myfranchise-html5-repo-host
               ServiceKeyName: myfranchise-html5-repo-host-key
               sap.cloud.service: myfranchise.service
-            - Name: myfranchise-auth
+            - Name: myfranchise-uaa
               Authentication: OAuth2UserTokenExchange
-              ServiceInstanceName: myfranchise-auth
-              ServiceKeyName: myfranchise-auth-key
+              ServiceInstanceName: myfranchise-uaa
+              ServiceKeyName: myfranchise-uaa-key
               sap.cloud.service: myfranchise.service
-    build-parameters:
-      no-source: true
 
 resources:
-  # ── HANA Cloud (HDI container) ───────────────────────────
+  # ------------------ HANA HDI Container ----------------------
   - name: myfranchise-db
     type: com.sap.xs.hdi-container
     parameters:
@@ -176,43 +148,66 @@ resources:
     properties:
       hdi-service-name: ${service-name}
 
-  # ── XSUAA (roles/scopes/attrs) ───────────────────────────
-  - name: myfranchise-auth
+  # ------------------------ XSUAA -----------------------------
+  - name: myfranchise-uaa
     type: org.cloudfoundry.managed-service
     parameters:
       service: xsuaa
       service-plan: application
       path: ./xs-security.json
       config:
-        xsappname: myfranchise-${org}-${space}
+        xsappname: myfranchise-${space}
         tenant-mode: dedicated
+        role-collections:
+          - name: 'MyFranchise_Gestor_${space}'
+            description: Gestor da Franqueadora
+            role-template-references:
+              - $XSAPPNAME.Franqueadora_Gestor
+          - name: 'MyFranchise_Franqueado_${space}'
+            description: Franqueado
+            role-template-references:
+              - $XSAPPNAME.Franqueado
 
-  # ── Destination (Work Zone consome os apps + srv) ────────
-  - name: myfranchise-destination
+  # ---------------- HTML5 Repo (runtime) ----------------------
+  - name: myfranchise-html5-repo-runtime
     type: org.cloudfoundry.managed-service
     parameters:
-      service: destination
-      service-plan: lite
-    requires:
-      - name: srv-api
+      service: html5-apps-repo
+      service-plan: app-runtime
 
-  # ── HTML5 apps repository (host) ─────────────────────────
+  # ---------------- HTML5 Repo (host) -------------------------
   - name: myfranchise-html5-repo-host
     type: org.cloudfoundry.managed-service
     parameters:
       service: html5-apps-repo
       service-plan: app-host
 
-  # ── AI Core (GenAI Hub) — REUSA default_aicore existente ─
-  # Criar nova instância aicore falha (já há plano extended na subaccount).
+  # ------------------ Destination Service ---------------------
+  # Cria o destination srv-api (dinâmico) + habilita HTML5 runtime
+  - name: myfranchise-destination-service
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        version: 1.0.0
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            existing_destinations_policy: update
+            destinations:
+              - Name: myfranchise-srv
+                URL: ~{srv-api/srv-url}
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
+
+  # ------------- AI Core (REUSA default_aicore) ---------------
   - name: myfranchise-aicore
     type: org.cloudfoundry.existing-service
     parameters:
       service-name: default_aicore
-
-  # ── Build Work Zone (launchpad) ──────────────────────────
-  - name: myfranchise-workzone
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: build-workzone-standard
-      service-plan: foundation

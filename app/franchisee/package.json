@@ -2,11 +2,12 @@
   "name": "myfranchise-franchisee",
   "version": "1.0.0",
   "private": true,
+  "main": "webapp/index.html",
   "scripts": {
-    "build:cf": "ui5 build --config ui5.yaml --clean-dest --dest dist/app && cd dist/app && npx bestzip ../franchisee.zip * && cd ../.."
+    "build": "ui5 build preload --clean-dest --include-task=generateCachebusterInfo"
   },
   "devDependencies": {
     "@ui5/cli": "^3",
-    "bestzip": "^2"
+    "ui5-task-zipper": "^3"
   }
 }
