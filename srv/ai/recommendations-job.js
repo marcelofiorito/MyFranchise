@@ -243,6 +243,11 @@ async function gerarParaUnidade(srv, unidadeId) {
     dataValidade:    validade.toISOString()
   }));
 
+  // Substitui as recomendações ainda NÃO tratadas (status NOVA) desta unidade —
+  // evita acúmulo/duplicação quando o job roda mais de uma vez. Recomendações que
+  // o franqueado já aceitou/descartou (status != NOVA) são preservadas como histórico.
+  await DELETE.from(Recomendacoes).where({ unidade_ID: unidadeId, status_code: 'NOVA' });
+
   await INSERT.into(Recomendacoes).entries(entries);
   return { count: entries.length, modo: modoUsado };
 }
