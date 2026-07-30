@@ -10,7 +10,7 @@ annotate service.Saude_Dashboard with @(
   Aggregation.CustomAggregate #compliancePct : 'Edm.Decimal',
   Common.SemanticKey : [ID]
 ) {
-  ID           @Analytics.Measure: false;
+  ID           @Analytics.Measure: false  @ID: 'ID';
   scoreSaude   @Aggregation.default: #AVG;
   compliancePct @Aggregation.default: #AVG;
   // Dimensão do chart: código + texto (padrão sflight status/statusName)
@@ -55,6 +55,7 @@ annotate service.Saude_Dashboard with @(
   },
 
   UI.PresentationVariant: {
+    GroupBy       : [ scoreCriticality ],
     Total         : [ scoreSaude ],
     Visualizations: ['@UI.Chart', '@UI.LineItem']
   },

@@ -43,12 +43,17 @@
   },
   "sap.ui5": {
     "flexEnabled": true,
+    "rootView": {
+      "viewName": "sap.ovp.app.Main",
+      "type": "XML",
+      "async": true,
+      "id": "app"
+    },
     "dependencies": {
       "minUI5Version": "1.120.0",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {},
-        "sap.fe.templates": {},
         "sap.ovp": {}
       }
     },
@@ -69,108 +74,50 @@
           "bundleName": "myfranchise.franchisee.i18n.i18n"
         }
       }
-    },
-    "routing": {
-      "routes": [
-        {
-          "name": "PortalFranqueado",
-          "pattern": ":?query:",
-          "target": "PortalFranqueado"
-        },
-        {
-          "name": "MeusDesviosObjectPage",
-          "pattern": "MeusDesvios({key}):?query:",
-          "target": "MeusDesviosObjectPage"
-        },
-        {
-          "name": "MinhasRecomendacoesObjectPage",
-          "pattern": "MinhasRecomendacoes({key}):?query:",
-          "target": "MinhasRecomendacoesObjectPage"
-        }
-      ],
-      "targets": {
-        "PortalFranqueado": {
-          "type": "Component",
-          "id": "PortalFranqueado",
-          "name": "sap.fe.templates.OverviewPage",
-          "options": {
-            "settings": {
-              "entitySet": "MeusKPIs"
-            }
-          }
-        },
-        "MeusDesviosObjectPage": {
-          "type": "Component",
-          "id": "MeusDesviosObjectPage",
-          "name": "sap.fe.templates.ObjectPage",
-          "options": {
-            "settings": {
-              "entitySet": "MeusDesvios"
-            }
-          }
-        },
-        "MinhasRecomendacoesObjectPage": {
-          "type": "Component",
-          "id": "MinhasRecomendacoesObjectPage",
-          "name": "sap.fe.templates.ObjectPage",
-          "options": {
-            "settings": {
-              "entitySet": "MinhasRecomendacoes"
-            }
-          }
-        }
-      }
     }
   },
   "sap.ovp": {
-    "globalFilterModel": "",
-    "globalFilterEntityType": "",
     "enableLiveFilter": true,
+    "considerAnalyticalParameters": false,
     "cards": {
       "card00_kpis": {
-        "model": "",
-        "template": "sap.ovp.cards.v4.analytical",
+        "template": "sap.ovp.cards.v4.table",
         "settings": {
           "title": "Minha Performance",
-          "subTitle": "Últimos 6 meses",
+          "subTitle": "Loja Porto Alegre · últimos 6 meses",
           "entitySet": "MeusKPIs",
-          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#KPITrend",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#LastPeriod",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Trend",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
         }
       },
       "card01_saude": {
-        "model": "",
-        "template": "sap.ovp.cards.v4.keyPerformanceIndicator",
+        "template": "sap.ovp.cards.v4.table",
         "settings": {
           "title": "Score de Saúde",
-          "subTitle": "Comparado à média do cluster",
+          "subTitle": "Loja Porto Alegre · vs. média do cluster",
           "entitySet": "MinhaSaude",
-          "dataPointAnnotationPath": "com.sap.vocabularies.UI.v1.DataPoint#ScoreSaude",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Saude",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Current"
         }
       },
       "card02_acoes": {
-        "model": "",
         "template": "sap.ovp.cards.v4.list",
         "settings": {
           "title": "Ações Pendentes",
-          "subTitle": "Requer atenção",
+          "subTitle": "Loja Porto Alegre · requer atenção",
           "entitySet": "MeusDesvios",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Pendentes",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Abertos",
-          "listFlavor": "bar",
           "sortBy": "dataDeteccao",
           "sortOrder": "descending",
-          "listType": "condensed"
+          "listType": "extended"
         }
       },
       "card03_recomendacoes": {
-        "model": "",
         "template": "sap.ovp.cards.v4.list",
         "settings": {
           "title": "Recomendações",
-          "subTitle": "Geradas pelo assistente AI",
+          "subTitle": "Loja Porto Alegre · assistente AI",
           "entitySet": "MinhasRecomendacoes",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Recomendacoes",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Novas",
@@ -180,13 +127,12 @@
         }
       },
       "card04_benchmark": {
-        "model": "",
-        "template": "sap.ovp.cards.v4.analytical",
+        "template": "sap.ovp.cards.v4.table",
         "settings": {
           "title": "Posição na Rede",
-          "subTitle": "Média do meu cluster (anonimizado)",
+          "subTitle": "Cluster STD · média anonimizada",
           "entitySet": "BenchmarkMeuCluster",
-          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BenchmarkComparativo",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Benchmark",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
         }
       }

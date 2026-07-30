@@ -1,9 +1,9 @@
 sap.ui.define(
-  ["sap/fe/core/AppComponent"],
-  function (AppComponent) {
+  ["sap/ovp/app/Component"],
+  function (OVPComponent) {
     "use strict";
 
-    return AppComponent.extend("myfranchise.franchisee.Component", {
+    return OVPComponent.extend("myfranchise.franchisee.Component", {
       metadata: {
         manifest: "json"
       }

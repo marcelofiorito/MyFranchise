@@ -95,22 +95,57 @@ service FranqueadoService {
   // ── Meus KPIs ────────────────────────────────────────────
   @readonly
   @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
-  entity MeusKPIs            as projection on mf.KPI_Unidade;
+  entity MeusKPIs            as projection on mf.KPI_Unidade {
+    *,
+    unidade.nome   as unidadeNome   : String,
+    unidade.cidade as unidadeCidade : String,
+    'BRL'          as moeda         : String(3) @Common.IsCurrency,
+    case substring(periodo, 4, 2)
+      when '01' then 'Jan' when '02' then 'Fev' when '03' then 'Mar'
+      when '04' then 'Abr' when '05' then 'Mai' when '06' then 'Jun'
+      when '07' then 'Jul' when '08' then 'Ago' when '09' then 'Set'
+      when '10' then 'Out' when '11' then 'Nov' when '12' then 'Dez'
+      else substring(periodo, 4, 2)
+    end || '/' || substring(periodo, 0, 4) as periodoLabel : String(8)
+  };
 
   // ── Minha Saúde ──────────────────────────────────────────
   @readonly
   @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
-  entity MinhaSaude          as projection on mf.Saude_Unidade;
+  entity MinhaSaude          as projection on mf.Saude_Unidade {
+    *,
+    unidade.nome   as unidadeNome   : String,
+    unidade.cidade as unidadeCidade : String
+  };
 
   // ── Benchmark do cluster (anonimizado) ───────────────────
   @readonly
   @(restrict: [{ grant: 'READ', where: 'cluster_code = $user.cluster' }])
-  entity BenchmarkMeuCluster as projection on mf.Benchmark_Cluster;
+  entity BenchmarkMeuCluster as projection on mf.Benchmark_Cluster {
+    *,
+    'BRL' as moeda : String(3) @Common.IsCurrency,
+    case substring(periodo, 4, 2)
+      when '01' then 'Jan' when '02' then 'Fev' when '03' then 'Mar'
+      when '04' then 'Abr' when '05' then 'Mai' when '06' then 'Jun'
+      when '07' then 'Jul' when '08' then 'Ago' when '09' then 'Set'
+      when '10' then 'Out' when '11' then 'Nov' when '12' then 'Dez'
+      else substring(periodo, 4, 2)
+    end || '/' || substring(periodo, 0, 4) as periodoLabel : String(8)
+  };
 
   // ── Desvios de compliance ─────────────────────────────────
   @readonly
   @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
-  entity MeusDesvios         as projection on mf.Desvios;
+  entity MeusDesvios         as projection on mf.Desvios {
+    *,
+    unidade.nome as unidadeNome : String,
+    case severidade.code
+      when 'ALTA'  then 1
+      when 'MEDIA' then 2
+      when 'BAIXA' then 3
+      else 0
+    end as severidadeCrit : Integer
+  };
 
   // ── Notificações de compliance ────────────────────────────
   @(restrict: [{ grant: ['READ','WRITE'], where: 'unidade_ID = $user.unidade_ID' }])
@@ -118,7 +153,16 @@ service FranqueadoService {
 
   // ── Recomendações do AI ───────────────────────────────────
   @(restrict: [{ grant: ['READ','WRITE'], where: 'unidade_ID = $user.unidade_ID' }])
-  entity MinhasRecomendacoes as projection on mf.Recomendacoes;
+  entity MinhasRecomendacoes as projection on mf.Recomendacoes {
+    *,
+    unidade.nome as unidadeNome : String,
+    case prioridade.code
+      when 'ALTA'  then 1
+      when 'MEDIA' then 2
+      when 'BAIXA' then 3
+      else 0
+    end as prioridadeCrit : Integer
+  };
 
   // ── Onboarding ───────────────────────────────────────────
   @readonly

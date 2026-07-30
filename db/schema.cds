@@ -100,6 +100,7 @@ entity Saude_Unidade : cuid, managed {
   Transformations       : ['aggregate', 'groupby', 'filter'],
   GroupableProperties   : [codigo, nome, cidade, cluster_code, regiao_code, scoreCriticality],
   AggregatableProperties: [
+    { Property: ID },
     { Property: scoreSaude },
     { Property: compliancePct },
     { Property: performancePct },

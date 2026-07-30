@@ -5,22 +5,32 @@ using FranqueadoService as service from '../../srv/service';
 // 5 cards: KPIs, Score de Saúde, Desvios, Recomendações, Benchmark
 // ─────────────────────────────────────────────────────────────
 
-// ── Card 0: Minha Performance (chart de linha — faturamento 6 meses) ─
+// ── Card 0: Minha Performance (faturamento 6 meses) ─
+annotate service.MeusKPIs with {
+  faturamento @Measures.ISOCurrency: moeda;
+  ticketMedio @Measures.ISOCurrency: moeda;
+}
 annotate service.MeusKPIs with @(
 
-  UI.Chart #KPITrend: {
-    Title              : '{i18n>lbl_franchisee_meuFaturamento}',
-    ChartType          : #Line,
-    Dimensions         : [periodo],
-    DimensionAttributes: [{ Dimension: periodo, Role: #Category }],
-    Measures           : [faturamento],
-    MeasureAttributes  : [{ Measure: faturamento, Role: #Axis1 }]
+  UI.HeaderInfo: {
+    TypeName      : '{i18n>KPI_Unidade_periodo}',
+    TypeNamePlural: '{i18n>lbl_franchisee_meuFaturamento}',
+    Title         : { Value: unidadeNome },
+    Description   : { Value: unidadeCidade }
   },
 
   UI.PresentationVariant #ByPeriod: {
-    SortOrder     : [{ Property: periodo, Descending: false }],
-    Visualizations: ['@UI.Chart#KPITrend']
+    SortOrder     : [{ Property: periodo, Descending: true }],
+    Visualizations: ['@UI.LineItem#Trend']
   },
+
+  UI.LineItem #Trend: [
+    { Value: periodoLabel,   Label: '{i18n>KPI_Unidade_periodo}'        },
+    { Value: faturamento,    Label: '{i18n>KPI_Unidade_faturamento}'    },
+    { Value: ticketMedio,    Label: '{i18n>KPI_Unidade_ticketMedio}'    },
+    { Value: crescimentoMoM, Label: '{i18n>KPI_Unidade_crescimentoMoM}' },
+    { Value: nps,            Label: '{i18n>KPI_Unidade_nps}'            }
+  ],
 
   UI.SelectionVariant #LastPeriod: {
     Text: '{i18n>lbl_franchisee_varUltimoPeriodo}'
@@ -30,16 +40,29 @@ annotate service.MeusKPIs with @(
 // ── Card 1: Score de Saúde (KPI card) ──────────────────────────
 annotate service.MinhaSaude with @(
 
+  UI.HeaderInfo: {
+    TypeName      : '{i18n>Saude_Unidade_scoreSaude}',
+    TypeNamePlural: '{i18n>Saude_Unidade_scoreSaude}',
+    Title         : { Value: unidadeNome },
+    Description   : { Value: unidadeCidade }
+  },
+
   UI.DataPoint #ScoreSaude: {
     Value              : scoreSaude,
     Title              : '{i18n>Saude_Unidade_scoreSaude}',
-    Criticality        : scoreCriticality,
-    CriticalityCalculation: {
-      ImprovementDirection   : #Maximize,
-      ToleranceRangeLowValue : 45,
-      DeviationRangeLowValue : 0
-    }
+    Criticality        : scoreCriticality
   },
+
+  UI.LineItem #Saude: [
+    {
+      $Type : 'UI.DataFieldForAnnotation',
+      Target: '@UI.DataPoint#ScoreSaude',
+      Label : '{i18n>Saude_Unidade_scoreSaude}',
+      ![@UI.Importance]: #High
+    },
+    { Value: compliancePct,  Label: '{i18n>Saude_Unidade_compliancePct}'  },
+    { Value: performancePct, Label: '{i18n>Saude_Unidade_performancePct}' }
+  ],
 
   UI.SelectionVariant #Current: {
     Text: '{i18n>lbl_franchisee_varAtual}'
@@ -49,14 +72,21 @@ annotate service.MinhaSaude with @(
 // ── Card 2: Ações Pendentes (desvios abertos) ─────────────────
 annotate service.MeusDesvios with @(
 
+  UI.DataPoint #Severidade: {
+    Value      : severidade_code,
+    Title      : '{i18n>Desvios_severidade}',
+    Criticality: severidadeCrit
+  },
+
   UI.LineItem #Pendentes: [
-    { Value: nomeProduto,      Label: '{i18n>Desvios_nomeProduto}'      },
+    { Value: nomeProduto,      Label: '{i18n>Desvios_nomeProduto}', ![@UI.Importance]: #High },
     { Value: tipo_code,        Label: '{i18n>Alertas_tipo}'             },
     { Value: percentualDesvio, Label: '{i18n>Desvios_percentualDesvio}' },
     {
-      Value      : severidade_code,
-      Label      : '{i18n>Desvios_severidade}',
-      Criticality: severidadeCriticality
+      $Type : 'UI.DataFieldForAnnotation',
+      Target: '@UI.DataPoint#Severidade',
+      Label : '{i18n>Desvios_severidade}',
+      ![@UI.Importance]: #High
     },
     { Value: dataDeteccao, Label: '{i18n>Desvios_dataDeteccao}' }
   ],
@@ -76,11 +106,22 @@ annotate service.MeusDesvios with @(
 // ── Card 3: Recomendações do AI ───────────────────────────────
 annotate service.MinhasRecomendacoes with @(
 
+  UI.DataPoint #Prioridade: {
+    Value      : prioridade_code,
+    Title      : '{i18n>Recomendacoes_prioridade}',
+    Criticality: prioridadeCrit
+  },
+
   UI.LineItem #Recomendacoes: [
-    { Value: titulo,         Label: '{i18n>Recomendacoes}'             },
-    { Value: tipo_code,      Label: '{i18n>Alertas_tipo}'              },
-    { Value: prioridade_code,Label: '{i18n>Recomendacoes_prioridade}'  },
-    { Value: dataGeracao,    Label: '{i18n>Recomendacoes_dataGeracao}' }
+    { Value: titulo,      Label: '{i18n>Recomendacoes}', ![@UI.Importance]: #High },
+    { Value: tipo_code,   Label: '{i18n>Alertas_tipo}'  },
+    {
+      $Type : 'UI.DataFieldForAnnotation',
+      Target: '@UI.DataPoint#Prioridade',
+      Label : '{i18n>Recomendacoes_prioridade}',
+      ![@UI.Importance]: #High
+    },
+    { Value: dataGeracao, Label: '{i18n>Recomendacoes_dataGeracao}' }
   ],
 
   UI.SelectionVariant #Novas: {
@@ -93,6 +134,10 @@ annotate service.MinhasRecomendacoes with @(
 );
 
 // ── Card 4: Posição na Rede — Benchmark do cluster ────────────
+annotate service.BenchmarkMeuCluster with {
+  faturamentoMedio @Measures.ISOCurrency: moeda;
+  ticketMedioMedio @Measures.ISOCurrency: moeda;
+}
 annotate service.BenchmarkMeuCluster with @(
 
   UI.Chart #BenchmarkComparativo: {
@@ -109,6 +154,13 @@ annotate service.BenchmarkMeuCluster with @(
 
   UI.PresentationVariant #ByPeriod: {
     SortOrder     : [{ Property: periodo, Descending: false }],
-    Visualizations: ['@UI.Chart#BenchmarkComparativo']
-  }
+    Visualizations: ['@UI.LineItem#Benchmark']
+  },
+
+  UI.LineItem #Benchmark: [
+    { Value: periodoLabel,     Label: '{i18n>KPI_Unidade_periodo}'                  },
+    { Value: faturamentoMedio, Label: '{i18n>Benchmark_Cluster_faturamentoMedio}'   },
+    { Value: ticketMedioMedio, Label: '{i18n>Benchmark_Cluster_ticketMedioMedio}'   },
+    { Value: npsMedio,         Label: '{i18n>Benchmark_Cluster_npsMedio}'           }
+  ]
 );

@@ -66,18 +66,22 @@ async function gerarViaGenAIHub(ctx) {
   // Evita erro de dependência ausente em dev.
   const { OrchestrationClient } = require('@sap-ai-sdk/orchestration');
 
+  // API do @sap-ai-sdk/orchestration v2+: config em `promptTemplating`
+  // ({ model, prompt: { template } }) e valores em `placeholderValues`.
   const client = new OrchestrationClient({
-    llm: {
-      model_name: 'gpt-4o',
-      model_params: { max_tokens: 800, temperature: 0.4 }
-    },
-    templating: {
-      template: [{ role: 'user', content: '{{?prompt}}' }]
+    promptTemplating: {
+      model: {
+        name  : 'gpt-4o',
+        params: { max_tokens: 800, temperature: 0.4 }
+      },
+      prompt: {
+        template: [{ role: 'user', content: '{{?prompt}}' }]
+      }
     }
   });
 
   const response = await client.chatCompletion({
-    inputParams: { prompt: montarPrompt(ctx) }
+    placeholderValues: { prompt: montarPrompt(ctx) }
   });
 
   const content = response.getContent();
