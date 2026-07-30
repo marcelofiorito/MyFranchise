@@ -16,12 +16,14 @@
     {
       "name": "unidade_ID",
       "description": "ID da unidade do franqueado",
-      "valueType": "string"
+      "valueType": "string",
+      "valueRequired": false
     },
     {
       "name": "cluster",
       "description": "Cluster da unidade do franqueado",
-      "valueType": "string"
+      "valueType": "string",
+      "valueRequired": false
     }
   ],
   "role-templates": [
