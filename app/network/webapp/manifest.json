@@ -89,9 +89,16 @@
           "name": "sap.fe.templates.ListReport",
           "options": {
             "settings": {
-              "entitySet": "Saude_Dashboard",
-              "initialLoad": true,
+              "contextPath": "/Saude_Dashboard",
               "variantManagement": "Page",
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable",
+                    "selectionMode": "None"
+                  }
+                }
+              },
               "views": {
                 "paths": [
                   {
@@ -104,7 +111,8 @@
                     "defaultPath": "both"
                   }
                 ]
-              }
+              },
+              "initialLoad": "Enabled"
             }
           }
         },
