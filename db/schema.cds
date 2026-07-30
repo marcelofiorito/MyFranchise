@@ -34,25 +34,25 @@ entity StatusContrato     : CodeList { key code : String(20); }
 // ═══════════════════════════════════════════════════════════
 
 entity Franqueados : cuid, managed {
-  razaoSocial : String(100) @title : 'Razão Social';
-  cnpj        : String(18)  @title : 'CNPJ';
-  responsavel : String(100) @title : 'Responsável';
-  email       : String(255) @title : 'E-mail';
-  telefone    : String(20)  @title : 'Telefone';
+  razaoSocial : String(100) @title : '{i18n>Franqueados_razaoSocial}';
+  cnpj        : String(18)  @title : '{i18n>Franqueados_cnpj}';
+  responsavel : String(100) @title : '{i18n>Franqueados_responsavel}';
+  email       : String(255) @title : '{i18n>Franqueados_email}';
+  telefone    : String(20)  @title : '{i18n>Franqueados_telefone}';
   status      : Association to StatusFranqueado;
   unidades    : Composition of many Unidades on unidades.franqueado = $self;
 }
 
 entity Unidades : cuid, managed {
-  codigo       : String(20)  @title : 'Código';
-  nome         : String(100) @title : 'Unidade';
+  codigo       : String(20)  @title : '{i18n>Unidades_codigo}';
+  nome         : String(100) @title : '{i18n>Unidades_nome}';
   franqueado   : Association to Franqueados;
-  endereco     : String(255) @title : 'Endereço';
-  cidade       : String(100) @title : 'Cidade';
-  estado       : String(2)   @title : 'Estado';
+  endereco     : String(255) @title : '{i18n>Unidades_endereco}';
+  cidade       : String(100) @title : '{i18n>Unidades_cidade}';
+  estado       : String(2)   @title : '{i18n>Unidades_estado}';
   regiao       : Association to Regiao;
   cluster      : Association to Cluster;
-  dataAbertura : Date        @title : 'Data de Abertura';
+  dataAbertura : Date        @title : '{i18n>Unidades_dataAbertura}';
   status       : Association to StatusUnidade;
   // Navegação para entidades filhas via OData $expand — sem back-associations
   // para evitar problemas de resolveView no CAP 10 durante o deploy.
@@ -66,55 +66,53 @@ entity Unidades : cuid, managed {
 
 entity KPI_Unidade : cuid, managed {
   unidade        : Association to Unidades;
-  periodo        : String(6)      @title : 'Período';     // YYYYMM
-  faturamento    : Decimal(15,2)  @title : 'Faturamento';
-  ticketMedio    : Decimal(10,2)  @title : 'Ticket Médio';
-  qtdTransacoes  : Integer        @title : 'Transações';
-  crescimentoMoM : Decimal(5,2)   @title : 'Cresc. MoM %';
-  crescimentoYoY : Decimal(5,2)   @title : 'Cresc. YoY %';
-  nps            : Decimal(4,1)   @title : 'NPS';
+  periodo        : String(6)      @title : '{i18n>KPI_Unidade_periodo}';
+  faturamento    : Decimal(15,2)  @title : '{i18n>KPI_Unidade_faturamento}';
+  ticketMedio    : Decimal(10,2)  @title : '{i18n>KPI_Unidade_ticketMedio}';
+  qtdTransacoes  : Integer        @title : '{i18n>KPI_Unidade_qtdTransacoes}';
+  crescimentoMoM : Decimal(5,2)   @title : '{i18n>KPI_Unidade_crescimentoMoM}';
+  crescimentoYoY : Decimal(5,2)   @title : '{i18n>KPI_Unidade_crescimentoYoY}';
+  nps            : Decimal(4,1)   @title : '{i18n>KPI_Unidade_nps}';
   statusKPI      : Association to StatusKPI;
 }
 
 /**
  * Score de saúde consolidado por unidade.
- * Calculado pelo service handler a cada novo KPI recebido:
- *   scoreSaude = (performancePct * 0.4) + (compliancePct * 0.4) + (scoreContrato * 0.2)
+ * scoreSaude = (performancePct * 0.4) + (compliancePct * 0.4) + (scoreContrato * 0.2)
  */
 entity Saude_Unidade : cuid, managed {
   unidade           : Association to Unidades;
-  scoreSaude        : Decimal(5,2)  @title : 'Score de Saúde';  // 0–100
-  compliancePct     : Decimal(5,2)  @title : 'Compliance %';
-  performancePct    : Decimal(5,2)  @title : 'Performance %';
-  qtdAlertasAlta    : Integer       @title : 'Alertas Alta';
-  qtdAlertasMedia   : Integer       @title : 'Alertas Média';
-  dataAtualizacao   : DateTime      @title : 'Atualizado em';
-  // 1=vermelho (<45), 2=amarelo (45–69), 3=verde (>=70) — usado pelo ALP para colorir colunas
-  scoreCriticality  : Integer       @title : 'Criticidade' @Core.Computed: true;
+  scoreSaude        : Decimal(5,2)  @title : '{i18n>Saude_Unidade_scoreSaude}';
+  compliancePct     : Decimal(5,2)  @title : '{i18n>Saude_Unidade_compliancePct}';
+  performancePct    : Decimal(5,2)  @title : '{i18n>Saude_Unidade_performancePct}';
+  qtdAlertasAlta    : Integer       @title : '{i18n>Saude_Unidade_qtdAlertasAlta}';
+  qtdAlertasMedia   : Integer       @title : '{i18n>Saude_Unidade_qtdAlertasMedia}';
+  dataAtualizacao   : DateTime      @title : '{i18n>Saude_Unidade_dataAtualizacao}';
+  // 1=vermelho (<45), 2=amarelo (45–69), 3=verde (>=70)
+  scoreCriticality  : Integer       @title : '{i18n>Saude_Unidade_scoreCriticality}' @Core.Computed: true;
 }
 
 entity Alertas : cuid, managed {
   unidade       : Association to Unidades;
   tipo          : Association to TipoAlerta;
   severidade    : Association to Severidade;
-  descricao     : String(500) @title : 'Descrição';
+  descricao     : String(500) @title : '{i18n>Alertas_descricao}';
   status        : Association to StatusAlerta;
-  dataGeracao   : DateTime    @title : 'Gerado em';
-  dataResolucao : DateTime    @title : 'Resolvido em';
+  dataGeracao   : DateTime    @title : '{i18n>Alertas_dataGeracao}';
+  dataResolucao : DateTime    @title : '{i18n>Alertas_dataResolucao}';
 }
 
 /**
  * Médias anonimizadas da rede por cluster e período.
- * Exposto ao franqueado apenas como agregação — nunca dados individuais.
  */
 entity Benchmark_Cluster : cuid, managed {
   cluster          : Association to Cluster;
-  periodo          : String(6)     @title : 'Período';
-  faturamentoMedio : Decimal(15,2) @title : 'Fat. Médio';
-  ticketMedioMedio : Decimal(10,2) @title : 'TM Médio';
-  crescimentoMedio : Decimal(5,2)  @title : 'Cresc. Médio %';
-  npsMedio         : Decimal(4,1)  @title : 'NPS Médio';
-  qtdUnidades      : Integer       @title : 'Unidades na Amostra';
+  periodo          : String(6)     @title : '{i18n>KPI_Unidade_periodo}';
+  faturamentoMedio : Decimal(15,2) @title : '{i18n>Benchmark_Cluster_faturamentoMedio}';
+  ticketMedioMedio : Decimal(10,2) @title : '{i18n>Benchmark_Cluster_ticketMedioMedio}';
+  crescimentoMedio : Decimal(5,2)  @title : '{i18n>Benchmark_Cluster_crescimentoMedio}';
+  npsMedio         : Decimal(4,1)  @title : '{i18n>Benchmark_Cluster_npsMedio}';
+  qtdUnidades      : Integer       @title : '{i18n>Benchmark_Cluster_qtdUnidades}';
 }
 
 
@@ -123,10 +121,10 @@ entity Benchmark_Cluster : cuid, managed {
 // ═══════════════════════════════════════════════════════════
 
 entity Catalogos : cuid, managed {
-  nome           : String(100) @title : 'Catálogo';
-  descricao      : String(500) @title : 'Descrição';
-  vigenciaInicio : Date        @title : 'Vigência Início';
-  vigenciaFim    : Date        @title : 'Vigência Fim';
+  nome           : String(100) @title : '{i18n>Catalogos_nome}';
+  descricao      : String(500) @title : '{i18n>Catalogos_descricao}';
+  vigenciaInicio : Date        @title : '{i18n>Catalogos_vigenciaInicio}';
+  vigenciaFim    : Date        @title : '{i18n>Catalogos_vigenciaFim}';
   status         : Association to StatusCatalogo;
   itens          : Composition of many ItensCatalogo
                      on itens.catalogo = $self;
@@ -134,62 +132,61 @@ entity Catalogos : cuid, managed {
 
 entity ItensCatalogo : cuid, managed {
   catalogo      : Association to Catalogos;
-  sku           : String(50)    @title : 'SKU';
-  nomeProduto   : String(150)   @title : 'Produto';
-  categoria     : String(100)   @title : 'Categoria';
-  precoMinimo   : Decimal(10,2) @title : 'Preço Mín.';
-  precoMaximo   : Decimal(10,2) @title : 'Preço Máx.';
-  precoSugerido : Decimal(10,2) @title : 'Preço Sugerido';
+  sku           : String(50)    @title : '{i18n>ItensCatalogo_sku}';
+  nomeProduto   : String(150)   @title : '{i18n>ItensCatalogo_nomeProduto}';
+  categoria     : String(100)   @title : '{i18n>ItensCatalogo_categoria}';
+  precoMinimo   : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoMinimo}';
+  precoMaximo   : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoMaximo}';
+  precoSugerido : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoSugerido}';
   ativo         : Boolean default true;
 }
 
 entity VendaPraticada : cuid, managed {
   unidade        : Association to Unidades;
-  periodo        : String(6)    @title : 'Período';
-  sku            : String(50)   @title : 'SKU';
-  nomeProduto    : String(150)  @title : 'Produto';
-  precoPraticado : Decimal(10,2)@title : 'Preço Praticado';
-  qtdVendida     : Integer      @title : 'Qtd. Vendida';
-  dataCaptura    : DateTime     @title : 'Capturado em';
+  periodo        : String(6)    @title : '{i18n>KPI_Unidade_periodo}';
+  sku            : String(50)   @title : '{i18n>ItensCatalogo_sku}';
+  nomeProduto    : String(150)  @title : '{i18n>ItensCatalogo_nomeProduto}';
+  precoPraticado : Decimal(10,2)@title : '{i18n>VendaPraticada_precoPraticado}';
+  qtdVendida     : Integer      @title : '{i18n>VendaPraticada_qtdVendida}';
+  dataCaptura    : DateTime     @title : '{i18n>VendaPraticada_dataCaptura}';
 }
 
 entity Desvios : cuid, managed {
   unidade              : Association to Unidades;
   tipo                 : Association to TipoDesvio;
-  sku                  : String(50)    @title : 'SKU';
-  nomeProduto          : String(150)   @title : 'Produto';
-  precoAutorizado      : Decimal(10,2) @title : 'Preço Autorizado';
-  precoPraticado       : Decimal(10,2) @title : 'Preço Praticado';
-  percentualDesvio     : Decimal(5,2)  @title : 'Desvio %';
+  sku                  : String(50)    @title : '{i18n>ItensCatalogo_sku}';
+  nomeProduto          : String(150)   @title : '{i18n>ItensCatalogo_nomeProduto}';
+  precoAutorizado      : Decimal(10,2) @title : '{i18n>Desvios_precoAutorizado}';
+  precoPraticado       : Decimal(10,2) @title : '{i18n>VendaPraticada_precoPraticado}';
+  percentualDesvio     : Decimal(5,2)  @title : '{i18n>Desvios_percentualDesvio}';
   severidade           : Association to Severidade;
   status               : Association to StatusDesvio;
-  dataDeteccao         : DateTime      @title : 'Detectado em';
-  dataResolucao        : DateTime      @title : 'Resolvido em';
+  dataDeteccao         : DateTime      @title : '{i18n>Desvios_dataDeteccao}';
+  dataResolucao        : DateTime      @title : '{i18n>Desvios_dataResolucao}';
   // 1=vermelho (Alta), 2=amarelo (Media), 3=verde (Baixa)
-  severidadeCriticality: Integer       @title : 'Criticidade' @Core.Computed: true;
+  severidadeCriticality: Integer       @title : '{i18n>Desvios_severidadeCriticality}' @Core.Computed: true;
   notificacoes         : Composition of many NotificacoesCompliance
                            on notificacoes.desvio = $self;
 }
 
 /**
  * Regras configuráveis pela franqueadora — lidas em runtime pelo service handler.
- * Permite ajustar limiares de severidade sem alterar código.
  */
 entity RegrasCompliance : cuid, managed {
   tipo              : Association to TipoDesvio;
-  limiarMedia_pct   : Decimal(5,2) @title : 'Limiar Média %';
-  limiarAlta_pct    : Decimal(5,2) @title : 'Limiar Alta %';
-  prazoCorrecao_dias: Integer      @title : 'Prazo Correção (dias)';
+  limiarMedia_pct   : Decimal(5,2) @title : '{i18n>RegrasCompliance_limiarMedia_pct}';
+  limiarAlta_pct    : Decimal(5,2) @title : '{i18n>RegrasCompliance_limiarAlta_pct}';
+  prazoCorrecao_dias: Integer      @title : '{i18n>RegrasCompliance_prazoCorrecao_dias}';
   ativa             : Boolean default true;
 }
 
 entity NotificacoesCompliance : cuid, managed {
   desvio             : Association to Desvios;
   unidade            : Association to Unidades;
-  dataEnvio          : DateTime    @title : 'Enviada em';
-  prazoCorrecao      : Date        @title : 'Prazo';
+  dataEnvio          : DateTime    @title : '{i18n>NotificacoesCompliance_dataEnvio}';
+  prazoCorrecao      : Date        @title : '{i18n>NotificacoesCompliance_prazoCorrecao}';
   status             : Association to StatusNotificacao;
-  comentarioResposta : String(500) @title : 'Resposta do Franqueado';
+  comentarioResposta : String(500) @title : '{i18n>NotificacoesCompliance_comentarioResposta}';
 }
 
 
@@ -199,19 +196,16 @@ entity NotificacoesCompliance : cuid, managed {
 
 /**
  * Recomendações geradas por job diário via AI Core + GenAI Hub.
- * Persistidas no HANA — não são inferência em tempo real.
- * Prompt estruturado inclui: KPIs da unidade, benchmark do cluster,
- * desvios abertos e alertas ativos.
  */
 entity Recomendacoes : cuid, managed {
   unidade     : Association to Unidades;
   tipo        : Association to TipoRecomendacao;
-  titulo      : String(150)   @title : 'Título';
-  descricao   : String(2000)  @title : 'Descrição';
+  titulo      : String(150)   @title : '{i18n>Recomendacoes_titulo}';
+  descricao   : String(2000)  @title : '{i18n>Recomendacoes_descricao}';
   prioridade  : Association to Prioridade;
   status      : Association to StatusRecomendacao;
-  dataGeracao : DateTime      @title : 'Gerada em';
-  dataValidade: DateTime      @title : 'Válida até';
+  dataGeracao : DateTime      @title : '{i18n>Recomendacoes_dataGeracao}';
+  dataValidade: DateTime      @title : '{i18n>Recomendacoes_dataValidade}';
 }
 
 
@@ -221,61 +215,60 @@ entity Recomendacoes : cuid, managed {
 
 entity ProcessosOnboarding : cuid, managed {
   unidade              : Association to Unidades;
-  dataInicio           : Date        @title : 'Início';
-  dataPrevisaoAbertura : Date        @title : 'Previsão de Abertura';
+  dataInicio           : Date        @title : '{i18n>ProcessosOnboarding_dataInicio}';
+  dataPrevisaoAbertura : Date        @title : '{i18n>ProcessosOnboarding_dataPrevisaoAbertura}';
   status               : Association to StatusOnboarding;
-  percentualConclusao  : Decimal(5,2)@title : '% Conclusão';
+  percentualConclusao  : Decimal(5,2)@title : '{i18n>ProcessosOnboarding_percentualConclusao}';
   // 1=vermelho (Suspenso/Cancelado), 2=amarelo (EmAndamento), 3=verde (Concluido)
-  statusCriticality    : Integer     @title : 'Criticidade' @Core.Computed: true;
+  statusCriticality    : Integer     @title : '{i18n>ProcessosOnboarding_statusCriticality}' @Core.Computed: true;
   tarefas              : Composition of many TarefasOnboarding
                            on tarefas.processo = $self;
 }
 
 /**
  * Template de etapas configurável pela franqueadora.
- * Ex: 1-Documentação, 2-Obra, 3-Estoque, 4-Treinamento, 5-Inauguração.
  */
 entity EtapasOnboarding : cuid, managed {
-  nome          : String(100) @title : 'Etapa';
-  descricao     : String(500) @title : 'Descrição';
-  ordem         : Integer     @title : 'Ordem';
+  nome          : String(100) @title : '{i18n>EtapasOnboarding_nome}';
+  descricao     : String(500) @title : '{i18n>EtapasOnboarding_descricao}';
+  ordem         : Integer     @title : '{i18n>EtapasOnboarding_ordem}';
   obrigatoria   : Boolean default true;
-  prazoEstimado : Integer     @title : 'Prazo Estimado (dias)';
+  prazoEstimado : Integer     @title : '{i18n>EtapasOnboarding_prazoEstimado}';
 }
 
 entity TarefasOnboarding : cuid, managed {
-  processo       : Association to ProcessosOnboarding;
-  etapa          : Association to EtapasOnboarding;
-  nome           : String(100) @title : 'Tarefa';
-  status         : Association to StatusTarefa;
+  processo          : Association to ProcessosOnboarding;
+  etapa             : Association to EtapasOnboarding;
+  nome              : String(100) @title : '{i18n>TarefasOnboarding_nome}';
+  status            : Association to StatusTarefa;
   // 1=vermelho (Vencida/Bloqueada), 2=amarelo (EmAndamento), 3=verde (Concluida)
-  tarefaCriticality : Integer  @title : 'Criticidade' @Core.Computed: true;
-  responsavel    : String(100) @title : 'Responsável';
-  dataVencimento : Date        @title : 'Vencimento';
-  dataConclusao  : Date        @title : 'Concluída em';
-  observacao     : String(500) @title : 'Observação';
-  documentos     : Composition of many DocumentosOnboarding
-                     on documentos.tarefa = $self;
-  aprovacoes     : Composition of many AprovacoesOnboarding
-                     on aprovacoes.tarefa = $self;
+  tarefaCriticality : Integer     @title : '{i18n>TarefasOnboarding_tarefaCriticality}' @Core.Computed: true;
+  responsavel       : String(100) @title : '{i18n>TarefasOnboarding_responsavel}';
+  dataVencimento    : Date        @title : '{i18n>TarefasOnboarding_dataVencimento}';
+  dataConclusao     : Date        @title : '{i18n>TarefasOnboarding_dataConclusao}';
+  observacao        : String(500) @title : '{i18n>TarefasOnboarding_observacao}';
+  documentos        : Composition of many DocumentosOnboarding
+                       on documentos.tarefa = $self;
+  aprovacoes        : Composition of many AprovacoesOnboarding
+                       on aprovacoes.tarefa = $self;
 }
 
 entity DocumentosOnboarding : cuid, managed {
   tarefa     : Association to TarefasOnboarding;
-  nome       : String(100) @title : 'Documento';
+  nome       : String(100) @title : '{i18n>DocumentosOnboarding_nome}';
   tipo       : Association to TipoDocumento;
   status     : Association to StatusDocumento;
-  url        : String(500) @title : 'URL';
-  dataEnvio  : DateTime    @title : 'Enviado em';
-  comentario : String(500) @title : 'Comentário';
+  url        : String(500) @title : '{i18n>DocumentosOnboarding_url}';
+  dataEnvio  : DateTime    @title : '{i18n>DocumentosOnboarding_dataEnvio}';
+  comentario : String(500) @title : '{i18n>DocumentosOnboarding_comentario}';
 }
 
 entity AprovacoesOnboarding : cuid, managed {
   tarefa      : Association to TarefasOnboarding;
-  aprovador   : String(100) @title : 'Aprovador';
+  aprovador   : String(100) @title : '{i18n>AprovacoesOnboarding_aprovador}';
   status      : Association to StatusAprovacao;
-  comentario  : String(500) @title : 'Comentário';
-  dataDecisao : DateTime    @title : 'Decisão em';
+  comentario  : String(500) @title : '{i18n>AprovacoesOnboarding_comentario}';
+  dataDecisao : DateTime    @title : '{i18n>AprovacoesOnboarding_dataDecisao}';
 }
 
 
@@ -285,8 +278,8 @@ entity AprovacoesOnboarding : cuid, managed {
 
 entity Contratos_Franquia : cuid, managed {
   unidade        : Association to Unidades;
-  dataInicio     : Date         @title : 'Início';
-  dataVencimento : Date         @title : 'Vencimento';
+  dataInicio     : Date         @title : '{i18n>Contratos_Franquia_dataInicio}';
+  dataVencimento : Date         @title : '{i18n>Contratos_Franquia_dataVencimento}';
   status         : Association to StatusContrato;
-  valorRoyalties : Decimal(15,2)@title : 'Royalties Mensais';
+  valorRoyalties : Decimal(15,2)@title : '{i18n>Contratos_Franquia_valorRoyalties}';
 }

@@ -8,29 +8,29 @@ using FranqueadoraService as service from '../../srv/service';
 annotate service.Desvios with @(
 
   UI.HeaderInfo: {
-    TypeName       : 'Desvio',
-    TypeNamePlural : 'Desvios de Compliance',
+    TypeName       : '{i18n>Desvios}',
+    TypeNamePlural : '{i18n>Desvios_plural}',
     Title          : { Value: nomeProduto },
     Description    : { Value: sku }
   },
 
   // ── Colunas da lista ──────────────────────────────────────
   UI.LineItem: [
-    { Value: unidade.nome,       Label: 'Unidade'           },
-    { Value: unidade.cidade,     Label: 'Cidade'            },
-    { Value: tipo_code,          Label: 'Tipo'              },
-    { Value: sku,                Label: 'SKU'               },
-    { Value: nomeProduto,        Label: 'Produto'           },
-    { Value: precoAutorizado,    Label: 'Preço Autorizado'  },
-    { Value: precoPraticado,     Label: 'Preço Praticado'   },
-    { Value: percentualDesvio,   Label: 'Desvio %'          },
+    { Value: unidade.nome,       Label: '{i18n>Unidades_nome}'            },
+    { Value: unidade.cidade,     Label: '{i18n>Unidades_cidade}'          },
+    { Value: tipo_code,          Label: '{i18n>Alertas_tipo}'             },
+    { Value: sku,                Label: '{i18n>Desvios_sku}'              },
+    { Value: nomeProduto,        Label: '{i18n>Desvios_nomeProduto}'      },
+    { Value: precoAutorizado,    Label: '{i18n>Desvios_precoAutorizado}'  },
+    { Value: precoPraticado,     Label: '{i18n>Desvios_precoPraticado}'   },
+    { Value: percentualDesvio,   Label: '{i18n>Desvios_percentualDesvio}' },
     {
       Value      : severidade_code,
-      Label      : 'Severidade',
+      Label      : '{i18n>Desvios_severidade}',
       Criticality: severidadeCriticality
     },
-    { Value: status_code,        Label: 'Status'            },
-    { Value: dataDeteccao,       Label: 'Detectado em'      }
+    { Value: status_code,        Label: '{i18n>Desvios_status}'           },
+    { Value: dataDeteccao,       Label: '{i18n>Desvios_dataDeteccao}'     }
   ],
 
   // ── Filtros ───────────────────────────────────────────────
@@ -43,7 +43,7 @@ annotate service.Desvios with @(
 
   // ── Selection Variants ────────────────────────────────────
   UI.SelectionVariant #AltaSeveridade: {
-    Text         : 'Alta Severidade',
+    Text         : '{i18n>lbl_compliance_varAltaSeveridade}',
     SelectOptions: [{
       PropertyName: severidade_code,
       Ranges      : [{ Sign: #I, Option: #EQ, Low: 'ALTA' }]
@@ -51,7 +51,7 @@ annotate service.Desvios with @(
   },
 
   UI.SelectionVariant #SemResposta: {
-    Text         : 'Sem Resposta',
+    Text         : '{i18n>lbl_compliance_varSemResposta}',
     SelectOptions: [{
       PropertyName: status_code,
       Ranges      : [{ Sign: #I, Option: #EQ, Low: 'NOTIFICADO' }]
@@ -59,7 +59,7 @@ annotate service.Desvios with @(
   },
 
   UI.SelectionVariant #Abertos: {
-    Text         : 'Abertos',
+    Text         : '{i18n>lbl_compliance_varAbertos}',
     SelectOptions: [{
       PropertyName: status_code,
       Ranges      : [{ Sign: #I, Option: #EQ, Low: 'ABERTO' }]
@@ -71,46 +71,46 @@ annotate service.Desvios with @(
     {
       $Type : 'UI.ReferenceFacet',
       Target: '@UI.FieldGroup#Comparativo',
-      Label : 'Comparativo de Preços'
+      Label : '{i18n>lbl_compliance_facetComparativo}'
     },
     {
       $Type : 'UI.ReferenceFacet',
       Target: '@UI.FieldGroup#Unidade',
-      Label : 'Informações da Unidade'
+      Label : '{i18n>lbl_compliance_facetUnidade}'
     },
     {
       $Type        : 'UI.ReferenceFacet',
       Target       : 'notificacoes/@UI.LineItem',
-      Label        : 'Notificações'
+      Label        : '{i18n>lbl_compliance_facetNotificacoes}'
     }
   ],
 
   UI.FieldGroup #Comparativo: {
     Data: [
-      { Value: tipo_code,          Label: 'Tipo de Desvio'    },
-      { Value: sku,                Label: 'SKU'               },
-      { Value: nomeProduto,        Label: 'Produto'           },
-      { Value: precoAutorizado,    Label: 'Preço Autorizado'  },
-      { Value: precoPraticado,     Label: 'Preço Praticado'   },
-      { Value: percentualDesvio,   Label: 'Desvio %'          },
+      { Value: tipo_code,          Label: '{i18n>Desvios_tipo}'            },
+      { Value: sku,                Label: '{i18n>Desvios_sku}'             },
+      { Value: nomeProduto,        Label: '{i18n>Desvios_nomeProduto}'     },
+      { Value: precoAutorizado,    Label: '{i18n>Desvios_precoAutorizado}' },
+      { Value: precoPraticado,     Label: '{i18n>Desvios_precoPraticado}'  },
+      { Value: percentualDesvio,   Label: '{i18n>Desvios_percentualDesvio}'},
       {
         Value      : severidade_code,
-        Label      : 'Severidade',
+        Label      : '{i18n>Desvios_severidade}',
         Criticality: severidadeCriticality
       },
-      { Value: status_code,        Label: 'Status'            },
-      { Value: dataDeteccao,       Label: 'Detectado em'      },
-      { Value: dataResolucao,      Label: 'Resolvido em'      }
+      { Value: status_code,        Label: '{i18n>Desvios_status}'          },
+      { Value: dataDeteccao,       Label: '{i18n>Desvios_dataDeteccao}'    },
+      { Value: dataResolucao,      Label: '{i18n>Desvios_dataResolucao}'   }
     ]
   },
 
   UI.FieldGroup #Unidade: {
     Data: [
-      { Value: unidade.nome,         Label: 'Unidade'  },
-      { Value: unidade.cidade,       Label: 'Cidade'   },
-      { Value: unidade.estado,       Label: 'Estado'   },
-      { Value: unidade.cluster_code, Label: 'Cluster'  },
-      { Value: unidade.regiao_code,  Label: 'Região'   }
+      { Value: unidade.nome,         Label: '{i18n>Unidades_nome}'    },
+      { Value: unidade.cidade,       Label: '{i18n>Unidades_cidade}'  },
+      { Value: unidade.estado,       Label: '{i18n>Unidades_estado}'  },
+      { Value: unidade.cluster_code, Label: '{i18n>Unidades_cluster}' },
+      { Value: unidade.regiao_code,  Label: '{i18n>Unidades_regiao}'  }
     ]
   }
 );
@@ -118,9 +118,9 @@ annotate service.Desvios with @(
 // ── Notificações (sub-table na Object Page) ───────────────────
 annotate service.NotificacoesCompliance with @(
   UI.LineItem: [
-    { Value: dataEnvio,          Label: 'Enviada em'    },
-    { Value: prazoCorrecao,      Label: 'Prazo'         },
-    { Value: status_code,        Label: 'Status'        },
-    { Value: comentarioResposta, Label: 'Resposta'      }
+    { Value: dataEnvio,          Label: '{i18n>NotificacoesCompliance_dataEnvio}'     },
+    { Value: prazoCorrecao,      Label: '{i18n>NotificacoesCompliance_prazoCorrecao}' },
+    { Value: status_code,        Label: '{i18n>NotificacoesCompliance_status}'        },
+    { Value: comentarioResposta, Label: '{i18n>lbl_compliance_resposta}'              }
   ]
 );

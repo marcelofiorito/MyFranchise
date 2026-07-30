@@ -9,7 +9,7 @@ using FranqueadoService as service from '../../srv/service';
 annotate service.MeusKPIs with @(
 
   UI.Chart #KPITrend: {
-    Title              : 'Meu Faturamento',
+    Title              : '{i18n>lbl_franchisee_meuFaturamento}',
     ChartType          : #Line,
     Dimensions         : [periodo],
     DimensionAttributes: [{ Dimension: periodo, Role: #Category }],
@@ -23,7 +23,7 @@ annotate service.MeusKPIs with @(
   },
 
   UI.SelectionVariant #LastPeriod: {
-    Text: 'Último período'
+    Text: '{i18n>lbl_franchisee_varUltimoPeriodo}'
   }
 );
 
@@ -32,7 +32,7 @@ annotate service.MinhaSaude with @(
 
   UI.DataPoint #ScoreSaude: {
     Value              : scoreSaude,
-    Title              : 'Score de Saúde',
+    Title              : '{i18n>Saude_Unidade_scoreSaude}',
     Criticality        : scoreCriticality,
     CriticalityCalculation: {
       ImprovementDirection   : #Maximize,
@@ -42,7 +42,7 @@ annotate service.MinhaSaude with @(
   },
 
   UI.SelectionVariant #Current: {
-    Text: 'Atual'
+    Text: '{i18n>lbl_franchisee_varAtual}'
   }
 );
 
@@ -50,19 +50,19 @@ annotate service.MinhaSaude with @(
 annotate service.MeusDesvios with @(
 
   UI.LineItem #Pendentes: [
-    { Value: nomeProduto,      Label: 'Produto'       },
-    { Value: tipo_code,        Label: 'Tipo'          },
-    { Value: percentualDesvio, Label: 'Desvio %'      },
+    { Value: nomeProduto,      Label: '{i18n>Desvios_nomeProduto}'      },
+    { Value: tipo_code,        Label: '{i18n>Alertas_tipo}'             },
+    { Value: percentualDesvio, Label: '{i18n>Desvios_percentualDesvio}' },
     {
       Value      : severidade_code,
-      Label      : 'Severidade',
+      Label      : '{i18n>Desvios_severidade}',
       Criticality: severidadeCriticality
     },
-    { Value: dataDeteccao, Label: 'Detectado em' }
+    { Value: dataDeteccao, Label: '{i18n>Desvios_dataDeteccao}' }
   ],
 
   UI.SelectionVariant #Abertos: {
-    Text         : 'Pendentes',
+    Text         : '{i18n>lbl_franchisee_varPendentes}',
     SelectOptions: [{
       PropertyName: status_code,
       Ranges      : [
@@ -77,14 +77,14 @@ annotate service.MeusDesvios with @(
 annotate service.MinhasRecomendacoes with @(
 
   UI.LineItem #Recomendacoes: [
-    { Value: titulo,         Label: 'Recomendação' },
-    { Value: tipo_code,      Label: 'Tipo'         },
-    { Value: prioridade_code,Label: 'Prioridade'   },
-    { Value: dataGeracao,    Label: 'Gerada em'    }
+    { Value: titulo,         Label: '{i18n>Recomendacoes}'             },
+    { Value: tipo_code,      Label: '{i18n>Alertas_tipo}'              },
+    { Value: prioridade_code,Label: '{i18n>Recomendacoes_prioridade}'  },
+    { Value: dataGeracao,    Label: '{i18n>Recomendacoes_dataGeracao}' }
   ],
 
   UI.SelectionVariant #Novas: {
-    Text         : 'Novas',
+    Text         : '{i18n>lbl_franchisee_varNovas}',
     SelectOptions: [{
       PropertyName: status_code,
       Ranges      : [{ Sign: #I, Option: #EQ, Low: 'NOVA' }]
@@ -96,7 +96,7 @@ annotate service.MinhasRecomendacoes with @(
 annotate service.BenchmarkMeuCluster with @(
 
   UI.Chart #BenchmarkComparativo: {
-    Title              : 'Média do Cluster',
+    Title              : '{i18n>lbl_franchisee_chartBenchmark}',
     ChartType          : #Bar,
     Dimensions         : [periodo],
     DimensionAttributes: [{ Dimension: periodo, Role: #Category }],
