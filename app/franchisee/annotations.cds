@@ -113,16 +113,14 @@ annotate service.MinhasRecomendacoes with @(
   },
 
   UI.LineItem #Recomendacoes: [
-    { Value: titulo,      Label: '{i18n>Recomendacoes}', ![@UI.Importance]: #High },
-    { Value: descricao,   Label: '{i18n>Recomendacoes_descricao}', ![@UI.Importance]: #High },
-    { Value: tipo_code,   Label: '{i18n>Alertas_tipo}'  },
     {
       $Type : 'UI.DataFieldForAnnotation',
       Target: '@UI.DataPoint#Prioridade',
       Label : '{i18n>Recomendacoes_prioridade}',
       ![@UI.Importance]: #High
     },
-    { Value: dataGeracao, Label: '{i18n>Recomendacoes_dataGeracao}' }
+    { Value: titulo,    Label: '{i18n>Recomendacoes}',           ![@UI.Importance]: #High },
+    { Value: descricao, Label: '{i18n>Recomendacoes_descricao}', ![@UI.Importance]: #High }
   ],
 
   UI.SelectionVariant #Novas: {
