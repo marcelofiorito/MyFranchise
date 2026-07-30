@@ -1,5 +1,6 @@
 'use strict';
 const cds = require('@sap/cds');
+const recommendations = require('./ai/recommendations-job');
 
 module.exports = class FranqueadoraService extends cds.ApplicationService {
 
@@ -32,6 +33,21 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       if (!req.data.codigo) {
         req.data.codigo = await this._proximoCodigoUnidade(Unidades);
       }
+    });
+
+    // Ações de IA — geração de recomendações (AI Core/GenAI Hub ou fallback)
+    this.on('gerarRecomendacoes', async (req) => {
+      const { unidade_ID } = req.data;
+      const n = await recommendations.gerarParaUnidade(this, unidade_ID);
+      return {
+        unidade_ID,
+        recomendacoes: n,
+        modo: recommendations.aiCoreDisponivel() ? 'GenAI Hub' : 'regras (fallback)'
+      };
+    });
+
+    this.on('gerarRecomendacoesTodas', async () => {
+      return await recommendations.gerarParaTodas(this);
     });
 
     return super.init();

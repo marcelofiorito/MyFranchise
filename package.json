@@ -6,6 +6,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@sap-ai-sdk/orchestration": "^2.13.0",
     "@sap/cds": "^10",
     "express": "^4.22.2"
   },
@@ -29,11 +30,15 @@
         "users": {
           "gestor": {
             "password": "gestor",
-            "roles": ["Franqueadora_Gestor"]
+            "roles": [
+              "Franqueadora_Gestor"
+            ]
           },
           "roberto": {
             "password": "roberto",
-            "roles": ["Franqueado"],
+            "roles": [
+              "Franqueado"
+            ],
             "attr": {
               "unidade_ID": "u147",
               "cluster": "STD"

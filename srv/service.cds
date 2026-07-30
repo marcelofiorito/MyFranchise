@@ -36,6 +36,19 @@ service FranqueadoraService {
   // ── Recomendações ────────────────────────────────────────
   entity Recomendacoes    as projection on mf.Recomendacoes;
 
+  // Ações de IA — geração de recomendações via AI Core / GenAI Hub
+  // (com fallback baseado em regras quando o AI Core não está disponível)
+  action gerarRecomendacoes(unidade_ID : String) returns {
+    unidade_ID    : String;
+    recomendacoes : Integer;
+    modo          : String;
+  };
+  action gerarRecomendacoesTodas() returns {
+    unidades      : Integer;
+    recomendacoes : Integer;
+    modo          : String;
+  };
+
   // ── Onboarding ───────────────────────────────────────────
   @odata.draft.enabled
   entity ProcessosOnboarding  as projection on mf.ProcessosOnboarding;
