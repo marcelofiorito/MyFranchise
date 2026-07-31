@@ -146,21 +146,6 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 
 ![Fluxo da Demo — BPMN](BPMN.png)
 
-### Dados validados em produção — Loja Porto Alegre (u147)
-
-| Dado | Valor |
-|---|---|
-| Score de Saúde | **32 / 100** — crítico (vermelho) |
-| Compliance | 45% |
-| Faturamento Jun/2026 | R$ 162.378 (queda de R$ 199k em fev → R$ 162k em jun) |
-| Desvios detectados | 4 (Tênis Casual −14,3% ALTA, Boné −24,1% ALTA, Vestido −8,8% MÉDIA, Short não-autorizado) |
-| Recomendações IA | 3 — via gpt-4o (`modo: "GenAI Hub"` confirmado) |
-| Donut da rede | 4 críticas / 9 atenção / 7 saudáveis (20 unidades) |
-
-**Roteiro detalhado:** ver `teste/ROTEIRO_DEMO.md` (4 atos: Visão → Causa → IA → Ponta)
-
----
-
 ## Tech Stack
 
 ```
