@@ -31,6 +31,31 @@ modules:
       builder: npm-ci
       ignore: ["node_modules/"]
 
+  # --------------------- MCP SERVER (SAP Joule) ----------------
+  - name: myfranchise-mcp
+    type: nodejs
+    path: .
+    parameters:
+      buildpack: nodejs_buildpack
+      command: node srv/mcp-server.js
+      memory: 256M
+      disk-quota: 512M
+    build-parameters:
+      builder: npm-ci
+      ignore:
+        - node_modules/
+        - gen/
+        - app/
+        - mta_archives/
+        - .MyFranchise_mta_build_tmp/
+    provides:
+      - name: mcp-api
+        properties:
+          mcp-url: ${default-url}
+    requires:
+      - name: myfranchise-db
+      - name: myfranchise-uaa
+
   # -------------------- DB DEPLOYER (HANA) --------------------
   - name: myfranchise-db-deployer
     type: hdb

@@ -7,11 +7,13 @@
   },
   "dependencies": {
     "@cap-js/hana": "^2.8.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@sap-ai-sdk/orchestration": "^2.13.0",
     "@sap/cds": "^10",
     "@sap/hdi-deploy": "^5.7.0",
     "@sap/xssec": "^4.13.3",
-    "express": "^4.22.2"
+    "express": "^4.22.2",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^2.1.3"
