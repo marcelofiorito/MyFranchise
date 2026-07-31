@@ -65,7 +65,14 @@ service FranqueadoraService {
 
   // ── Estoque & Reposição ──────────────────────────────────
   @readonly
-  entity Estoque_Unidade        as projection on mf.Estoque_Unidade;
+  entity Estoque_Unidade        as projection on mf.Estoque_Unidade {
+    *,
+    unidade.nome        as unidadeNome : String,
+    unidade.codigo      as unidadeCodigo : String,
+    unidade.cidade      as unidadeCidade : String,
+    unidade.regiao.code as regiaoCode  : String,
+    unidade.cluster.code as clusterCode : String
+  };
   @readonly
   entity Sazonalidade_Regional  as projection on mf.Sazonalidade_Regional;
   @readonly

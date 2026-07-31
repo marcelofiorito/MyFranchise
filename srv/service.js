@@ -50,6 +50,17 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
 
     // Estoque: calcula coberturaDias + estoqueCriticality considerando a
     // sazonalidade regional da unidade (demanda ajustada = giro × fator sazonal).
+    // O before garante que as colunas-base entrem no $select (o FE pede só as
+    // colunas visíveis; sem os campos-base o cálculo não teria dados).
+    this.before('READ', Estoque_Unidade, (req) => {
+      const cols = req.query?.SELECT?.columns;
+      if (Array.isArray(cols)) {
+        const nomes = new Set(cols.map(c => c.ref?.[c.ref.length - 1]).filter(Boolean));
+        for (const base of ['saldoAtual', 'giroMedioDiario', 'leadTimeDias', 'categoria', 'unidade_ID']) {
+          if (!nomes.has(base)) cols.push({ ref: [base] });
+        }
+      }
+    });
     this.after('READ', Estoque_Unidade, async (rows) => {
       if (!rows) return;
       await reposicao.enriquecerEstoque(this, Array.isArray(rows) ? rows : [rows]);

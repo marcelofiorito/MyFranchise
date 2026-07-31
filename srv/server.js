@@ -46,6 +46,15 @@ cds.on('bootstrap', () => {
 cds.on('served', (services) => {
   const franqueado = services.FranqueadoService || cds.services.FranqueadoService;
   if (franqueado && franqueado.entities.MeuEstoque) {
+    franqueado.before('READ', 'MeuEstoque', (req) => {
+      const cols = req.query?.SELECT?.columns;
+      if (Array.isArray(cols)) {
+        const nomes = new Set(cols.map(c => c.ref?.[c.ref.length - 1]).filter(Boolean));
+        for (const base of ['saldoAtual', 'giroMedioDiario', 'leadTimeDias', 'categoria', 'unidade_ID']) {
+          if (!nomes.has(base)) cols.push({ ref: [base] });
+        }
+      }
+    });
     franqueado.after('READ', 'MeuEstoque', async (rows) => {
       if (!rows) return;
       await reposicao.enriquecerEstoque(franqueado, Array.isArray(rows) ? rows : [rows]);

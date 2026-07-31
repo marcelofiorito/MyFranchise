@@ -70,6 +70,9 @@ modules:
         - name: recommendations
           artifacts: [recommendations.zip]
           target-path: app/
+        - name: inventory
+          artifacts: [inventory.zip]
+          target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
   - name: network
@@ -111,6 +114,15 @@ modules:
   - name: recommendations
     type: html5
     path: app/recommendations
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: inventory
+    type: html5
+    path: app/inventory
     build-parameters:
       build-result: dist
       builder: custom
