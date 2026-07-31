@@ -55,6 +55,8 @@
 
 ## Arquitetura SAP BTP
 
+![Arquitetura RunMyFranchise](arquitetura.png)
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ CANAIS DE ACESSO                                             │
