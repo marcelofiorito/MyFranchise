@@ -64,7 +64,9 @@ service FranqueadoraService {
   entity Contratos_Franquia as projection on mf.Contratos_Franquia;
 
   // ── Estoque & Reposição ──────────────────────────────────
-  @readonly
+  // NÃO @readonly: o Fiori Elements V4 só habilita navegação de linha (List Report
+  // → Object Page) em entidades editáveis. Como o app precisa do drill-down, a
+  // entidade fica editável (a UI é de leitura; ninguém edita estoque manualmente).
   entity Estoque_Unidade        as projection on mf.Estoque_Unidade {
     *,
     unidade.nome        as unidadeNome : String,
