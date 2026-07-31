@@ -104,10 +104,14 @@
                 "paths": [
                   {
                     "primary": [
-                      { "annotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant" }
+                      {
+                        "annotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant"
+                      }
                     ],
                     "secondary": [
-                      { "annotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant" }
+                      {
+                        "annotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant"
+                      }
                     ],
                     "defaultPath": "both"
                   }
@@ -122,7 +126,8 @@
           "name": "sap.fe.templates.ObjectPage",
           "options": {
             "settings": {
-              "entitySet": "Unidades"
+              "contextPath": "/Unidades",
+              "editableHeaderContent": false
             }
           }
         }

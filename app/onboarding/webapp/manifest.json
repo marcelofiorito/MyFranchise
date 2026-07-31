@@ -94,9 +94,23 @@
           "name": "sap.fe.templates.ListReport",
           "options": {
             "settings": {
-              "entitySet": "ProcessosOnboarding",
               "initialLoad": true,
-              "variantManagement": "Page"
+              "variantManagement": "Page",
+              "contextPath": "/ProcessosOnboarding",
+              "navigation": {
+                "ProcessosOnboarding": {
+                  "detail": {
+                    "route": "ProcessoObjectPage"
+                  }
+                }
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable"
+                  }
+                }
+              }
             }
           }
         },
@@ -106,14 +120,15 @@
           "name": "sap.fe.templates.ObjectPage",
           "options": {
             "settings": {
-              "entitySet": "ProcessosOnboarding",
               "navigation": {
                 "tarefas": {
                   "detail": {
                     "route": "TarefaObjectPage"
                   }
                 }
-              }
+              },
+              "contextPath": "/ProcessosOnboarding",
+              "editableHeaderContent": false
             }
           }
         },
