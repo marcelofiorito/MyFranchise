@@ -1,6 +1,8 @@
 # Product Requirements Document
 # RunMyFranchise — Franchise Network Management Platform
 
+[🇧🇷 Português](PRD.md) · **🇬🇧 English**
+
 | | |
 |---|---|
 | **Version** | 1.0 |

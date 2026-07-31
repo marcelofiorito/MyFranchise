@@ -1,5 +1,7 @@
 # RunMyFranchise
 
+**🇧🇷 Português** · [🇬🇧 English](README.en.md)
+
 > **SAP BTP solution for franchise network management**  
 > Dragons' Den: Learn to Win Edition 2026 — SAP Solution Advisory
 

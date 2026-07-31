@@ -1,4 +1,7 @@
 # Demo Script — RunMyFranchise
+
+[🇧🇷 Português](ROTEIRO_DEMO.md) · **🇬🇧 English**
+
 **Dragons' Den: Learn to Win 2026 · Aug 26 · 15 min demo + 5 min Q&A · live**
 
 > Through-line: the journey of **Alexandre Mendes** (Director of Operations, 280 stores) discovering and solving the problem of **Store 147 (Porto Alegre, score 32)**. Each app is an act. This is not a "screen tour" — it's "from pain to value in 15 minutes."

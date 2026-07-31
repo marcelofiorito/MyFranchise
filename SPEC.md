@@ -1,4 +1,7 @@
 # RunMyFranchise — Especificação Técnica
+
+**🇧🇷 Português** · [🇬🇧 English](SPEC.en.md)
+
 > Versão 1.0 · Julho 2026  
 > Use este documento como contexto primário para implementação com Claude Code.
 

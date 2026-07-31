@@ -1,5 +1,7 @@
 # RunMyFranchise — Functional Test Report
 
+[🇧🇷 Português](testes.md) · **🇬🇧 English**
+
 > **Execution date:** 07/29/2026
 > **Environment:** Local development (`cds watch`, SQLite in-memory)
 > **Stack:** `@sap/cds@10.0.5` · `@cap-js/sqlite@2.1.3` · Node.js 22.9 · OData V4
