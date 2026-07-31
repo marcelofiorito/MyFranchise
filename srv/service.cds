@@ -64,9 +64,12 @@ service FranqueadoraService {
   entity Contratos_Franquia as projection on mf.Contratos_Franquia;
 
   // ── Estoque & Reposição ──────────────────────────────────
-  // NÃO @readonly: o Fiori Elements V4 só habilita navegação de linha (List Report
-  // → Object Page) em entidades editáveis. Como o app precisa do drill-down, a
-  // entidade fica editável (a UI é de leitura; ninguém edita estoque manualmente).
+  // Nota: drill-down (List Report → Object Page) NÃO habilitado — o FE V4 marca
+  // as linhas como "Active" (não "Navigation") em todos os apps deste projeto,
+  // apesar de navigation/SemanticKey/draft configurados como no sflight. Causa
+  // raiz em investigação (comportamento do sap.fe runtime). A tabela já mostra
+  // tudo (loja/região/cobertura/status) em uma linha; drill-down é evolução.
+  @readonly
   entity Estoque_Unidade        as projection on mf.Estoque_Unidade {
     *,
     unidade.nome        as unidadeNome : String,
