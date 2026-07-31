@@ -37,6 +37,8 @@ A solução implementa um **Agente de Reposição** (`srv/ai/reposicao-agent.js`
 
 O fluxo de status é: `PENDENTE → APROVADO / RECUSADO → ENVIADO → RECEBIDO`.
 
+**Guardrails de IA responsável:** O agente opera com prompt estruturado que inclui exclusivamente dados factuais extraídos do modelo CDS (saldo atual, cobertura em dias, fator sazonal, lead time). O LLM gera a narrativa de justificativa — não os números de quantidade ou os fatores de cálculo. Qualquer divergência entre a sugestão do modelo e os dados reais é detectável pelo aprovador humano na tela de revisão Fiori. Adicionalmente, o SAP AI Launchpad permite monitorar deployments, logs de inferência e consumo de tokens do agente em produção.
+
 ---
 
 ## 3. Portfolio SAP Retail: O que cada produto cobre
@@ -55,14 +57,18 @@ O fluxo de status é: `PENDENTE → APROVADO / RECUSADO → ENVIADO → RECEBIDO
 
 ### O que nenhum desses produtos resolve nativamente
 
-Nenhum produto da tabela acima possui um **módulo de gestão de franquias**. Não há no portfolio SAP padrão uma solução que:
+Nenhum produto da tabela acima possui um **módulo de gestão de franquias para varejo/consumer goods**. Não há no portfolio SAP padrão uma solução que:
 
 - Mantenha o registro de cada franqueado como entidade jurídica independente com CNPJ, contrato, score de saúde e regras de compliance individualizadas;
 - Detecte desvios de preço praticado *na loja do franqueado* em relação ao catálogo da franqueadora;
 - Gere recomendações de ação personalizadas por loja usando IA, considerando o cluster de performance e a região geográfica;
 - Ofereça ao franqueado um portal self-service para acompanhar seus próprios KPIs, desvios, tarefas de onboarding e pedidos de reposição — com isolamento total de dados entre franqueados concorrentes.
 
-O IBP, por exemplo, planeja demanda em nível de rede. Ele não sabe que a loja `u147-Porto Alegre` tem um franqueado diferente da loja `u189-Fortaleza`, com autonomia operacional, contrato distinto e perfil de demanda regional específico.
+> **Nota técnica:** O SAP S/4HANA On-Premise possui um módulo chamado *"Distribution Franchisee Management"*, específico para a indústria de **Utilities na Índia** — onde franqueados executam leitura de medidores, distribuição de faturas e coleta de pagamentos para concessionárias de energia. Este módulo não se aplica ao modelo de franquia de varejo/consumer goods, onde o franqueado é uma entidade comercial independente gerindo loja própria, catálogo, pricing e estoque com autonomia operacional.
+
+O IBP, por exemplo, é capaz de planejar em granularidade de localização individual (location-product) e aplicar fatores sazonais via DDMRP (Demand-Driven Replenishment). No entanto, ele não modela a **relação contratual franqueador-franqueado**: não mantém score de saúde por unidade, não gerencia compliance de marca, não gera recomendações contextualizadas por IA para cada loja, e não oferece um portal self-service com isolamento de dados entre entidades jurídicas concorrentes. O IBP não sabe que a loja `u147-Porto Alegre` tem um franqueado diferente da loja `u189-Fortaleza`, com autonomia operacional, contrato distinto e necessidades de comunicação individualizadas.
+
+> **Roadmap:** O *SAP Retail Planning Hub* (H1/H2 2026) está introduzindo capacidades nativas de demand forecasting e replenishment para lojas individuais no Public Cloud. Essas capacidades complementam — e não substituem — a camada de orquestração de rede franqueada que o RunMyFranchise oferece, pois não endereçam a gestão do relacionamento franqueador-franqueado.
 
 ---
 
@@ -77,10 +83,10 @@ Os módulos cobertos pelo RunMyFranchise e ausentes no portfolio padrão:
 | **Painel da Rede** | Score de saúde por unidade (performance + compliance + contrato) com criticality e benchmark por cluster | O SAC mostra KPIs, mas não tem o conceito de "franqueado" como entidade com score próprio |
 | **Compliance de Preços** | Detecção automática de desvio entre preço praticado e catálogo da franqueadora | O S/4HANA não acessa o preço praticado na loja do franqueado (sistema independente) |
 | **Recomendações IA** | Recomendações personalizadas geradas por gpt-4o via SAP AI Core, contextualizadas por loja e região | O SAP Joule é assistente; não gera recomendações proativas por unidade da rede |
-| **Agente de Reposição** | Pedidos de reposição com sazonalidade regional e aprovação humana | O IBP planeja para a rede; não opera no nível individual do franqueado independente |
+| **Agente de Reposição** | Pedidos de reposição com sazonalidade regional e aprovação humana | O IBP planeja supply chain; não gerencia o relacionamento com o franqueado independente nem gera justificativas em linguagem natural |
 | **Portal do Franqueado** | Visão isolada (por `unidade_ID`) de KPIs, desvios, reposição e recomendações | Não existe no portfolio SAP um portal self-service nativo para franqueados |
 | **Onboarding** | Fluxo de abertura de loja com etapas, documentos e aprovações rastreáveis | O S/4HANA tem workflow, mas não um processo pré-configurado de onboarding de franquia |
-| **Estoque Sazonal** | Cobertura calculada com fator regional × calendário promocional em tempo real por loja | O IBP planeja a rede; não calcula cobertura diária com sazonalidade por loja individual |
+| **Estoque Sazonal** | Cobertura calculada com fator regional × calendário promocional em tempo real por loja | O IBP suporta DDMRP por localização, mas não contextualiza com o perfil contratual do franqueado nem dispara alertas personalizados por unidade |
 
 ---
 
@@ -93,7 +99,7 @@ Os módulos cobertos pelo RunMyFranchise e ausentes no portfolio padrão:
 | Planejamento de demanda sazonal | SAP IBP | Fator sazonal por categoria × região × mês aplicado em tempo real na loja |
 | Pedido de reposição ao fornecedor | SAP Ariba (cotação/contrato) | Rascunho de pedido com justificativa em linguagem natural; aprovação franqueadora |
 | Dashboard executivo da rede | SAP Analytics Cloud | Score de saúde individual por unidade; benchmark anonimizado por cluster |
-| Comunicação com o franqueado | SAP Emarsys / e-mail | Portal self-service isolado por `unidade_ID` com OData seguro (XSUAA) |
+| Comunicação com o franqueado | SAP Emarsys / e-mail | Portal self-service isolado por `unidade_ID` com OData seguro (XSUAA + instance-based auth) |
 | Abertura de nova loja | Múltiplos sistemas (Ariba, S/4HANA, BPA) | Fluxo unificado de onboarding: etapas, tarefas, documentos, aprovações |
 
 ---
@@ -125,9 +131,13 @@ SAP POS DM / Unified POS ──► SAP CAR
                              SAP S/4HANA MM
                              (posição de estoque)
                                      │
-                              SAP Integration Suite
-                              (barramento de integração)
-                                     │
+                    ┌────────────────┴────────────────┐
+                    ▼                                 ▼
+         SAP Event Mesh                    SAP Integration Suite
+    (eventos de movimentação               (APIs síncronas: leitura
+     de estoque — push)                    de saldo, criação de PO)
+                    │                                 │
+                    └────────────────┬────────────────┘
                                      ▼
                           SAP BTP — RunMyFranchise
                           (CAP + HANA Cloud)
@@ -142,7 +152,12 @@ SAP POS DM / Unified POS ──► SAP CAR
                       (federação para SAC / analytics)
 ```
 
-O **SAP Integration Suite** atua como barramento entre o ERP core e a extensão BTP, garantindo que os dados de estoque sejam consumidos em tempo real sem replicação desnecessária. O **SAP Datasphere** pode federar dados do CAR e do S/4HANA para enriquecer o contexto do agente sem movimentação de dados.
+A integração com o ERP core opera em dois modos complementares:
+
+- **SAP Event Mesh** (padrão publish-subscribe): o S/4HANA emite Business Events via Enterprise Event Enablement quando há movimentações de estoque relevantes. O RunMyFranchise consome esses eventos em tempo real para recalcular cobertura e disparar alertas de ruptura — sem polling e sem replicação de dados.
+- **SAP Integration Suite** (APIs síncronas): para operações que exigem leitura sob demanda (consulta de saldo pontual) ou escrita (criação de Purchase Order no Ariba), o Integration Suite atua como barramento com roteamento, transformação e segurança centralizados.
+
+O **SAP Datasphere** pode federar dados do CAR e do S/4HANA para enriquecer o contexto do agente sem movimentação de dados.
 
 ---
 
@@ -154,11 +169,24 @@ O **SAP Joule** — copiloto conversacional nativo da SAP — pode ser integrado
 - *"Quantas unidades de Havaianas Top o agente sugeriu para Recife?"*
 - *"Qual o score de saúde médio das lojas do cluster STD?"*
 
-Na arquitetura proposta, o Joule consumiria as skills registradas no BTP — cada entidade OData do RunMyFranchise se tornaria um *tool* disponível para o modelo. Isso completa o arco: do **dado** (S/4HANA + CAR) à **inteligência** (gpt-4o via AI Core) à **conversa** (Joule).
+Na arquitetura de produção, o RunMyFranchise pode ser registrado como uma **Joule Capability** via protocolo **A2A (Agent-to-Agent)**, permitindo que o Joule consulte entidades da extensão em linguagem natural. Nesse modelo, um agente intermediário (LangGraph ou CAP-based) expõe as entidades OData como ações disponíveis para o Joule. Alternativamente, um **MCP server (Model Context Protocol)** expondo as entidades CAP permite integração direta com ferramentas de AI assistida. Isso completa o arco: do **dado** (S/4HANA + CAR) à **inteligência** (gpt-4o via AI Core) à **conversa** (Joule via A2A).
 
 ---
 
-## 8. A Proposta de Valor
+## 8. Modelo de Segurança e Isolamento de Dados
+
+O isolamento entre franqueados é implementado via **instance-based authorization** com XSUAA e SAP Cloud Identity Services (IAS):
+
+- Cada usuário franqueado recebe um atributo customizado `unidadeId` no IAS/XSUAA durante o onboarding.
+- O CAP aplica filtros automáticos em todas as queries OData via anotações `@restrict` com `where: 'unidade_ID = $user.unidadeId'`.
+- Nenhuma query cross-franqueado é possível sem o role `FranqueadoraAdmin`.
+- O padrão é **single-tenant com row-level security** — adequado para redes de até centenas de unidades. Para escala SaaS multi-tenant (múltiplas redes franqueadoras), o CAP suporta promoção para o modelo `@multitenancy` com subscriber tenants isolados.
+
+Esse design garante que o franqueado A nunca acessa dados do franqueado B — mesmo que ambos operem na mesma instância da aplicação.
+
+---
+
+## 9. A Proposta de Valor
 
 O RunMyFranchise não compete com o portfolio SAP — **o pressupõe**. Ele é a camada de orquestração que conecta:
 
@@ -174,14 +202,18 @@ O RunMyFranchise é a resposta técnica a esse gap, construída sobre o stack SA
 
 ---
 
-## 9. Referências
+## 10. Referências
 
 - [SAP S/4HANA Retail](https://www.sap.com/products/s4hana-erp.html)
 - [SAP Customer Activity Repository](https://www.sap.com/products/customer-activity-repository.html)
 - [SAP Integrated Business Planning](https://www.sap.com/products/ibp.html)
+- [SAP IBP — Demand-Driven Replenishment (DDMRP)](https://help.sap.com/docs/SAP_INTEGRATED_BUSINESS_PLANNING/feae3cea3cc549aaa9d9de7d363a83e6/0503ebd965af4531b376b371b38f1e6c.html)
 - [SAP Ariba](https://www.sap.com/products/spend-management/ariba-network.html)
 - [SAP Analytics Cloud](https://www.sap.com/products/analytics-cloud.html)
 - [SAP Datasphere](https://www.sap.com/products/datasphere.html)
 - [SAP AI Core + GenAI Hub](https://help.sap.com/docs/sap-ai-core)
+- [SAP Event Mesh — Enterprise Event Enablement](https://help.sap.com/docs/event-mesh)
 - [SAP BTP — Extensões Side-by-Side](https://help.sap.com/docs/btp)
-- [SAP Joule](https://www.sap.com/products/joule.html)
+- [SAP BTP Developer's Guide — Side-by-Side CAP Extension](https://help.sap.com/docs/BTP/0c8c1db388f645159e134a005aaabbcf/2289e25a0e494f03867c195454b6eaea.html)
+- [SAP Joule — Capabilities](https://help.sap.com/docs/JOULE/82a14f108cfa4d4788244d81371e072b/41de8c499c72413c8e134493686a5348.html)
+- [SAP S/4HANA — Distribution Franchisee Management (Utilities)](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/181023b0d46f417b82eed136aa57029b/526df057f3944183a9460429f3b9903a.html)
