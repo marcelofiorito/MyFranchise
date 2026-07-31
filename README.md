@@ -101,9 +101,9 @@
 - **Destaque:** Detecção automática de desvios no `after CREATE VendaPraticada`. Regras configuráveis (`RegrasCompliance`). Severidade colorida (ALTA vermelho, MÉDIA amarelo). Navegação para detalhe do desvio.
 
 ### 3. Onboarding
-- **Floorplan:** List Report + Object Page (2 níveis) + `@odata.draft.enabled`
-- **contextPath:** `/ProcessosOnboarding` → `TarefasOnboarding`
-- **Destaque:** Draft salva progresso automaticamente. Seed de processos/etapas/tarefas incluído. Tarefas como sub-Object Page.
+- **Floorplan:** List Report + Object Page + `@odata.draft.enabled`
+- **contextPath:** `/ProcessosOnboarding`
+- **Destaque:** Acompanhamento de ponta a ponta da abertura de novas lojas. A lista mostra todos os processos em andamento com status e percentual de conclusão. Ao clicar num processo, o gestor vê as **etapas e tarefas** daquele onboarding — com responsável, prazo, status e documentos. O draft salva o progresso automaticamente; nada se perde se a tela for fechada. Seed incluído com lojas em estágio de onboarding (u301, u302, u303).
 
 ### 4. Estoque & Reposição _(caso de ruptura — Camila)_
 - **Floorplan:** List Report + Object Page
