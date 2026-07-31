@@ -120,6 +120,7 @@ service FranqueadoraService {
 
 @path    : '/franqueado'
 @requires: 'Franqueado'
+@impl    : 'srv/franqueado-service.js'
 service FranqueadoService {
 
   // ── Meus KPIs ────────────────────────────────────────────
