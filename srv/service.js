@@ -1,6 +1,7 @@
 'use strict';
 const cds = require('@sap/cds');
 const recommendations = require('./ai/recommendations-job');
+const reposicao = require('./ai/reposicao-agent');
 
 module.exports = class FranqueadoraService extends cds.ApplicationService {
 
@@ -9,7 +10,8 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       VendaPraticada, KPI_Unidade,
       ItensCatalogo, RegrasCompliance,
       Desvios, Saude_Unidade,
-      Unidades, Contratos_Franquia
+      Unidades, Contratos_Franquia,
+      Estoque_Unidade
     } = this.entities;
 
     // Detecção automática de desvios após nova venda registrada
@@ -44,6 +46,24 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
 
     this.on('gerarRecomendacoesTodas', async () => {
       return await recommendations.gerarParaTodas(this);
+    });
+
+    // Estoque: calcula coberturaDias + estoqueCriticality considerando a
+    // sazonalidade regional da unidade (demanda ajustada = giro × fator sazonal).
+    this.after('READ', Estoque_Unidade, async (rows) => {
+      if (!rows) return;
+      await reposicao.enriquecerEstoque(this, Array.isArray(rows) ? rows : [rows]);
+    });
+
+    // Agente de Reposição — detecta risco de ruptura e gera pedidos (gpt-4o + fallback)
+    this.on('gerarReposicao', async (req) => {
+      const { unidade_ID } = req.data;
+      const { count, modo } = await reposicao.gerarParaUnidade(this, unidade_ID);
+      return { unidade_ID, pedidos: count, modo };
+    });
+
+    this.on('gerarReposicaoTodas', async () => {
+      return await reposicao.gerarParaTodas(this);
     });
 
     return super.init();

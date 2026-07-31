@@ -63,6 +63,27 @@ service FranqueadoraService {
   // ── Contratos ─────────────────────────────────────────────
   entity Contratos_Franquia as projection on mf.Contratos_Franquia;
 
+  // ── Estoque & Reposição ──────────────────────────────────
+  @readonly
+  entity Estoque_Unidade        as projection on mf.Estoque_Unidade;
+  @readonly
+  entity Sazonalidade_Regional  as projection on mf.Sazonalidade_Regional;
+  @readonly
+  entity Calendario_Promocional as projection on mf.Calendario_Promocional;
+  entity Pedidos_Reposicao      as projection on mf.Pedidos_Reposicao;
+
+  // Agente de Reposição — detecta risco de ruptura e gera pedidos (gpt-4o)
+  action gerarReposicao(unidade_ID : String) returns {
+    unidade_ID : String;
+    pedidos    : Integer;
+    modo       : String;
+  };
+  action gerarReposicaoTodas() returns {
+    unidades : Integer;
+    pedidos  : Integer;
+    modo     : String;
+  };
+
   // ── Code Lists ───────────────────────────────────────────
   @readonly entity StatusFranqueado   as projection on mf.StatusFranqueado;
   @readonly entity StatusUnidade      as projection on mf.StatusUnidade;
@@ -80,6 +101,8 @@ service FranqueadoraService {
   @readonly entity StatusTarefa       as projection on mf.StatusTarefa;
   @readonly entity TipoDocumento      as projection on mf.TipoDocumento;
   @readonly entity StatusContrato     as projection on mf.StatusContrato;
+  @readonly entity StatusEstoque      as projection on mf.StatusEstoque;
+  @readonly entity StatusPedidoRep    as projection on mf.StatusPedidoRep;
 }
 
 
@@ -150,6 +173,21 @@ service FranqueadoService {
   // ── Notificações de compliance ────────────────────────────
   @(restrict: [{ grant: ['READ','WRITE'], where: 'unidade_ID = $user.unidade_ID' }])
   entity MinhasNotificacoes  as projection on mf.NotificacoesCompliance;
+
+  // ── Meu Estoque / Reposição ──────────────────────────────
+  @readonly
+  @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
+  entity MeuEstoque          as projection on mf.Estoque_Unidade {
+    *,
+    unidade.nome          as unidadeNome : String,
+    unidade.regiao.code   as regiaoCode  : String
+  };
+
+  @(restrict: [{ grant: ['READ','WRITE'], where: 'unidade_ID = $user.unidade_ID' }])
+  entity MinhasReposicoes    as projection on mf.Pedidos_Reposicao {
+    *,
+    unidade.nome as unidadeNome : String
+  };
 
   // ── Recomendações do AI ───────────────────────────────────
   @(restrict: [{ grant: ['READ','WRITE'], where: 'unidade_ID = $user.unidade_ID' }])

@@ -28,6 +28,10 @@ entity StatusDocumento    : CodeList { key code : String(20); }
 entity StatusAprovacao    : CodeList { key code : String(20); }
 entity StatusContrato     : CodeList { key code : String(20); }
 
+// Estoque / Reposição
+entity StatusEstoque      : CodeList { key code : String(20); }  // OK, ATENCAO, RUPTURA
+entity StatusPedidoRep    : CodeList { key code : String(20); }  // PENDENTE, APROVADO, RECUSADO, ENVIADO, RECEBIDO
+
 
 // ═══════════════════════════════════════════════════════════
 // CORE — Franqueados e Unidades (entidades raiz)
@@ -322,4 +326,80 @@ entity Contratos_Franquia : cuid, managed {
   dataVencimento : Date         @title : '{i18n>Contratos_Franquia_dataVencimento}';
   status         : Association to StatusContrato @title : '{i18n>Contratos_Franquia_status}';
   valorRoyalties : Decimal(15,2)@title : '{i18n>Contratos_Franquia_valorRoyalties}';
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// ESTOQUE & REPOSIÇÃO — evitar ruptura na loja do franqueado
+// Considera sazonalidade regional + calendário promocional.
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Posição de estoque por SKU por unidade.
+ * Base para detecção de risco de ruptura (cobertura vs. ponto de reposição).
+ */
+entity Estoque_Unidade : cuid, managed {
+  unidade          : Association to Unidades @title : '{i18n>Unidades}';
+  sku              : String(50)   @title : '{i18n>ItensCatalogo_sku}';
+  nomeProduto      : String(150)  @title : '{i18n>ItensCatalogo_nomeProduto}';
+  categoria        : String(100)  @title : '{i18n>ItensCatalogo_categoria}';
+  saldoAtual       : Integer      @title : '{i18n>Estoque_saldoAtual}';        // unidades em estoque
+  estoqueMinimo    : Integer      @title : '{i18n>Estoque_estoqueMinimo}';      // ponto de reposição
+  giroMedioDiario  : Decimal(8,2) @title : '{i18n>Estoque_giroMedioDiario}';    // unidades vendidas/dia (base)
+  leadTimeDias     : Integer      @title : '{i18n>Estoque_leadTimeDias}';       // dias até repor
+  // coberturaDias = saldoAtual / (giroMedioDiario ajustado pela sazonalidade regional)
+  // é @Core.Computed: calculado no service handler considerando a região da unidade
+  coberturaDias    : Decimal(6,1) @title : '{i18n>Estoque_coberturaDias}'    @Core.Computed: true;
+  status           : Association to StatusEstoque @title : '{i18n>Estoque_status}';
+  // 1=vermelho (RUPTURA/risco), 2=amarelo (ATENCAO), 3=verde (OK)
+  estoqueCriticality : Integer    @title : '{i18n>Estoque_criticality}'      @Core.Computed: true;
+  dataAtualizacao  : DateTime     @title : '{i18n>Estoque_dataAtualizacao}';
+}
+
+/**
+ * Fator de sazonalidade da demanda por categoria × região × mês.
+ * Ex.: Sandálias/Havaianas em Julho: Nordeste fator 1.8 (alta), Sul fator 0.4 (baixa).
+ * O fator multiplica o giro médio para estimar a demanda real do período.
+ */
+entity Sazonalidade_Regional : cuid, managed {
+  categoria    : String(100) @title : '{i18n>ItensCatalogo_categoria}';
+  regiao       : Association to Regiao @title : '{i18n>Unidades_regiao}';
+  mes          : Integer     @title : '{i18n>Sazonalidade_mes}';        // 1-12
+  fatorDemanda : Decimal(4,2)@title : '{i18n>Sazonalidade_fatorDemanda}'; // 1.0 = neutro; >1 alta; <1 baixa
+  observacao   : String(200) @title : '{i18n>Sazonalidade_observacao}';
+}
+
+/**
+ * Calendário de campanhas/promoções que antecipam demanda.
+ * O agente considera campanhas ativas/próximas ao calcular a reposição.
+ */
+entity Calendario_Promocional : cuid, managed {
+  nome           : String(150) @title : '{i18n>Promocao_nome}';
+  categoria      : String(100) @title : '{i18n>ItensCatalogo_categoria}';
+  regiao         : Association to Regiao @title : '{i18n>Unidades_regiao}';  // null = todas as regiões
+  dataInicio     : Date        @title : '{i18n>Promocao_dataInicio}';
+  dataFim        : Date        @title : '{i18n>Promocao_dataFim}';
+  upliftDemanda  : Decimal(4,2)@title : '{i18n>Promocao_upliftDemanda}';  // multiplicador extra na demanda
+  ativa          : Boolean default true;
+}
+
+/**
+ * Pedido de reposição gerado pelo Agente de Reposição.
+ * Fluxo: PENDENTE → (aprovação BPA) → APROVADO/RECUSADO → ENVIADO → RECEBIDO.
+ */
+entity Pedidos_Reposicao : cuid, managed {
+  unidade          : Association to Unidades @title : '{i18n>Unidades}';
+  sku              : String(50)   @title : '{i18n>ItensCatalogo_sku}';
+  nomeProduto      : String(150)  @title : '{i18n>ItensCatalogo_nomeProduto}';
+  qtdSugerida      : Integer      @title : '{i18n>PedidoRep_qtdSugerida}';   // calculada pelo agente
+  qtdAprovada      : Integer      @title : '{i18n>PedidoRep_qtdAprovada}';
+  justificativa    : String(2000) @title : '{i18n>PedidoRep_justificativa}'; // texto do agente (gpt-4o)
+  fornecedorSugerido: String(150) @title : '{i18n>PedidoRep_fornecedor}';
+  prazoDesejado    : Date         @title : '{i18n>PedidoRep_prazoDesejado}';
+  status           : Association to StatusPedidoRep @title : '{i18n>PedidoRep_status}';
+  aprovador        : String(100)  @title : '{i18n>PedidoRep_aprovador}';
+  dataDecisao      : DateTime     @title : '{i18n>PedidoRep_dataDecisao}';
+  origem           : String(20)   @title : '{i18n>PedidoRep_origem}';  // AGENTE | MANUAL
+  // 1=vermelho (Alta urgência), 2=amarelo (Media), 3=verde (Baixa)
+  urgenciaCriticality : Integer   @title : '{i18n>PedidoRep_criticality}' @Core.Computed: true;
 }

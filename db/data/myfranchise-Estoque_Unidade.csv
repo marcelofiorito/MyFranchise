@@ -1,0 +1,14 @@
+ID,unidade_ID,sku,nomeProduto,categoria,saldoAtual,estoqueMinimo,giroMedioDiario,leadTimeDias,status_code,dataAtualizacao
+es001,u178,SKU-100,Havaianas Top,Sandálias,45,60,7.00,10,ATENCAO,2026-07-01T08:00:00Z
+es002,u156,SKU-100,Havaianas Top,Sandálias,30,60,6.50,10,RUPTURA,2026-07-01T08:00:00Z
+es003,u189,SKU-100,Havaianas Top,Sandálias,20,50,5.80,12,RUPTURA,2026-07-01T08:00:00Z
+es004,u289,SKU-100,Havaianas Top,Sandálias,55,50,4.20,12,ATENCAO,2026-07-01T08:00:00Z
+es005,u147,SKU-100,Havaianas Top,Sandálias,80,40,3.00,10,OK,2026-07-01T08:00:00Z
+es006,u134,SKU-100,Havaianas Top,Sandálias,70,40,2.80,10,OK,2026-07-01T08:00:00Z
+es007,u178,SKU-101,Havaianas Slim,Sandálias,38,50,5.50,10,ATENCAO,2026-07-01T08:00:00Z
+es008,u156,SKU-101,Havaianas Slim,Sandálias,25,50,5.00,10,RUPTURA,2026-07-01T08:00:00Z
+es009,u147,SKU-200,Bota Couro Inverno,Calçado Fechado,18,45,4.50,14,RUPTURA,2026-07-01T08:00:00Z
+es010,u134,SKU-200,Bota Couro Inverno,Calçado Fechado,22,45,4.00,14,RUPTURA,2026-07-01T08:00:00Z
+es011,u115,SKU-200,Bota Couro Inverno,Calçado Fechado,60,40,3.50,14,OK,2026-07-01T08:00:00Z
+es012,u178,SKU-300,Biquíni Praia,Vestuário Praia,90,50,6.00,8,OK,2026-07-01T08:00:00Z
+es013,u147,SKU-300,Biquíni Praia,Vestuário Praia,50,30,1.50,8,OK,2026-07-01T08:00:00Z

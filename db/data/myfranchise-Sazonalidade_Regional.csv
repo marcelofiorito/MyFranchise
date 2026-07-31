@@ -1,0 +1,14 @@
+ID,categoria,regiao_code,mes,fatorDemanda,observacao
+sz001,Sandálias,NE,7,1.80,Nordeste: praia o ano todo — alta demanda de sandálias em julho
+sz002,Sandálias,S,7,0.40,Sul: inverno rigoroso — demanda de sandálias despenca em julho
+sz003,Sandálias,SE,7,0.80,Sudeste: inverno ameno — demanda moderada
+sz004,Sandálias,CO,7,1.00,Centro-Oeste: clima seco e quente — demanda neutra
+sz005,Sandálias,N,7,1.70,Norte: quente e úmido — alta demanda o ano todo
+sz006,Sandálias,NE,1,1.90,Nordeste: verão — pico de sandálias
+sz007,Sandálias,S,1,1.60,Sul: verão — alta de sandálias
+sz008,Sandálias,NE,12,2.00,Nordeste: dezembro/festas/verão — pico máximo
+sz009,Sandálias,S,12,1.50,Sul: dezembro/verão — alta
+sz010,Calçado Fechado,S,7,1.70,Sul: inverno — alta demanda de calçado fechado/botas
+sz011,Calçado Fechado,NE,7,0.60,Nordeste: calor — baixa demanda de calçado fechado
+sz012,Vestuário Praia,NE,7,1.60,Nordeste: praia — alta de moda praia em julho
+sz013,Vestuário Praia,S,7,0.30,Sul: inverno — baixíssima de moda praia

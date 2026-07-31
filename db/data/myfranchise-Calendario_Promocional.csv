@@ -1,0 +1,4 @@
+ID,nome,categoria,regiao_code,dataInicio,dataFim,upliftDemanda,ativa
+cp001,Esquenta Verão Nordeste,Sandálias,NE,2026-07-15,2026-08-15,1.40,true
+cp002,Liquida Inverno Sul,Calçado Fechado,S,2026-07-01,2026-07-31,1.30,true
+cp003,Volta às Aulas,Vestuário Praia,,2026-07-20,2026-08-10,1.20,true
