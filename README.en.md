@@ -55,7 +55,7 @@
 
 ## SAP BTP Architecture
 
-![Arquitetura RunMyFranchise](arquitetura.png)
+![Arquitetura RunMyFranchise](docs/arquitetura.png)
 
 
 
@@ -144,7 +144,7 @@ Same product, same month → opposite risk by region. The agent calculates cover
 
 ### Demo Flow
 
-![Fluxo da Demo — BPMN](BPMN.png)
+![Fluxo da Demo — BPMN](docs/BPMN.png)
 
 ### Data validated in production — Porto Alegre Store (u147)
 
