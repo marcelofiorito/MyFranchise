@@ -202,7 +202,244 @@ O RunMyFranchise é a resposta técnica a esse gap, construída sobre o stack SA
 
 ---
 
-## 10. Referências
+## 10. DE-PARA: Modelo de Dados da Demo × Soluções SAP em Produção
+
+Esta seção mapeia **cada entidade do modelo CDS** usado na demo para o sistema SAP proprietário em produção, incluindo a API/módulo específico, a direção do fluxo de dados e o mecanismo de integração.
+
+### 10.1 Entidades do Domínio — Mapeamento Completo
+
+| Entidade RunMyFranchise (CDS) | Campos-chave | Sistema SAP proprietário (produção) | API / Módulo SAP | Direção do fluxo | Mecanismo de integração |
+|---|---|---|---|---|---|
+| **Franqueados** | `ID`, `cnpj`, `razaoSocial`, `nomeFantasia`, `contratoInicio`, `contratoFim`, `status`, `cluster` | **SAP S/4HANA** (Business Partner) | API_BUSINESS_PARTNER (OData V4) — Role: `FLVN01` (Vendor/Franchisee) | BTP ← S/4HANA | SAP Integration Suite (sync pull) |
+| **Unidades** | `ID`, `franqueado_ID`, `nome`, `cidade`, `estado`, `regiao`, `scoresSaude`, `criticality` | **SAP S/4HANA** (Plant / Sales Org) | API_PLANT / API_SALESORGANIZATION + Extensão BTP (score calculado) | BTP ← S/4HANA + cálculo local | Integration Suite + Event Mesh (plant changes) |
+| **Estoque_Unidade** | `unidade_ID`, `material_ID`, `saldoAtual`, `giroMedioDiario`, `ultimaAtualizacao` | **SAP S/4HANA MM** | API_MATERIAL_STOCK (posição de estoque por planta) | BTP ← S/4HANA | Event Mesh (Goods Movement events) |
+| **Materiais** | `ID`, `descricao`, `categoria`, `sku`, `fornecedor_ID`, `leadTimeDias`, `precoSugerido` | **SAP S/4HANA MM** | API_PRODUCT (Master Data) | BTP ← S/4HANA | Integration Suite (sync pull / delta) |
+| **Sazonalidade_Regional** | `ID`, `categoria`, `regiao`, `mes`, `fatorDemanda` | **SAP IBP** (Demand Planning) ou **extensão BTP** | IBP: Planning Areas com dimensão Location × Product Group × Time / BTP: tabela local gerenciada pela franqueadora | BTP ← IBP (se existir) ou dado local | CI-DS (Cloud Integration for Data Services) / manual |
+| **Pedidos_Reposicao** | `ID`, `unidade_ID`, `material_ID`, `quantidade`, `fornecedor_ID`, `status`, `justificativaIA`, `dataCriacao`, `dataAprovacao` | **SAP Ariba** (Purchase Order) / **SAP S/4HANA MM** (PO) | API_PURCHASEORDER_PROCESS_SRV (criação de PO) / Ariba Procurement API | BTP → S/4HANA/Ariba | Integration Suite (sync push — após aprovação) |
+| **Vendas_Diarias** | `unidade_ID`, `material_ID`, `data`, `quantidadeVendida`, `precoUnitarioPraticado`, `receita` | **SAP CAR** (Customer Activity Repository) ← SAP POS DM | CAR POS Inbound API / ODP (Operational Data Provisioning) | BTP ← CAR | Integration Suite (batch daily) ou Datasphere (federation) |
+| **Desvios_Preco** | `ID`, `unidade_ID`, `material_ID`, `precoSugerido`, `precoPraticado`, `percentualDesvio`, `dataDeteccao`, `status` | **Calculado no BTP** (comparação Vendas_Diarias vs. Materiais.precoSugerido) | Não existe em SAP padrão — lógica 100% BTP | Interno BTP | N/A (cálculo local CAP) |
+| **Recomendacoes_IA** | `ID`, `unidade_ID`, `tipo`, `titulo`, `descricao`, `prioridade`, `status`, `dataCriacao`, `modeloIA` | **SAP AI Core** (GenAI Hub — gpt-4o) | GenAI Hub Inference API (`/v2/inference/deployments/{id}/invoke`) | BTP ↔ AI Core | SDK @sap-ai-sdk/ai-api (chamada direta) |
+| **Onboarding_Fluxos** | `ID`, `unidade_ID`, `etapa`, `responsavel`, `status`, `dataInicio`, `dataConclusao`, `documentoUrl` | **SAP Build Process Automation** (workflow) / extensão BTP | SPA Workflow API / tabela local CAP | BTP ↔ SPA | Destination Service (se SPA) ou local |
+| **Calendario_Promocional** | `ID`, `nome`, `dataInicio`, `dataFim`, `categorias`, `upliftEsperado`, `regioes` | **SAP Emarsys** (Campaign Calendar) ou **extensão BTP** | Emarsys API / tabela local gerenciada | BTP ← Emarsys ou dado local | Open Connectors / REST adapter |
+| **Usuarios_Franqueado** | `ID`, `unidade_ID`, `email`, `nome`, `role`, `ultimoAcesso` | **SAP Cloud Identity Services (IAS)** | SCIM API (Identity Directory) + XSUAA (autorização) | BTP ← IAS | IAS provisioning / XSUAA runtime |
+| **Scores_Saude** | `unidade_ID`, `periodo`, `scorePerformance`, `scoreCompliance`, `scoreContrato`, `scoreGeral`, `cluster` | **Calculado no BTP** (agregação de KPIs multi-fonte) | Não existe em SAP padrão — lógica 100% BTP | Interno BTP | N/A (cálculo local CAP) |
+
+### 10.2 Fluxo de Dados por Processo de Negócio
+
+#### Processo 1: Detecção de Ruptura e Pedido de Reposição
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│ FLUXO: Prevenção de Ruptura com Sazonalidade Regional                              │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  ① SAP S/4HANA MM                                                                  │
+│     Goods Movement Event (MIGO)                                                     │
+│         │                                                                           │
+│         ▼ [Event Mesh — topic: sap/s4/beh/materialdocument/v1/MaterialDocument/Created]│
+│                                                                                     │
+│  ② SAP BTP — RunMyFranchise                                                        │
+│     CAP Event Handler: on("MaterialDocument.Created")                               │
+│         │                                                                           │
+│         ├──► Atualiza Estoque_Unidade.saldoAtual                                   │
+│         │                                                                           │
+│         ▼                                                                           │
+│     srv/ai/reposicao-agent.js                                                       │
+│         │                                                                           │
+│         ├──► Lê Sazonalidade_Regional (categoria × região × mês)                   │
+│         ├──► Lê Calendario_Promocional (uplift vigente)                             │
+│         ├──► Calcula: coberturaDias = saldo ÷ (giro × fatorSazonal × uplift)       │
+│         │                                                                           │
+│         ▼ [Se coberturaDias < leadTimeDias]                                         │
+│                                                                                     │
+│  ③ SAP AI Core / GenAI Hub                                                         │
+│     POST /v2/inference/deployments/{id}/invoke                                      │
+│     Payload: {saldo, cobertura, leadTime, sazonalidade, historico}                  │
+│         │                                                                           │
+│         ▼ Response: {quantidade_sugerida, fornecedor, justificativa_texto}          │
+│                                                                                     │
+│  ④ SAP BTP — RunMyFranchise                                                        │
+│     Cria Pedidos_Reposicao (status: PENDENTE)                                       │
+│         │                                                                           │
+│         ▼ [Aprovação humana via Fiori Elements]                                     │
+│                                                                                     │
+│  ⑤ SAP S/4HANA MM / SAP Ariba                                                     │
+│     POST API_PURCHASEORDER_PROCESS_SRV/A_PurchaseOrder                              │
+│     [via Integration Suite — após status = APROVADO]                                │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Processo 2: Compliance de Preços
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│ FLUXO: Detecção de Desvio de Preço Praticado                                       │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  ① SAP POS DM → SAP CAR                                                           │
+│     Transação de venda (preço unitário praticado por item)                          │
+│         │                                                                           │
+│         ▼ [Integration Suite — batch diário ou Datasphere federation]               │
+│                                                                                     │
+│  ② SAP BTP — RunMyFranchise                                                        │
+│     Ingest: Vendas_Diarias (unidade, material, precoUnitarioPraticado)             │
+│         │                                                                           │
+│         ├──► Compara com Materiais.precoSugerido (tolerância ±X%)                  │
+│         │                                                                           │
+│         ▼ [Se |desvio| > tolerância]                                                │
+│                                                                                     │
+│     Cria Desvios_Preco (status: ABERTO)                                            │
+│         │                                                                           │
+│         ├──► Impacta Scores_Saude.scoreCompliance da unidade                       │
+│         └──► Notificação ao franqueado (portal / e-mail)                           │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Processo 3: Score de Saúde da Unidade
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│ FLUXO: Cálculo do Score de Saúde (executado periodicamente — cron job CAP)         │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  Fontes de dados:                                                                   │
+│                                                                                     │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                    │
+│  │ Vendas_Diarias  │  │ Desvios_Preco   │  │ Franqueados     │                    │
+│  │ (performance)   │  │ (compliance)    │  │ (contrato)      │                    │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘                    │
+│           │                     │                     │                             │
+│           ▼                     ▼                     ▼                             │
+│  ┌─────────────────────────────────────────────────────────────┐                   │
+│  │ srv/scores/health-calculator.js                             │                   │
+│  │                                                             │                   │
+│  │ scorePerformance = f(receita, giro, crescimento vs cluster)│                   │
+│  │ scoreCompliance  = f(desvios_abertos, recorrência)         │                   │
+│  │ scoreContrato    = f(diasParaVencimento, pendências)       │                   │
+│  │ scoreGeral       = média ponderada (40% perf, 35% comp,   │                   │
+│  │                    25% contrato)                            │                   │
+│  └─────────────────────────────────┬───────────────────────────┘                   │
+│                                     │                                               │
+│                                     ▼                                               │
+│  Scores_Saude (persistido) + Unidades.criticality (atualizado)                     │
+│         │                                                                           │
+│         └──► SAP Analytics Cloud (via Datasphere — federation para dashboards)     │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 10.3 Mapeamento de APIs SAP por Entidade (DE-PARA detalhado)
+
+| Dado no RunMyFranchise | Campo(s) | API SAP em Produção | Endpoint / Entity Set | Operação |
+|---|---|---|---|---|
+| Saldo de estoque por planta | `saldoAtual` | S/4HANA — Material Stock | `API_MATERIAL_STOCK/A_MatlStkInAcctMod` | GET (filtro: Plant + Material) |
+| Dados do material (master) | `descricao`, `categoria`, `sku`, `leadTimeDias` | S/4HANA — Product Master | `API_PRODUCT_SRV/A_Product` | GET |
+| Fornecedor preferencial | `fornecedor_ID`, `leadTimeDias` | S/4HANA — Purchasing Info Record | `API_INFORECORD_PROCESS_SRV/A_PurchasingInfoRecord` | GET |
+| Preço sugerido (catálogo) | `precoSugerido` | S/4HANA — Condition Records (Pricing) | `API_SLSPRICINGCONDITIONRECORD_SRV` | GET |
+| Vendas POS por loja | `quantidadeVendida`, `precoUnitarioPraticado` | SAP CAR — POS Transaction | CAR ODP: `2LIS_13_VDITM` ou POSDTA_INBOUND | GET (batch) |
+| Dados do franqueado (BP) | `cnpj`, `razaoSocial`, `contratoInicio` | S/4HANA — Business Partner | `API_BUSINESS_PARTNER/A_BusinessPartner` | GET |
+| Planta / Loja (unidade) | `nome`, `cidade`, `estado` | S/4HANA — Plant Master | `API_PLANT/A_Plant` (ou extensão custom field) | GET |
+| Criação de Purchase Order | `quantidade`, `material_ID`, `fornecedor_ID` | S/4HANA — Purchase Order | `API_PURCHASEORDER_PROCESS_SRV/A_PurchaseOrder` | POST |
+| Movimento de mercadoria (evento) | — | S/4HANA — Material Document | Business Event: `sap.s4.beh.materialdocument.v1.MaterialDocument.Created` | Event (subscribe) |
+| Previsão de demanda (se IBP) | `fatorDemanda` por location | SAP IBP — Planning View | IBP Cloud Integration CI-DS / OData API | GET (batch) |
+| Campanha promocional | `upliftEsperado`, `dataInicio`, `dataFim` | SAP Emarsys — Campaign API | Emarsys Contact & Campaign API | GET |
+| Identidade do usuário franqueado | `email`, `role`, `unidade_ID` | SAP Cloud Identity Services | SCIM 2.0 API (`/scim/Users`) | GET / provisioning |
+| Inferência IA (justificativa) | `justificativaIA` | SAP AI Core — GenAI Hub | `/v2/inference/deployments/{deploymentId}/invoke` | POST |
+
+### 10.4 Eventos SAP S/4HANA Consumidos (Event Mesh)
+
+| Evento (CloudEvents type) | Trigger no S/4HANA | Ação no RunMyFranchise |
+|---|---|---|
+| `sap.s4.beh.materialdocument.v1.MaterialDocument.Created` | Goods Receipt / Goods Issue (MIGO) | Atualiza `Estoque_Unidade`; dispara cálculo de cobertura |
+| `sap.s4.beh.purchaseorder.v1.PurchaseOrder.Changed` | Status change da PO (confirmação fornecedor) | Atualiza `Pedidos_Reposicao.status` → `ENVIADO` ou `RECEBIDO` |
+| `sap.s4.beh.businesspartner.v1.BusinessPartner.Changed` | Atualização cadastral do franqueado | Atualiza `Franqueados` (endereço, status, dados contratuais) |
+| `sap.s4.beh.product.v1.Product.Changed` | Alteração de master data do material | Atualiza `Materiais` (preço sugerido, lead time, descrição) |
+
+### 10.5 Serviços OData Expostos pelo RunMyFranchise
+
+| Serviço CAP | Path | Público-alvo | Entidades expostas | Autorização |
+|---|---|---|---|---|
+| **FranqueadoraService** | `/franqueadora` | Usuários da franqueadora (gestores, analistas) | Franqueados, Unidades, Estoque_Unidade, Pedidos_Reposicao, Desvios_Preco, Recomendacoes_IA, Scores_Saude, Onboarding_Fluxos, Sazonalidade_Regional, Calendario_Promocional | Role: `FranqueadoraAdmin`, `FranqueadoraAnalista` |
+| **FranqueadoService** | `/franqueado` | Usuários do franqueado (lojistas) | Unidades (filtered by unidade_ID), Estoque_Unidade, Pedidos_Reposicao, Desvios_Preco, Recomendacoes_IA | Role: `Franqueado` — filtrado por `$user.unidadeId` |
+
+### 10.6 Resumo Visual: DE-PARA por Camada
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              CAMADA DE DADOS (Fontes)                                   │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                         │
+│  SAP S/4HANA          SAP CAR            SAP IBP           SAP Emarsys    SAP IAS      │
+│  ┌──────────┐        ┌──────────┐       ┌──────────┐      ┌──────────┐  ┌──────────┐  │
+│  │Material  │        │POS Trans │       │Demand    │      │Campaigns │  │Users     │  │
+│  │Stock     │        │Sales Data│       │Forecast  │      │Calendar  │  │Groups    │  │
+│  │Plant     │        │          │       │Seasonal  │      │          │  │Attributes│  │
+│  │Bus.Partn.│        │          │       │Factors   │      │          │  │          │  │
+│  │Purch.Ord.│        │          │       │          │      │          │  │          │  │
+│  │Pricing   │        │          │       │          │      │          │  │          │  │
+│  └────┬─────┘        └────┬─────┘       └────┬─────┘      └────┬─────┘  └────┬─────┘  │
+│       │                    │                   │                  │             │        │
+├───────┼────────────────────┼───────────────────┼──────────────────┼─────────────┼────────┤
+│       │  CAMADA DE INTEGRAÇÃO                  │                  │             │        │
+│       │                                        │                  │             │        │
+│       ▼                    ▼                   ▼                  ▼             ▼        │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐   │
+│  │                    SAP Integration Suite + SAP Event Mesh                        │   │
+│  │                                                                                  │   │
+│  │  • Event Mesh: subscrição a Business Events (push, real-time)                   │   │
+│  │  • Integration Suite: iFlows para batch/sync (pull, scheduled)                  │   │
+│  │  • API Management: governança de APIs expostas                                  │   │
+│  │  • Open Connectors: adaptador para Emarsys                                     │   │
+│  └──────────────────────────────────────────┬───────────────────────────────────────┘   │
+│                                              │                                          │
+├──────────────────────────────────────────────┼──────────────────────────────────────────┤
+│       CAMADA DE APLICAÇÃO (BTP)              │                                          │
+│                                              ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐   │
+│  │                    SAP BTP — RunMyFranchise (CAP + HANA Cloud)                   │   │
+│  │                                                                                  │   │
+│  │  Entidades locais:              Entidades derivadas:         Entidades de ação:  │   │
+│  │  • Franqueados                  • Scores_Saude (calc.)      • Pedidos_Reposicao │   │
+│  │  • Unidades                     • Desvios_Preco (calc.)     • Recomendacoes_IA  │   │
+│  │  • Estoque_Unidade              • Calendario_Promocional    • Onboarding_Fluxos │   │
+│  │  • Materiais                                                                     │   │
+│  │  • Sazonalidade_Regional                                                        │   │
+│  │  • Vendas_Diarias                                                               │   │
+│  │  • Usuarios_Franqueado                                                          │   │
+│  └──────────────────────────────────────────┬───────────────────────────────────────┘   │
+│                                              │                                          │
+├──────────────────────────────────────────────┼──────────────────────────────────────────┤
+│       CAMADA DE INTELIGÊNCIA                 │                                          │
+│                                              ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐   │
+│  │                    SAP AI Core — GenAI Hub (gpt-4o)                              │   │
+│  │                                                                                  │   │
+│  │  Input: {saldo, cobertura, leadTime, fatorSazonal, historico, cluster}          │   │
+│  │  Output: {quantidade_sugerida, fornecedor, justificativa_texto}                 │   │
+│  └──────────────────────────────────────────┬───────────────────────────────────────┘   │
+│                                              │                                          │
+├──────────────────────────────────────────────┼──────────────────────────────────────────┤
+│       CAMADA DE APRESENTAÇÃO                 │                                          │
+│                                              ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐   │
+│  │          SAP Work Zone / SAP Fiori Elements (6 apps)                            │   │
+│  │                                                                                  │   │
+│  │  Franqueadora:                         Franqueado:                              │   │
+│  │  • Painel da Rede (scores)             • Portal (KPIs da minha loja)           │   │
+│  │  • Compliance de Preços (desvios)      • Pedidos de Reposição                  │   │
+│  │  • Estoque Sazonal (cobertura)         • Recomendações IA                      │   │
+│  │  • Recomendações IA (rede)                                                      │   │
+│  │  • Onboarding (fluxos)                                                          │   │
+│  └──────────────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 11. Referências
 
 - [SAP S/4HANA Retail](https://www.sap.com/products/s4hana-erp.html)
 - [SAP Customer Activity Repository](https://www.sap.com/products/customer-activity-repository.html)
@@ -217,3 +454,8 @@ O RunMyFranchise é a resposta técnica a esse gap, construída sobre o stack SA
 - [SAP BTP Developer's Guide — Side-by-Side CAP Extension](https://help.sap.com/docs/BTP/0c8c1db388f645159e134a005aaabbcf/2289e25a0e494f03867c195454b6eaea.html)
 - [SAP Joule — Capabilities](https://help.sap.com/docs/JOULE/82a14f108cfa4d4788244d81371e072b/41de8c499c72413c8e134493686a5348.html)
 - [SAP S/4HANA — Distribution Franchisee Management (Utilities)](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/181023b0d46f417b82eed136aa57029b/526df057f3944183a9460429f3b9903a.html)
+- [SAP S/4HANA — Business Events (Enterprise Event Enablement)](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8308e6d301d54584a33cd04a9861bc52/8cbf952e55364254be2da77aa1342aa5.html)
+- [SAP S/4HANA — API_MATERIAL_STOCK](https://api.sap.com/api/API_MATERIAL_STOCK_SRV/overview)
+- [SAP S/4HANA — API_PURCHASEORDER_PROCESS_SRV](https://api.sap.com/api/API_PURCHASEORDER_PROCESS_SRV/overview)
+- [SAP S/4HANA — API_BUSINESS_PARTNER](https://api.sap.com/api/API_BUSINESS_PARTNER/overview)
+- [SAP Cloud Identity Services — SCIM API](https://help.sap.com/docs/cloud-identity-services)
