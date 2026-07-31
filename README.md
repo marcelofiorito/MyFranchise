@@ -57,25 +57,7 @@
 
 ![Arquitetura RunMyFranchise](arquitetura.png)
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│ CANAIS DE ACESSO                                             │
-│ SAP Build Work Zone (managed approuter) │ Responsivo (PWA)  │
-├──────────────────────────────────────────────────────────────┤
-│ APPS FIORI (6)                                               │
-│ Painel da Rede │ Compliance │ Onboarding │ Estoque           │
-│ Recomendações IA │ Portal do Franqueado (OVP)                │
-├──────────────────────────────────────────────────────────────┤
-│ BACKEND — SAP CAP (Node.js, OData V4)                        │
-│ FranqueadoraService │ FranqueadoService                      │
-│ Agente de Recomendações (gpt-4o) │ Agente de Reposição       │
-│ Middleware de atributos │ Servidor customizado                │
-├──────────────────────────────────────────────────────────────┤
-│ SERVIÇOS SAP BTP                                             │
-│ HANA Cloud (hdi-shared) │ XSUAA │ AI Core + GenAI Hub       │
-│ HTML5 Apps Repo (host + runtime) │ Destination Service       │
-└──────────────────────────────────────────────────────────────┘
-```
+
 
 ### Decisões Técnicas
 
