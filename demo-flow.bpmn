@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             id="RunMyFranchise_Demo"
+             targetNamespace="http://runmyfranchise.demo/bpmn"
+             exporter="Claude Code" exporterVersion="1.0">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       RunMyFranchise — Fluxo da Demo (26/08/2026)
+       Cenário: Ruptura de Estoque → Agente de Reposição → Aprovação
+       3 piscinas: Gestor (Franqueadora) | Sistema (RunMyFranchise) | Franqueado
+       ═══════════════════════════════════════════════════════════ -->
+
+  <collaboration id="Demo_Collaboration">
+    <participant id="Pool_Gestor"     name="Gestor (Franqueadora)"  processRef="Process_Gestor"/>
+    <participant id="Pool_Sistema"    name="Sistema (RunMyFranchise)" processRef="Process_Sistema"/>
+    <participant id="Pool_Franqueado" name="Franqueado (Loja)"      processRef="Process_Franqueado"/>
+
+    <!-- mensagens entre piscinas -->
+    <messageFlow id="mf1" sourceRef="task_G_AbreEstoque"    targetRef="task_S_CarregaEstoque"/>
+    <messageFlow id="mf2" sourceRef="task_S_GeraCobertura"  targetRef="task_G_VerCobertura"/>
+    <messageFlow id="mf3" sourceRef="task_S_GeraRec"        targetRef="task_G_VerRec"/>
+    <messageFlow id="mf4" sourceRef="task_G_AprovaReposicao" targetRef="task_S_ExecutaReposicao"/>
+    <messageFlow id="mf5" sourceRef="task_S_NotificaFranqueado" targetRef="task_F_RecebeAlerta"/>
+    <messageFlow id="mf6" sourceRef="task_S_EntregaRec"     targetRef="task_F_LeRecomendacoes"/>
+  </collaboration>
+
+  <!-- ═══════════════ POOL GESTOR ═══════════════ -->
+  <process id="Process_Gestor" isExecutable="false">
+
+    <startEvent id="start_G" name="Demo inicia&#10;Painel da Rede">
+      <outgoing>sf_G1</outgoing>
+    </startEvent>
+
+    <task id="task_G_AbreNetwork" name="Abre Painel da Rede&#10;— vê donut de criticidade">
+      <incoming>sf_G1</incoming>
+      <outgoing>sf_G2</outgoing>
+    </task>
+
+    <task id="task_G_FiltraRegiao" name="Filtra Estoque por Região&#10;NE → Havaianas em RUPTURA">
+      <incoming>sf_G2</incoming>
+      <outgoing>sf_G3</outgoing>
+    </task>
+
+    <task id="task_G_AbreEstoque" name="Abre app Estoque &amp; Reposição&#10;— envia request ao sistema">
+      <incoming>sf_G3</incoming>
+      <outgoing>sf_G4</outgoing>
+    </task>
+
+    <task id="task_G_VerCobertura" name="Visualiza cobertura sazonal&#10;Recife: 2,6 dias → RUPTURA&#10;Porto Alegre: 66,7 dias → OK">
+      <incoming>sf_G4</incoming>
+      <outgoing>sf_G5</outgoing>
+    </task>
+
+    <task id="task_G_AcionaAgente" name="Aciona Agente de Reposição&#10;— dispara gerarReposicao(u178)">
+      <incoming>sf_G5</incoming>
+      <outgoing>sf_G6</outgoing>
+    </task>
+
+    <task id="task_G_VerRec" name="Recebe pedidos gerados pela IA&#10;— visualiza justificativa do gpt-4o">
+      <incoming>sf_G6</incoming>
+      <outgoing>sf_G7</outgoing>
+    </task>
+
+    <exclusiveGateway id="gw_G_Aprovar" name="Aprova?">
+      <incoming>sf_G7</incoming>
+      <outgoing>sf_G8_sim</outgoing>
+      <outgoing>sf_G8_nao</outgoing>
+    </exclusiveGateway>
+
+    <task id="task_G_AprovaReposicao" name="Aprova Pedido de Reposição&#10;→ status APROVADO">
+      <incoming>sf_G8_sim</incoming>
+      <outgoing>sf_G9</outgoing>
+    </task>
+
+    <task id="task_G_RecusaReposicao" name="Recusa / Ajusta Pedido">
+      <incoming>sf_G8_nao</incoming>
+      <outgoing>sf_G10</outgoing>
+    </task>
+
+    <endEvent id="end_G_ok" name="Reposição&#10;aprovada">
+      <incoming>sf_G9</incoming>
+    </endEvent>
+
+    <endEvent id="end_G_nao" name="Pedido&#10;recusado">
+      <incoming>sf_G10</incoming>
+    </endEvent>
+
+    <sequenceFlow id="sf_G1" sourceRef="start_G"             targetRef="task_G_AbreNetwork"/>
+    <sequenceFlow id="sf_G2" sourceRef="task_G_AbreNetwork"  targetRef="task_G_FiltraRegiao"/>
+    <sequenceFlow id="sf_G3" sourceRef="task_G_FiltraRegiao" targetRef="task_G_AbreEstoque"/>
+    <sequenceFlow id="sf_G4" sourceRef="task_G_AbreEstoque"  targetRef="task_G_VerCobertura"/>
+    <sequenceFlow id="sf_G5" sourceRef="task_G_VerCobertura" targetRef="task_G_AcionaAgente"/>
+    <sequenceFlow id="sf_G6" sourceRef="task_G_AcionaAgente" targetRef="task_G_VerRec"/>
+    <sequenceFlow id="sf_G7" sourceRef="task_G_VerRec"       targetRef="gw_G_Aprovar"/>
+    <sequenceFlow id="sf_G8_sim" name="Sim" sourceRef="gw_G_Aprovar"         targetRef="task_G_AprovaReposicao"/>
+    <sequenceFlow id="sf_G8_nao" name="Não" sourceRef="gw_G_Aprovar"         targetRef="task_G_RecusaReposicao"/>
+    <sequenceFlow id="sf_G9" sourceRef="task_G_AprovaReposicao" targetRef="end_G_ok"/>
+    <sequenceFlow id="sf_G10" sourceRef="task_G_RecusaReposicao" targetRef="end_G_nao"/>
+  </process>
+
+  <!-- ═══════════════ POOL SISTEMA ═══════════════ -->
+  <process id="Process_Sistema" isExecutable="false">
+
+    <task id="task_S_CarregaEstoque" name="Carrega Estoque_Unidade&#10;+ Sazonalidade_Regional&#10;+ Calendario_Promocional">
+      <outgoing>sf_S1</outgoing>
+    </task>
+
+    <task id="task_S_GeraCobertura" name="Calcula coberturaDias&#10;= saldo / (giro × fatorSazonal × uplift)&#10;→ estoqueCriticality (1/2/3)">
+      <incoming>sf_S1</incoming>
+      <outgoing>sf_S2</outgoing>
+    </task>
+
+    <exclusiveGateway id="gw_S_Ruptura" name="coberturaDias &#60; leadTime?">
+      <incoming>sf_S2</incoming>
+      <outgoing>sf_S3_sim</outgoing>
+      <outgoing>sf_S3_nao</outgoing>
+    </exclusiveGateway>
+
+    <task id="task_S_GeraRec" name="Agente de Reposição (gpt-4o)&#10;— monta prompt com contexto sazonal&#10;— gera Pedidos_Reposicao (PENDENTE)">
+      <incoming>sf_S3_sim</incoming>
+      <outgoing>sf_S4</outgoing>
+    </task>
+
+    <task id="task_S_SemRuptura" name="Sem risco — nenhuma ação">
+      <incoming>sf_S3_nao</incoming>
+      <outgoing>sf_S5</outgoing>
+    </task>
+
+    <task id="task_S_ExecutaReposicao" name="Atualiza Pedidos_Reposicao&#10;→ status APROVADO&#10;→ dispara notificação">
+      <incoming>sf_S4</incoming>
+      <outgoing>sf_S6</outgoing>
+    </task>
+
+    <task id="task_S_NotificaFranqueado" name="Notifica Franqueado&#10;— envia alerta de pedido aprovado">
+      <incoming>sf_S6</incoming>
+      <outgoing>sf_S7</outgoing>
+    </task>
+
+    <task id="task_S_EntregaRec" name="Entrega Recomendações da IA&#10;MinhasRecomendacoes (3 recomendações)&#10;— descrição completa gpt-4o">
+      <incoming>sf_S7</incoming>
+    </task>
+
+    <endEvent id="end_S_ok">
+      <incoming>sf_S5</incoming>
+    </endEvent>
+
+    <sequenceFlow id="sf_S1" sourceRef="task_S_CarregaEstoque"   targetRef="task_S_GeraCobertura"/>
+    <sequenceFlow id="sf_S2" sourceRef="task_S_GeraCobertura"    targetRef="gw_S_Ruptura"/>
+    <sequenceFlow id="sf_S3_sim" name="Sim"  sourceRef="gw_S_Ruptura" targetRef="task_S_GeraRec"/>
+    <sequenceFlow id="sf_S3_nao" name="Não"  sourceRef="gw_S_Ruptura" targetRef="task_S_SemRuptura"/>
+    <sequenceFlow id="sf_S4" sourceRef="task_S_GeraRec"          targetRef="task_S_ExecutaReposicao"/>
+    <sequenceFlow id="sf_S5" sourceRef="task_S_SemRuptura"       targetRef="end_S_ok"/>
+    <sequenceFlow id="sf_S6" sourceRef="task_S_ExecutaReposicao" targetRef="task_S_NotificaFranqueado"/>
+    <sequenceFlow id="sf_S7" sourceRef="task_S_NotificaFranqueado" targetRef="task_S_EntregaRec"/>
+  </process>
+
+  <!-- ═══════════════ POOL FRANQUEADO ═══════════════ -->
+  <process id="Process_Franqueado" isExecutable="false">
+
+    <task id="task_F_RecebeAlerta" name="Recebe alerta de reposição&#10;no Portal do Franqueado">
+      <outgoing>sf_F1</outgoing>
+    </task>
+
+    <task id="task_F_AbrePortal" name="Abre Portal do Franqueado&#10;— vê 5 cards (Score, KPIs, Ações,&#10;  Recomendações, Benchmark)">
+      <incoming>sf_F1</incoming>
+      <outgoing>sf_F2</outgoing>
+    </task>
+
+    <task id="task_F_LeRecomendacoes" name="Lê Recomendações da IA&#10;— SKUs, percentuais, impacto&#10;— ação concreta com prazo">
+      <incoming>sf_F2</incoming>
+      <outgoing>sf_F3</outgoing>
+    </task>
+
+    <task id="task_F_ExecutaAcao" name="Executa ação recomendada&#10;— ajusta preços / faz pedido&#10;— registra resposta na notificação">
+      <incoming>sf_F3</incoming>
+      <outgoing>sf_F4</outgoing>
+    </task>
+
+    <endEvent id="end_F" name="Ruptura&#10;evitada">
+      <incoming>sf_F4</incoming>
+    </endEvent>
+
+    <sequenceFlow id="sf_F1" sourceRef="task_F_RecebeAlerta"     targetRef="task_F_AbrePortal"/>
+    <sequenceFlow id="sf_F2" sourceRef="task_F_AbrePortal"       targetRef="task_F_LeRecomendacoes"/>
+    <sequenceFlow id="sf_F3" sourceRef="task_F_LeRecomendacoes"  targetRef="task_F_ExecutaAcao"/>
+    <sequenceFlow id="sf_F4" sourceRef="task_F_ExecutaAcao"      targetRef="end_F"/>
+  </process>
+
+  <!-- ═══════════════ DIAGRAM ═══════════════ -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Demo_Collaboration">
+
+      <!-- Pool Gestor -->
+      <bpmndi:BPMNShape id="shape_Pool_Gestor" bpmnElement="Pool_Gestor" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="1100" height="220"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_start_G" bpmnElement="start_G">
+        <dc:Bounds x="212" y="162" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_G_AbreNetwork" bpmnElement="task_G_AbreNetwork">
+        <dc:Bounds x="290" y="142" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_G_FiltraRegiao" bpmnElement="task_G_FiltraRegiao">
+        <dc:Bounds x="450" y="142" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_G_AbreEstoque" bpmnElement="task_G_AbreEstoque">
+        <dc:Bounds x="610" y="142" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_G_VerCobertura" bpmnElement="task_G_VerCobertura">
+        <dc:Bounds x="770" y="142" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_G_AcionaAgente" bpmnElement="task_G_AcionaAgente">
+        <dc:Bounds x="930" y="142" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_G_VerRec" bpmnElement="task_G_VerRec">
+        <dc:Bounds x="1090" y="142" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_G_Aprovar" bpmnElement="gw_G_Aprovar" isMarkerVisible="true">
+        <dc:Bounds x="1250" y="155" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_G_AprovaReposicao" bpmnElement="task_G_AprovaReposicao">
+        <dc:Bounds x="1350" y="142" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_G_RecusaReposicao" bpmnElement="task_G_RecusaReposicao">
+        <dc:Bounds x="1350" y="230" width="120" height="60"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_end_G_ok" bpmnElement="end_G_ok">
+        <dc:Bounds x="1520" y="162" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_end_G_nao" bpmnElement="end_G_nao">
+        <dc:Bounds x="1520" y="248" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Pool Sistema -->
+      <bpmndi:BPMNShape id="shape_Pool_Sistema" bpmnElement="Pool_Sistema" isHorizontal="true">
+        <dc:Bounds x="150" y="340" width="1100" height="230"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_S_CarregaEstoque" bpmnElement="task_S_CarregaEstoque">
+        <dc:Bounds x="610" y="388" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_S_GeraCobertura" bpmnElement="task_S_GeraCobertura">
+        <dc:Bounds x="770" y="388" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gw_S_Ruptura" bpmnElement="gw_S_Ruptura" isMarkerVisible="true">
+        <dc:Bounds x="930" y="405" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_S_GeraRec" bpmnElement="task_S_GeraRec">
+        <dc:Bounds x="1030" y="388" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_S_SemRuptura" bpmnElement="task_S_SemRuptura">
+        <dc:Bounds x="1030" y="480" width="120" height="60"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_S_ExecutaReposicao" bpmnElement="task_S_ExecutaReposicao">
+        <dc:Bounds x="1190" y="388" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_S_NotificaFranqueado" bpmnElement="task_S_NotificaFranqueado">
+        <dc:Bounds x="1350" y="388" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_S_EntregaRec" bpmnElement="task_S_EntregaRec">
+        <dc:Bounds x="1090" y="480" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_end_S_ok" bpmnElement="end_S_ok">
+        <dc:Bounds x="1200" y="505" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Pool Franqueado -->
+      <bpmndi:BPMNShape id="shape_Pool_Franqueado" bpmnElement="Pool_Franqueado" isHorizontal="true">
+        <dc:Bounds x="150" y="610" width="1100" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_F_RecebeAlerta" bpmnElement="task_F_RecebeAlerta">
+        <dc:Bounds x="1350" y="658" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_F_AbrePortal" bpmnElement="task_F_AbrePortal">
+        <dc:Bounds x="1090" y="658" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_F_LeRecomendacoes" bpmnElement="task_F_LeRecomendacoes">
+        <dc:Bounds x="930" y="658" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_F_ExecutaAcao" bpmnElement="task_F_ExecutaAcao">
+        <dc:Bounds x="770" y="658" width="120" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_end_F" bpmnElement="end_F">
+        <dc:Bounds x="720" y="680" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Sequence flows Gestor -->
+      <bpmndi:BPMNEdge id="edge_sf_G1" bpmnElement="sf_G1"><di:waypoint x="248" y="180"/><di:waypoint x="290" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G2" bpmnElement="sf_G2"><di:waypoint x="410" y="180"/><di:waypoint x="450" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G3" bpmnElement="sf_G3"><di:waypoint x="570" y="180"/><di:waypoint x="610" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G4" bpmnElement="sf_G4"><di:waypoint x="730" y="180"/><di:waypoint x="770" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G5" bpmnElement="sf_G5"><di:waypoint x="890" y="180"/><di:waypoint x="930" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G6" bpmnElement="sf_G6"><di:waypoint x="1050" y="180"/><di:waypoint x="1090" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G7" bpmnElement="sf_G7"><di:waypoint x="1210" y="180"/><di:waypoint x="1250" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G8_sim" bpmnElement="sf_G8_sim"><di:waypoint x="1300" y="180"/><di:waypoint x="1350" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G8_nao" bpmnElement="sf_G8_nao"><di:waypoint x="1275" y="205"/><di:waypoint x="1275" y="260"/><di:waypoint x="1350" y="260"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G9" bpmnElement="sf_G9"><di:waypoint x="1470" y="180"/><di:waypoint x="1520" y="180"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_G10" bpmnElement="sf_G10"><di:waypoint x="1470" y="260"/><di:waypoint x="1520" y="266"/></bpmndi:BPMNEdge>
+
+      <!-- Sequence flows Sistema -->
+      <bpmndi:BPMNEdge id="edge_sf_S1" bpmnElement="sf_S1"><di:waypoint x="730" y="426"/><di:waypoint x="770" y="426"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_S2" bpmnElement="sf_S2"><di:waypoint x="890" y="426"/><di:waypoint x="930" y="430"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_S3_sim" bpmnElement="sf_S3_sim"><di:waypoint x="980" y="430"/><di:waypoint x="1030" y="426"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_S3_nao" bpmnElement="sf_S3_nao"><di:waypoint x="955" y="455"/><di:waypoint x="955" y="510"/><di:waypoint x="1030" y="510"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_S4" bpmnElement="sf_S4"><di:waypoint x="1150" y="426"/><di:waypoint x="1190" y="426"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_S5" bpmnElement="sf_S5"><di:waypoint x="1150" y="510"/><di:waypoint x="1200" y="523"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_S6" bpmnElement="sf_S6"><di:waypoint x="1310" y="426"/><di:waypoint x="1350" y="426"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_S7" bpmnElement="sf_S7"><di:waypoint x="1410" y="464"/><di:waypoint x="1150" y="518"/></bpmndi:BPMNEdge>
+
+      <!-- Sequence flows Franqueado -->
+      <bpmndi:BPMNEdge id="edge_sf_F1" bpmnElement="sf_F1"><di:waypoint x="1350" y="696"/><di:waypoint x="1210" y="696"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_F2" bpmnElement="sf_F2"><di:waypoint x="1090" y="696"/><di:waypoint x="1050" y="696"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_F3" bpmnElement="sf_F3"><di:waypoint x="930" y="696"/><di:waypoint x="890" y="696"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sf_F4" bpmnElement="sf_F4"><di:waypoint x="770" y="696"/><di:waypoint x="756" y="698"/></bpmndi:BPMNEdge>
+
+      <!-- Message flows (entre piscinas) -->
+      <bpmndi:BPMNEdge id="edge_mf1" bpmnElement="mf1"><di:waypoint x="670" y="218"/><di:waypoint x="670" y="388"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_mf2" bpmnElement="mf2"><di:waypoint x="830" y="388"/><di:waypoint x="830" y="218"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_mf3" bpmnElement="mf3"><di:waypoint x="1090" y="480"/><di:waypoint x="1090" y="218"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_mf4" bpmnElement="mf4"><di:waypoint x="1410" y="218"/><di:waypoint x="1250" y="388"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_mf5" bpmnElement="mf5"><di:waypoint x="1410" y="464"/><di:waypoint x="1410" y="658"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_mf6" bpmnElement="mf6"><di:waypoint x="1150" y="556"/><di:waypoint x="990" y="658"/></bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
