@@ -146,11 +146,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 
 ![Fluxo da Demo — BPMN](BPMN.png)
 
----
-
-## Cenário de Demo — Loja 147 (Porto Alegre)
-
-**Dados validados em produção:**
+### Dados validados em produção — Loja Porto Alegre (u147)
 
 | Dado | Valor |
 |---|---|
@@ -161,7 +157,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 | Recomendações IA | 3 — via gpt-4o (`modo: "GenAI Hub"` confirmado) |
 | Donut da rede | 4 críticas / 9 atenção / 7 saudáveis (20 unidades) |
 
-**Roteiro de demo:** ver `teste/ROTEIRO_DEMO.md` (4 atos: Visão → Causa → IA → Ponta)
+**Roteiro detalhado:** ver `teste/ROTEIRO_DEMO.md` (4 atos: Visão → Causa → IA → Ponta)
 
 ---
 
