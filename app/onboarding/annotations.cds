@@ -1,5 +1,21 @@
 using FranqueadoraService as service from '../../srv/service';
 
+// ── ValueHelp nos filtros do Onboarding ──────────────────────
+annotate service.ProcessosOnboarding with {
+  status @(
+    Common.ValueListWithFixedValues: true,
+    Common.ValueList: {
+      CollectionPath: 'StatusOnboarding',
+      Parameters    : [
+        { $Type: 'Common.ValueListParameterOut',
+          LocalDataProperty: status_code, ValueListProperty: 'code' },
+        { $Type: 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'name' }
+      ]
+    }
+  );
+}
+
 // ─────────────────────────────────────────────────────────────
 // ONBOARDING — List Report Object Page + Draft
 // EntitySet: ProcessosOnboarding

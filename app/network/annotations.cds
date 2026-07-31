@@ -1,5 +1,35 @@
 using FranqueadoraService as service from '../../srv/service';
 
+// ── ValueHelp nos filtros do Painel da Rede ───────────────────
+annotate service.Saude_Dashboard with {
+  regiao_code @(
+    title: 'Região',
+    Common.ValueListWithFixedValues: true,
+    Common.ValueList: {
+      CollectionPath: 'Regiao',
+      Parameters    : [
+        { $Type: 'Common.ValueListParameterOut',
+          LocalDataProperty: regiao_code, ValueListProperty: 'code' },
+        { $Type: 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'name' }
+      ]
+    }
+  );
+  cluster_code @(
+    title: 'Cluster',
+    Common.ValueListWithFixedValues: true,
+    Common.ValueList: {
+      CollectionPath: 'Cluster',
+      Parameters    : [
+        { $Type: 'Common.ValueListParameterOut',
+          LocalDataProperty: cluster_code, ValueListProperty: 'code' },
+        { $Type: 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'name' }
+      ]
+    }
+  );
+}
+
 // ═════════════════════════════════════════════════════════════
 // PAINEL DA REDE — Analytical List Page (view Saude_Dashboard)
 // View agregável (@Aggregation.ApplySupported) → suporta chart

@@ -3,6 +3,46 @@ using FranqueadoraService as service from '../../srv/service';
 // ─────────────────────────────────────────────────────────────
 // GOVERNANÇA & COMPLIANCE — List Report Object Page
 // EntitySet: Desvios
+
+// ── ValueHelp nos filtros ─────────────────────────────────────
+annotate service.Desvios with {
+  tipo @(
+    Common.ValueListWithFixedValues: true,
+    Common.ValueList: {
+      CollectionPath: 'TipoDesvio',
+      Parameters    : [
+        { $Type: 'Common.ValueListParameterOut',
+          LocalDataProperty: tipo_code, ValueListProperty: 'code' },
+        { $Type: 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'name' }
+      ]
+    }
+  );
+  severidade @(
+    Common.ValueListWithFixedValues: true,
+    Common.ValueList: {
+      CollectionPath: 'Severidade',
+      Parameters    : [
+        { $Type: 'Common.ValueListParameterOut',
+          LocalDataProperty: severidade_code, ValueListProperty: 'code' },
+        { $Type: 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'name' }
+      ]
+    }
+  );
+  status @(
+    Common.ValueListWithFixedValues: true,
+    Common.ValueList: {
+      CollectionPath: 'StatusDesvio',
+      Parameters    : [
+        { $Type: 'Common.ValueListParameterOut',
+          LocalDataProperty: status_code, ValueListProperty: 'code' },
+        { $Type: 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'name' }
+      ]
+    }
+  );
+}
 // ─────────────────────────────────────────────────────────────
 
 annotate service.Desvios with @(

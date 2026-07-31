@@ -11,6 +11,38 @@ annotate service.Estoque_Unidade with @(
   // ── Filtros: região (Sul × Nordeste), status, categoria ──
   UI.SelectionFields: [ regiaoCode, status_code, categoria ],
 
+) {
+  // ValueHelp na região: apresenta lista N/NE/CO/SE/S com o nome completo
+  regiaoCode @(
+    title: 'Região',
+    Common.ValueListWithFixedValues: true,
+    Common.ValueList: {
+      CollectionPath: 'Regiao',
+      Parameters    : [
+        { $Type : 'Common.ValueListParameterOut',
+          LocalDataProperty: regiaoCode, ValueListProperty: 'code' },
+        { $Type : 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'name' }
+      ]
+    }
+  );
+  // ValueHelp no status: OK / ATENCAO / RUPTURA
+  status @(
+    Common.ValueListWithFixedValues: true,
+    Common.ValueList: {
+      CollectionPath: 'StatusEstoque',
+      Parameters    : [
+        { $Type : 'Common.ValueListParameterOut',
+          LocalDataProperty: status_code, ValueListProperty: 'code' },
+        { $Type : 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'name' }
+      ]
+    }
+  );
+}
+
+annotate service.Estoque_Unidade with @(
+
   // ── DataPoint: cobertura com criticality (vermelho = ruptura) ──
   UI.DataPoint #Cobertura: {
     Value       : coberturaDias,
