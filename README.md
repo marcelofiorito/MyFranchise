@@ -287,24 +287,6 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 
 ---
 
-## Caso de Foco — Ruptura + Joule + Agente (próximos passos)
-
-Escopo confirmado para a demo de 26/08:
-
-### Implementado
-- ✅ Modelo (`Estoque_Unidade`, `Sazonalidade_Regional`, `Calendario_Promocional`, `Pedidos_Reposicao`)
-- ✅ Sazonalidade regional (fator de demanda por categoria × região × mês)
-- ✅ Cálculo de cobertura sazonal no handler
-- ✅ Agente de reposição nível 1-2 (detecta risco + gera pedidos PENDENTE via gpt-4o)
-- ✅ App Estoque & Reposição com filtro por região (demonstra Havaianas NE×Sul)
-
-### Pendente
-- ⬜ **Joule** — registrar entidades como skills para verificações conversacionais ("vou ter ruptura de Havaianas no NE em julho?")
-- ⬜ **Agente nível 3** — enviar `Pedidos_Reposicao` APROVADO para processamento via SAP Build Process Automation (human-in-the-loop)
-- ⬜ **BPMN completo** — fluxo da detecção ao reabastecimento
-
----
-
 ## Roadmap (pós-demo)
 
 ### Inteligência e Automação
