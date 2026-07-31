@@ -12,6 +12,9 @@
       "description": "Franqueado — acesso restrito à própria unidade"
     }
   ],
+  "authorities": [
+    "$XSAPPNAME.Franqueadora_Gestor"
+  ],
   "attributes": [
     {
       "name": "unidade_ID",
