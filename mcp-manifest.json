@@ -34,10 +34,12 @@
   ],
   "authentication": {
     "type": "oauth2",
-    "tokenUrl": "https://sa-build-platform-org.authentication.us10.hana.ondemand.com/oauth/token",
-    "clientId": "<replace-with-myfranchise-uaa-clientid>",
+    "tokenUrl": "https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com/oauth/token",
+    "clientId": "sb-myfranchise-DEV!t597567",
     "clientSecret": "<replace-with-myfranchise-uaa-clientsecret>",
-    "scopes": ["uaa.resource"]
+    "scopes": [
+      "uaa.resource"
+    ]
   },
   "examples": [
     "Quais lojas têm risco de ruptura de Havaianas no Nordeste em julho?",

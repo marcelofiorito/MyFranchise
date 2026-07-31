@@ -12,3 +12,4 @@ resources/
 *.mtar
 app/*/dist/
 app/*/node_modules/
+mcp-manifest.local.json
