@@ -142,6 +142,10 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 
 > **Cenário da demo:** o caso de ruptura de estoque é o foco principal da demonstração de 26/08. Outros cenários (compliance, onboarding, recomendações IA) poderão ser incluídos conforme análise do time.
 
+### Fluxo da Demo
+
+![Fluxo da Demo — BPMN](BPMN.png)
+
 ---
 
 ## Cenário de Demo — Loja 147 (Porto Alegre)
