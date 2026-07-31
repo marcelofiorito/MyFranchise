@@ -9,9 +9,9 @@
 
 ## Overview
 
-**Problem:** Franchisors struggle to manage and scale networks in a standardised way. Information is scattered, compliance is manual, KPIs arrive with delays, and franchisees operate as islands — with no visibility into their own performance and no proactive guidance.
+**Problem:** Franchisors struggle to manage and expand networks in a standardized way. Information is scattered, compliance is manual, KPIs arrive with delays, and franchisees operate as islands — with no visibility into their own performance and no proactive guidance.
 
-**Solution:** An SAP BTP platform that connects franchisors and franchisees in real time: a network panel, automated compliance, AI agents for recommendations and inventory replenishment, and a franchisee portal with its own dashboard.
+**Solution:** An SAP BTP platform that connects franchisors and franchisees in real time: network panel, automatic compliance, AI agents for recommendations and inventory replenishment, and a franchisee portal with its own dashboard.
 
 **Anchor persona:** Alexandre Mendes — Operations Director, network of 280 fashion/lifestyle stores, wants to double the network without multiplying the chaos.
 
@@ -22,9 +22,9 @@
 | Item | Detail |
 |---|---|
 | Event | Dragons' Den: Learn to Win Edition 2026 |
-| Organisation | SAP Solution Advisory |
+| Organization | SAP Solution Advisory |
 | Format | 15-min live demo + 5-min Q&A |
-| Date | 26 August 2026 |
+| Date | August 26, 2026 |
 | Critical requirement | Live demo, no screenshots |
 | Highest-weight criterion | Live Demo Quality (20%) |
 
@@ -55,25 +55,9 @@
 
 ## SAP BTP Architecture
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│ ACCESS CHANNELS                                              │
-│ SAP Build Work Zone (managed approuter) │ Responsive (PWA)  │
-├──────────────────────────────────────────────────────────────┤
-│ FIORI APPS (6)                                               │
-│ Network Panel │ Compliance │ Onboarding │ Inventory          │
-│ AI Recommendations │ Franchisee Portal (OVP)                 │
-├──────────────────────────────────────────────────────────────┤
-│ BACKEND — SAP CAP (Node.js, OData V4)                        │
-│ FranqueadoraService │ FranqueadoService                      │
-│ Recommendations Agent (gpt-4o) │ Replenishment Agent         │
-│ Attribute middleware │ Custom server                         │
-├──────────────────────────────────────────────────────────────┤
-│ SAP BTP SERVICES                                             │
-│ HANA Cloud (hdi-shared) │ XSUAA │ AI Core + GenAI Hub       │
-│ HTML5 Apps Repo (host + runtime) │ Destination Service       │
-└──────────────────────────────────────────────────────────────┘
-```
+![Arquitetura RunMyFranchise](arquitetura.png)
+
+
 
 ### Technical Decisions
 
@@ -83,8 +67,8 @@
 | Backend | SAP CAP Node.js, OData V4 | `@sap/cds ^10` |
 | Database | HANA Cloud (prod) / SQLite in-memory (dev) | `@cap-js/hana ^2.8` / `@cap-js/sqlite ^2.1.3` |
 | AI | AI Core + GenAI Hub (gpt-4o) | `@sap-ai-sdk/orchestration ^2.13` |
-| UI5 runtime | Fixed version `1.136.7` | Aligns build and runtime; avoids `Active` behaviour in FE V4 |
-| CAP profiles | `hana-cloud`/`xsuaa` as default; `[development]` activates sqlite+mocked | Avoids empty apps in CF |
+| UI5 runtime | Fixed version `1.136.7` | Aligns build and runtime; avoids `Active` behavior in FE V4 |
+| CAP profiles | `hana-cloud`/`xsuaa` as default; `[development]` enables sqlite+mocked | Prevents empty apps in CF |
 
 ---
 
@@ -93,32 +77,32 @@
 ### 1. Network Panel
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/Saude_Dashboard` → drill-down `/Unidades`
-- **Highlight:** Criticality donut (`@Aggregation.ApplySupported` + `Analytics.AggregatedProperty`): Critical / Warning / Healthy. Table with colour-coded score by criticality. Filter by cluster/region. Navigation to the unit Object Page.
+- **Highlight:** Criticality donut (`@Aggregation.ApplySupported` + `Analytics.AggregatedProperty`): Critical / Warning / Healthy. Table with color-coded score by criticality. Filter by cluster/region. Navigation to the unit's Object Page.
 
 ### 2. Governance & Compliance
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/Desvios`
-- **Highlight:** Automatic deviation detection in `after CREATE VendaPraticada`. Configurable rules (`RegrasCompliance`). Colour-coded severity (ALTA red, MÉDIA yellow). Navigation to deviation detail.
+- **Highlight:** Automatic deviation detection in `after CREATE VendaPraticada`. Configurable rules (`RegrasCompliance`). Color-coded severity (ALTA red, MÉDIA yellow). Navigation to deviation detail.
 
 ### 3. Onboarding
-- **Floorplan:** List Report + Object Page (2 levels) + `@odata.draft.enabled`
-- **contextPath:** `/ProcessosOnboarding` → `TarefasOnboarding`
-- **Highlight:** Draft saves progress automatically. Seed of processes/stages/tasks included. Tasks as sub-Object Pages.
+- **Floorplan:** List Report + Object Page + `@odata.draft.enabled`
+- **contextPath:** `/ProcessosOnboarding`
+- **Highlight:** End-to-end tracking of new store openings. The list shows all in-progress processes with status and completion percentage. Clicking a process shows the manager the **steps and tasks** of that onboarding — with owner, deadline, status, and documents. Draft saves progress automatically; nothing is lost if the screen is closed. Seed included with stores in the onboarding stage (u301, u302, u303).
 
-### 4. Inventory & Replenishment _(stockout use case — Camila)_
+### 4. Inventory & Replenishment
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/Estoque_Unidade`
-- **Highlight:** Inventory coverage calculated with **regional seasonality** (e.g. Havaianas in July: NE factor 1.8 = RUPTURA; South factor 0.4 = OK). Region filter highlights the South × Northeast contrast. `coberturaDias` and `estoqueCriticality` computed in the handler taking `Sazonalidade_Regional` and `Calendario_Promocional` into account. Object Page with situation + location.
+- **Highlight:** Inventory coverage calculated with **regional seasonality** (e.g., Havaianas in July: NE factor 1.8 = RUPTURA; South factor 0.4 = OK). Region filter shows the South × Northeast contrast. `coberturaDias` and `estoqueCriticality` computed in the handler considering `Sazonalidade_Regional` and `Calendario_Promocional`. Object Page with situation + location.
 
 ### 5. AI Recommendations
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/MinhasRecomendacoes`
-- **Highlight:** Lists recommendations with colour-coded priority (ALTA red). Object Page shows the **full description generated by gpt-4o** — SKUs, percentages, impact, action with deadline — without truncation.
+- **Highlight:** Lists recommendations with color-coded priority (ALTA red). Object Page shows the **full description generated by gpt-4o** — SKUs, percentages, impact, action with deadline — without truncation.
 
 ### 6. Franchisee Portal
 - **Floorplan:** Overview Page (OVP) — 5 cards (`sap.ovp.app.Component`)
-- **Cards:** My Performance (6-month revenue in BRL, period "Jun/2026"), Health Score (colour-coded criticality), Pending Actions (deviations with icons), AI Recommendations (gpt-4o), Network Position (cluster benchmark)
-- **Highlight:** Subtitle "Porto Alegre Store" on every card. Criticality via `DataFieldForAnnotation→DataPoint`. Currency `BRL`. JWT attribute fallback middleware (IAS does not send `unidade_ID`/`cluster`).
+- **Cards:** My Performance (6-month revenue in BRL, period "Jun/2026"), Health Score (color-coded criticality), Pending Actions (deviations with icons), AI Recommendations (gpt-4o), Network Position (cluster benchmark)
+- **Highlight:** Subtitle "Porto Alegre Store" on each card. Criticality via `DataFieldForAnnotation→DataPoint`. Currency `BRL`. JWT attribute fallback middleware (IAS does not send `unidade_ID`/`cluster`).
 
 ---
 
@@ -127,7 +111,7 @@
 ### Recommendations Agent (`srv/ai/recommendations-job.js`)
 - **LLM:** gpt-4o via `@sap-ai-sdk/orchestration` (GenAI Hub)
 - **Input:** KPIs, cluster benchmark, open compliance deviations
-- **Output:** 3 prioritised recommendations (ALTA/MÉDIA/BAIXA) with rich descriptions
+- **Output:** 3 prioritized recommendations (ALTA/MÉDIA/BAIXA) with rich descriptions
 - **Fallback:** deterministic rules (price deviation → PRECIFICACAO; revenue drop → CAMPANHA; low NPS → TREINAMENTO)
 - **Actions:** `gerarRecomendacoes(unidade_ID)`, `gerarRecomendacoesTodas()`
 
@@ -141,9 +125,11 @@
 
 ---
 
-## Focus Case — Stockout (Camila's proposal)
+## Focus Scenario — Inventory Stockout
 
-Regional seasonality demonstration with real data:
+Inventory stockout is one of the key operational risks in franchise networks: out-of-stock products cause lost sales, franchisee dissatisfaction, and brand damage. The differentiator lies in **anticipating** the stockout by factoring in regional seasonality — the same replenishment strategy does not work for all regions.
+
+**Demo with real data (July — reference month):**
 
 | Store | Region | SKU | Coverage (Jul) | Status |
 |---|---|---|---|---|
@@ -152,24 +138,26 @@ Regional seasonality demonstration with real data:
 | Porto Alegre (u147) | S | Havaianas Top | 66.7 days | 🟢 OK |
 | Porto Alegre (u147) | S | Bota Couro Inverno | 1.8 days | 🔴 RUPTURA |
 
-**Demo narrative:** same product (Havaianas), same month (July) → opposite risk by region. The agent calculates coverage with a regional seasonal factor and generates replenishment orders with a gpt-4o justification.
+Same product, same month → opposite risk by region. The agent calculates coverage with the regional seasonal factor and generates replenishment orders with gpt-4o justification, also considering the promotional calendar.
 
----
+> **Demo scenario:** the inventory stockout case is the main focus of the August 26 demonstration. Other scenarios (compliance, onboarding, AI recommendations) may be included based on team analysis.
 
-## Demo Scenario — Store 147 (Porto Alegre)
+### Demo Flow
 
-**Data validated in production:**
+![Fluxo da Demo — BPMN](BPMN.png)
 
-| Data point | Value |
+### Data validated in production — Porto Alegre Store (u147)
+
+| Data | Value |
 |---|---|
 | Health Score | **32 / 100** — critical (red) |
 | Compliance | 45% |
-| Revenue Jun/2026 | R$ 162,378 (drop from R$ 199k in Feb → R$ 162k in Jun) |
-| Detected deviations | 4 (Casual Sneaker −14.3% ALTA, Cap −24.1% ALTA, Dress −8.8% MÉDIA, Unauthorised Short) |
+| Revenue Jun/2026 | R$ 162,378 (decline from R$ 199k in Feb → R$ 162k in Jun) |
+| Detected deviations | 4 (Casual Sneaker −14.3% ALTA, Cap −24.1% ALTA, Dress −8.8% MÉDIA, unauthorized Short) |
 | AI Recommendations | 3 — via gpt-4o (`modo: "GenAI Hub"` confirmed) |
 | Network donut | 4 critical / 9 warning / 7 healthy (20 units) |
 
-**Demo script:** see `teste/ROTEIRO_DEMO.md` (4 acts: Overview → Root Cause → AI → Franchisee End)
+**Detailed script:** see `teste/ROTEIRO_DEMO.md` (4 acts: Overview → Root Cause → AI → Endpoint)
 
 ---
 
@@ -180,17 +168,17 @@ Regional seasonality demonstration with real data:
 @cap-js/sqlite             ^2.1.3      # SQLite in-memory (dev)
 @cap-js/hana               ^2.8.0      # HANA Cloud (prod)
 @sap-ai-sdk/orchestration  ^2.13.0     # GenAI Hub — gpt-4o
-@sap/xssec                 ^4.13.3     # XSUAA authorisation
+@sap/xssec                 ^4.13.3     # XSUAA authorization
 express                    ^4.22.2     # HTTP runtime
 
 SAP HANA Cloud                         # production database
 SAP Build Work Zone                    # portal and launchpad (managed approuter)
 SAP AI Core + GenAI Hub               # AI agents (gpt-4o)
-SAP IAS + XSUAA                       # identity and authorisation
+SAP IAS + XSUAA                       # identity and authorization
 SAPUI5 1.136.7                        # Fiori Elements runtime (pinned version)
 ```
 
-**CAP profiles:** `hana-cloud`/`xsuaa` as **default**; `[development]` activates sqlite+mocked automatically with `cds watch`.
+**CAP profiles:** `hana-cloud`/`xsuaa` as **default**; `[development]` automatically enables sqlite+mocked with `cds watch`.
 
 ---
 
@@ -200,7 +188,7 @@ SAPUI5 1.136.7                        # Fiori Elements runtime (pinned version)
 MyFranchise/
 ├── db/
 │   ├── schema.cds              # Data model (all modules)
-│   └── data/                   # 43 CSV seed files
+│   └── data/                   # 43 seed CSV files
 │       ├── myfranchise-Franqueados.csv        (8 franchisees)
 │       ├── myfranchise-Unidades.csv           (20 units + 3 onboarding)
 │       ├── myfranchise-KPI_Unidade.csv        (120 KPIs — 20×6 months)
@@ -227,7 +215,7 @@ MyFranchise/
 │   ├── recommendations/  # AI Recommendations (LR + OP)
 │   └── franchisee/       # Franchisee Portal (OVP — 5 cards)
 ├── teste/
-│   └── ROTEIRO_DEMO.md         # 4-act demo script, checklist, plan B
+│   └── ROTEIRO_DEMO.md         # 4-act script, checklist, plan B
 ├── mta.yaml                    # CF deploy (10 modules, 6 services)
 ├── xs-security.json            # XSUAA (roles, scopes, attributes)
 ├── package.json
@@ -308,15 +296,15 @@ The `mta.yaml` publishes 10 modules: `myfranchise-srv`, `db-deployer`, 6 HTML5 a
 
 ## Production Notes
 
-- **Franchisee JWT attributes:** The IdP (IAS) does not send `unidade_ID`/`cluster` in the assertion. `srv/server.js` injects the defaults `u147`/`STD` via CAP middleware. For real production use, map these via IAS assertion attributes.
-- **HANA/AI Core cold start:** send 1 warm-up request before the demo (HANA and AI Core have cold-start times of several seconds).
-- **LR→OP navigation:** requires `contextPath` (not `entitySet`) + explicit `navigation` + `ResponsiveTable` in the manifest, and a **pinned** UI5 runtime version (not `/resources/latest`). Version `1.136.7` has been validated.
+- **Franchisee JWT attributes:** the IdP (IAS) does not send `unidade_ID`/`cluster` in the assertion. `srv/server.js` injects the default `u147`/`STD` via CAP middleware. For real production, map via IAS assertion attributes.
+- **HANA/AI Core cold start:** send 1 warm-up request before the demo (HANA and AI Core have cold start of several seconds).
+- **LR→OP navigation:** requires `contextPath` (not `entitySet`) + explicit `navigation` + `ResponsiveTable` in the manifest, and UI5 runtime **pinned version** (not `/resources/latest`). Version `1.136.7` has been validated.
 
 ---
 
-## Focus Case — Stockout + Joule + Agent (next steps)
+## Focus Scenario — Stockout + Joule + Agent (next steps)
 
-Proposal by analyst **Camila** — scope confirmed for the 26/08 demo:
+Confirmed scope for the August 26 demo:
 
 ### Implemented
 - ✅ Model (`Estoque_Unidade`, `Sazonalidade_Regional`, `Calendario_Promocional`, `Pedidos_Reposicao`)
@@ -328,19 +316,31 @@ Proposal by analyst **Camila** — scope confirmed for the 26/08 demo:
 ### Pending
 - ⬜ **Joule** — register entities as skills for conversational queries ("will I have a Havaianas stockout in the NE in July?")
 - ⬜ **Level-3 agent** — send APPROVED `Pedidos_Reposicao` for processing via SAP Build Process Automation (human-in-the-loop)
-- ⬜ **Full BPMN** — end-to-end flow from detection to restocking
+- ⬜ **Full BPMN** — flow from detection to replenishment
 
 ---
 
 ## Roadmap (post-demo)
 
-- **SAP Analytics Cloud** — executive dashboards (current: Fiori Elements, no SAC)
-- **SAP Datasphere** — data federation from multiple sources
-- **SAP Build Process Automation** — approval workflows (compliance + replenishment + onboarding)
-- **Drill-down to Object Page** across all apps via Joule (answers directly from the data)
+### Intelligence and Automation
+- **Joule** — conversational copilot over network data ("which stores have a stockout risk today?")
+- **Level-3 Replenishment Agent** — automatic approval via SAP Build Process Automation (human-in-the-loop); orders currently remain in PENDENTE
+- **SAP Build Process Automation** — approval workflows for compliance, replenishment, and onboarding
+- **SAP Analytics Cloud** — executive dashboards for board and leadership (currently: Fiori Elements)
+
+### Integration with SAP Retail Systems
+- **SAP S/4HANA Retail** — integration with merchandise management and automatic replenishment orders
+- **SAP Customer Activity Repository (CAR)** — real POS sales data to replace seed CSV; real-time demand feeds the replenishment agent
+- **SAP Omnichannel Point-of-Sale (POS DM)** — real-time capture of store transactions; basis for price deviation and stockout detection
+- **SAP Ariba** — supplier and purchase order management to close the replenishment cycle
+- **SAP Integrated Business Planning (IBP)** — demand forecasting with regional seasonality to feed the agent
+- **SAP Emarsys** — marketing campaigns targeted by cluster/region, integrated with the promotional calendar
+
+### Data and Platform
+- **SAP Datasphere** — data federation from multiple sources (POS, ERP, e-commerce)
+- **Expansion Module** — location scoring for opening new stores
 - **IAS Assertion Attributes** — map `unidade_ID`/`cluster` via IdP (remove fallback middleware)
-- **Expansion Module** — location scoring for new store openings
-- **HANA Sequences** — replace unit-code logic with native sequences
+- **HANA Sequences** — replace unit code logic with native sequences
 
 ---
 
@@ -348,8 +348,8 @@ Proposal by analyst **Camila** — scope confirmed for the 26/08 demo:
 
 - [CAP Documentation](https://cap.cloud.sap/docs/)
 - [SAP Fiori Elements — Feature Showcase](https://github.com/SAP-samples/fiori-elements-feature-showcase)
-- [cap-sflight (ALP/chart reference)](https://github.com/SAP-samples/cap-sflight)
-- [cap-cert-petrobras (LR→OP navigation reference)](https://github.com/marcelofiorito/cap-cert-petrobras)
+- [cap-sflight (reference for ALP/chart)](https://github.com/SAP-samples/cap-sflight)
+- [cap-cert-petrobras (reference for LR→OP navigation)](https://github.com/marcelofiorito/cap-cert-petrobras)
 - [SAP Build Work Zone](https://help.sap.com/docs/build-work-zone-standard-edition)
 - [SAP AI Core + GenAI Hub](https://help.sap.com/docs/sap-ai-core)
 - [OData Annotation Vocabulary](https://ui5.sap.com/#/topic/030faebe70b34198b17a93b4c6e7b4d7)
