@@ -175,8 +175,7 @@ MyFranchise/
 │   ├── onboarding/             # Onboarding (LROP + Draft)
 │   └── recommendations/        # Recomendações da IA (LR + Object Page)
 ├── teste/
-│   ├── ROTEIRO_DEMO.md              # Roteiro de demo (4 atos, checklist, plano B)
-│   └── AVALIACAO_RUPTURA_ESTOQUE.md # Avaliação da proposta de ruptura de estoque
+│   └── ROTEIRO_DEMO.md              # Roteiro de demo (4 atos, checklist, plano B)
 ├── mta.yaml                    # Deploy Cloud Foundry (srv + db + 5 apps + Work Zone)
 ├── xs-security.json            # XSUAA (roles, scopes, atributos)
 ├── package.json
@@ -297,7 +296,7 @@ POST /franqueadora/gerarRecomendacoes   { "unidade_ID": "u147" }
 ### Pendências
 - Ensaios da demo ao vivo (ver `teste/ROTEIRO_DEMO.md`)
 - Adicionar o app **Recomendações da IA** ao site do Work Zone (app novo)
-- Avaliar com o time a proposta de **ruptura de estoque** (ver `teste/AVALIACAO_RUPTURA_ESTOQUE.md`)
+- Construir o caso **Ruptura de Estoque + Joule + Agente de Reposição** (ver seção dedicada abaixo)
 
 ---
 
@@ -336,9 +335,101 @@ Todos compartilham `sap.cloud.service: "myfranchise.service"` — o Work Zone ag
 
 ---
 
+## Caso de Foco — Ruptura de Estoque + Joule + Agente (em construção para 26/08)
+
+> Proposta da analista de negócio **Camila**: evitar ruptura de estoque na loja do franqueado.
+> Evolução para incluir **Joule** (copiloto conversacional) e um **Agente de Reposição** (automação). Escopo confirmado para a demo de 26/08.
+
+### 2.1 Por que ruptura de estoque
+
+Dor concreta, visual e mensurável em franquias: falta de produto → venda perdida → franqueado insatisfeito → dano à marca. Fecha o arco da demo: hoje mostramos risco de **compliance** (preço); estoque é o segundo risco operacional, e habilita o gancho de **IA + agente**.
+
+### 2.2 Situação atual (gap)
+
+O tema **não é tratado** hoje — apenas decorativo:
+
+| Onde aparece "estoque" | O que é | Trata ruptura? |
+|---|---|---|
+| `TipoRecomendacao` código `ESTOQUE` | rótulo de categoria | ❌ |
+| Recomendações da IA (texto) | gpt-4o às vezes cita "reposição" | ❌ sem dado real |
+| `VendaPraticada.qtdVendida` | quantidade vendida | ⚠️ é venda, não saldo |
+
+**Não existe** entidade/campo de: saldo de estoque, mínimo/ponto de reposição, lead time, cobertura (dias restantes), eventos de ruptura.
+
+### 2.3 Fatores de decisão (o que torna o caso rico)
+
+- **Sazonalidade regional** — mesmo produto tem demanda diferente por região. Exemplo-âncora: **Havaianas em julho vendem alto no Nordeste e baixo no Sul**. A reposição precisa ser diferenciada por região/cluster, não uniforme.
+- **Promoções + calendário** — campanhas antecipam demanda (ex.: Dia dos Pais, verão). O agente considera o calendário promocional ao calcular a reposição.
+- **Filtro por região** — nos apps, filtrar por região demonstra visualmente a diferença de giro (Sul × Nordeste) — argumento de storytelling forte.
+
+### 2.4 Modelo de dados a criar
+
+- `EstoqueUnidade` (SKU, saldo, mínimo, leadTime, cobertura, criticality)
+- `SazonalidadeRegional` (SKU/categoria × região × período → fator de demanda)
+- `CalendarioPromocional` (campanha, período, SKUs/categorias afetadas, região)
+- `PedidosReposicao` (gerados pelo agente: SKU, qtd, fornecedor, prazo, status de aprovação)
+
+Reaproveita ~70% do padrão dos **Desvios de Compliance** (detecção → criticality → recomendação IA).
+
+### 2.5 Joule — copiloto conversacional (verificações)
+
+Joule consome as entidades/actions OData/CAP como **skills**. A mesma verificação disponível nos apps, feita por chat em linguagem natural:
+
+- *"Quais lojas estão em risco crítico hoje?"* → `Saude_Dashboard`
+- *"Por que a Loja 147 está vermelha?"* → cruza `Desvios` + `KPI_Unidade`
+- *"Vou ter ruptura de Havaianas no Nordeste em julho?"* → estoque + sazonalidade regional + calendário
+- *"Quais SKUs repor antes da campanha de verão?"* → cobertura + promoções
+
+Reforça a mensagem: **uma plataforma, múltiplas formas de acesso** (app + chat).
+
+### 2.6 Agente de Reposição — automação (níveis 1→3)
+
+Padrão: **detectar → raciocinar (gpt-4o) → agir (action CAP) → registrar**, sobre AI Core + BPA.
+
+| Nível | O que faz | Base |
+|---|---|---|
+| **1 — Detectar & Recomendar** | Monitora cobertura; quando `cobertura < ponto_reposição` (ajustado por sazonalidade regional + promoções), gera recomendação de reposição via gpt-4o | evolução do `recommendations-job.js` |
+| **2 — Propor a ação** | Monta o pedido concreto: SKU, quantidade (giro × lead time × fator sazonal regional), fornecedor, prazo — pronto para 1 clique | novo: `PedidosReposicao` |
+| **3 — Executar (human-in-the-loop)** | Cria o pedido de reabastecimento e envia para aprovação; humano só aprova | SAP Build Process Automation |
+
+*(Nível 4 — autônomo com guardrails por valor/criticidade — fica como roadmap.)*
+
+### 2.7 Fluxo integrado (narrativa de demo)
+
+1. **Joule** (gestor): *"Tem risco de ruptura de Havaianas no Nordeste?"* → *"Sim, 3 lojas com cobertura < 5 dias e a campanha de verão começa em 2 semanas."*
+2. Gestor: *"Resolve isso."* → aciona o **Agente de Reposição**
+3. Agente calcula com fator sazonal do Nordeste, monta os pedidos e envia para aprovação (BPA)
+4. Gestor aprova → ruptura evitada
+5. Rastreável nos apps
+
+Demonstra os 3 níveis: **analytics (ver) → IA (entender/recomendar) → agente (agir)**.
+
+### 2.8 Processo completo (BPMN)
+
+Fluxo a detalhar em BPMN (do sinal de risco ao reabastecimento):
+
+```
+[Venda registrada] → [Recalcular cobertura por SKU/loja]
+     → <cobertura < ponto de reposição?> --não--> [fim]
+                    |sim
+     → [Ajustar por sazonalidade regional + calendário promocional]
+     → [Agente: calcular qtd + fornecedor + prazo (gpt-4o)]
+     → [Criar PedidoReposicao (status: PENDENTE)]
+     → [BPA: enviar para aprovação]
+     → <aprovado?> --não--> [registrar recusa] → [fim]
+                   |sim
+     → [Disparar reabastecimento] → [Atualizar estoque previsto]
+     → [Notificar franqueado] → [fim]
+```
+
+### 2.9 Risco de agenda
+
+Faltam ~4 semanas para 26/08 e os 5 apps + IA já estão prontos e validados. Este caso é **build novo significativo** (modelo + Joule + agente + BPA). Sequência recomendada: (1) modelo + seed com sazonalidade regional; (2) detecção + recomendação IA (nível 1-2); (3) Joule sobre as entidades; (4) agente nível 3 + BPA. Priorizar o que sustenta a narrativa das Havaianas Sul×Nordeste; cortar escopo se comprometer o ensaio da demo (Live Demo Quality = 20%).
+
+---
+
 ## Fase 2 (pós-competição)
 
-- **Gestão de ruptura de estoque** — detecção proativa de risco de ruptura (cobertura, giro, lead time), com sazonalidade regional e IA recomendando reposição (proposta em avaliação — ver `teste/AVALIACAO_RUPTURA_ESTOQUE.md`)
 - Módulo **Análise de Expansão** — score de praças + extensão de mapa (Flexible Programming Model)
 - **SAP Analytics Cloud** — dashboards executivos para conselho
 - **SAP Datasphere** — federação de dados de múltiplas fontes
