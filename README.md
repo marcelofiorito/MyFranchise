@@ -105,7 +105,7 @@
 - **contextPath:** `/ProcessosOnboarding`
 - **Destaque:** Acompanhamento de ponta a ponta da abertura de novas lojas. A lista mostra todos os processos em andamento com status e percentual de conclusão. Ao clicar num processo, o gestor vê as **etapas e tarefas** daquele onboarding — com responsável, prazo, status e documentos. O draft salva o progresso automaticamente; nada se perde se a tela for fechada. Seed incluído com lojas em estágio de onboarding (u301, u302, u303).
 
-### 4. Estoque & Reposição _(caso de ruptura — Camila)_
+### 4. Estoque & Reposição
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/Estoque_Unidade`
 - **Destaque:** Cobertura de estoque calculada com **sazonalidade regional** (ex.: Havaianas em julho: NE fator 1,8 = RUPTURA; Sul fator 0,4 = OK). Filtro por região mostra o contraste Sul×Nordeste. `coberturaDias` e `estoqueCriticality` computados no handler considerando `Sazonalidade_Regional` e `Calendario_Promocional`. Object Page com situação + localização.
@@ -141,9 +141,11 @@
 
 ---
 
-## Caso de Foco — Ruptura de Estoque (proposta Camila)
+## Caso de Foco — Ruptura de Estoque
 
-Demonstração de sazonalidade regional com dados reais:
+Ruptura de estoque é um dos principais riscos operacionais em redes de franquias: falta de produto gera venda perdida, insatisfação do franqueado e dano à marca. O diferencial está em **antecipar** a ruptura considerando sazonalidade regional — a mesma estratégia de reposição não serve para todas as regiões.
+
+**Demonstração com dados reais (julho — mês de referência):**
 
 | Loja | Região | SKU | Cobertura (jul) | Status |
 |---|---|---|---|---|
@@ -152,7 +154,9 @@ Demonstração de sazonalidade regional com dados reais:
 | Porto Alegre (u147) | S | Havaianas Top | 66,7 dias | 🟢 OK |
 | Porto Alegre (u147) | S | Bota Couro Inverno | 1,8 dias | 🔴 RUPTURA |
 
-**Narrativa da demo:** mesmo produto (Havaianas), mesmo mês (julho) → risco oposto por região. O agente calcula cobertura com fator sazonal regional e gera pedidos de reposição com justificativa do gpt-4o.
+Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertura com fator sazonal regional e gera pedidos de reposição com justificativa do gpt-4o, considerando também o calendário de promoções.
+
+> **Cenário da demo:** o caso de ruptura de estoque é o foco principal da demonstração de 26/08. Outros cenários (compliance, onboarding, recomendações IA) poderão ser incluídos conforme análise do time.
 
 ---
 
@@ -316,7 +320,7 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 
 ## Caso de Foco — Ruptura + Joule + Agente (próximos passos)
 
-Proposta da analista **Camila** — escopo confirmado para a demo de 26/08:
+Escopo confirmado para a demo de 26/08:
 
 ### Implementado
 - ✅ Modelo (`Estoque_Unidade`, `Sazonalidade_Regional`, `Calendario_Promocional`, `Pedidos_Reposicao`)
@@ -334,12 +338,24 @@ Proposta da analista **Camila** — escopo confirmado para a demo de 26/08:
 
 ## Roadmap (pós-demo)
 
-- **SAP Analytics Cloud** — dashboards executivos (hoje: Fiori Elements, sem SAC)
-- **SAP Datasphere** — federação de dados de múltiplas fontes
-- **SAP Build Process Automation** — workflows de aprovação (compliance + reposição + onboarding)
-- **Drill-down para Object Page** em todos os apps via Joule (respostas diretamente do dado)
+### Inteligência e Automação
+- **Joule** — copiloto conversacional sobre os dados da rede ("quais lojas têm risco de ruptura hoje?")
+- **Agente de Reposição nível 3** — aprovação automática via SAP Build Process Automation (human-in-the-loop); hoje os pedidos ficam em PENDENTE
+- **SAP Build Process Automation** — workflows de aprovação para compliance, reposição e onboarding
+- **SAP Analytics Cloud** — dashboards executivos para conselho e diretoria (hoje: Fiori Elements)
+
+### Integração com Sistemas Retail SAP
+- **SAP S/4HANA Retail** — integração com gestão de merchandise e pedidos de reposição automáticos
+- **SAP Customer Activity Repository (CAR)** — dados reais de vendas no PDV para substituir o seed CSV; demanda em tempo real alimenta o agente de reposição
+- **SAP Omnichannel Point-of-Sale (POS DM)** — captura de transações das lojas em tempo real; base para detecção de desvios de preço e ruptura
+- **SAP Ariba** — gestão de fornecedores e pedidos de compra para fechar o ciclo de reposição
+- **SAP Integrated Business Planning (IBP)** — previsão de demanda com sazonalidade regional para alimentar o agente
+- **SAP Emarsys** — campanhas de marketing direcionadas por cluster/região, integradas ao calendário promocional
+
+### Dados e Plataforma
+- **SAP Datasphere** — federação de dados de múltiplas fontes (PDV, ERP, e-commerce)
+- **Módulo de Expansão** — score de praças para abertura de novas lojas
 - **IAS Assertion Attributes** — mapear `unidade_ID`/`cluster` via IdP (remover middleware de fallback)
-- **Módulo de Expansão** — score de praças para novas aberturas
 - **HANA Sequences** — substituir lógica de código de unidade por sequence nativa
 
 ---
