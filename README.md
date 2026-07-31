@@ -55,7 +55,7 @@
 
 ## Arquitetura SAP BTP
 
-![Arquitetura RunMyFranchise](arquitetura.png)
+![Arquitetura RunMyFranchise](docs/arquitetura.png)
 
 
 
@@ -144,7 +144,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 
 ### Fluxo da Demo
 
-![Fluxo da Demo — BPMN](BPMN.png)
+![Fluxo da Demo — BPMN](docs/BPMN.png)
 
 ## Tech Stack
 
