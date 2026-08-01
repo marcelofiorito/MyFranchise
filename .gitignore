@@ -16,3 +16,4 @@ mcp-manifest.local.json
 mta-op-*/
 *.pptx
 ~$*
+*.png
