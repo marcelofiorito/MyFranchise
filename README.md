@@ -57,7 +57,7 @@
 
 ## Arquitetura SAP BTP
 
-![Arquitetura RunMyFranchise](docs/arquitetura_solucao_franquias_v2.png)
+![Arquitetura RunMyFranchise](docs/imagens/arquitetura_solucao_franquias_v2.png)
 
 
 
@@ -160,7 +160,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 
 ### Fluxo da Demo
 
-![Fluxo da Demo — BPMN](docs/BPMN.png)
+![Fluxo da Demo — BPMN](docs/imagens/BPMN.png)
 
 ## Tech Stack
 
@@ -337,7 +337,7 @@ Todos os documentos do projeto, organizados por categoria. Cada documento conté
 | Técnica | [Setup Joule no Work Zone](docs/integração/joule.md) | Pré-requisitos e configuração do MCP no Work Zone |
 | Técnica | [MCP Server — Joule](docs/integração/mcp-server.md) | 6 ferramentas, arquitetura do servidor, troubleshooting |
 | Demo | [Roteiro de Demo](teste/ROTEIRO_DEMO.md) | 5 atos, narrativa de ruptura, checklist pré-demo, plano B |
-| Arquitetura | [Diagrama de Arquitetura (v2)](docs/arquitetura_solucao_franquias_v2.png) | 8 apps + MCP Server + Joule como canal de acesso |
+| Arquitetura | [Diagrama de Arquitetura (v2)](docs/imagens/arquitetura_solucao_franquias_v2.png) | 8 apps + MCP Server + Joule como canal de acesso |
 | Arquitetura | [Slide SAP-branded (PPTX)](docs/arquitetura_solucao_franquias_v2.pptx) | Slide PowerPoint SAP 2026 com arquitetura atualizada |
 
 ---
