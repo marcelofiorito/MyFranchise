@@ -458,7 +458,112 @@ This section maps **each entity in the CDS model** used in the demo to the propr
 
 ---
 
-## 11. References
+## 11. S/4HANA Public Cloud — Transactions by Process
+
+This section details the **specific S/4HANA Public Cloud transactions** that would replace the simulated seed CSV data in production, mapped by business process.
+
+---
+
+### 11.1 Inventory (replaces `Estoque_Unidade` seed CSV)
+
+| Current data (demo) | S/4HANA Public Cloud transaction | Fiori App / Tile | OData API |
+|---|---|---|---|
+| `saldoAtual` per store/SKU | **Stock Overview** — `MM_MATL_STOCK_VALUE_0001` | Manage Stock | `API_MATERIAL_STOCK_SRV` / `A_MatlStkInAcctMod` |
+| `giroMedioDiario` | **Material Consumption Report** | Analyze Material Consumption | ODP: `2LIS_03_BF` (goods movements) |
+| `leadTimeDias` | **Purchasing Info Record** — `MM_PUR_INFORECORD_MANAGE` | Manage Purchasing Info Records | `API_INFORECORD_PROCESS_SRV` / `A_PurchasingInfoRecord` |
+| `estoqueMinimo` | **MRP Settings / Material Master** — `MM_MATL_MANAGE_0001` | Manage Products | `API_PRODUCT_SRV` / `A_ProductPlant` (`MinimumStockQuantity`) |
+| Real-time movements | **Post Goods Movement** — `MM_MATL_GOODS_MOVEMENT_0001` | Post Goods Movement | Business Event: `MaterialDocument.Created` (Event Mesh) |
+
+**Note:** In production, `coberturaDias` and `estoqueCriticality` continue to be calculated in CAP (regional seasonality logic does not exist in standard S/4HANA).
+
+---
+
+### 11.2 Sales / Practised Prices (replaces `VendaPraticada` seed CSV)
+
+| Current data (demo) | S/4HANA Public Cloud transaction | Fiori App / Tile | OData API |
+|---|---|---|---|
+| `precoPraticado` per SKU/store | **Sales Order** — `SD_SELL_FROM_STOCK_0001` | Manage Sales Orders | `API_SALES_ORDER_SRV` / `A_SalesOrderItem` (`NetAmount`) |
+| `qtdVendida` per period | **Billing Document** — `SD_BILLING_CREATE_0101` | Create Billing Documents | `API_BILLING_DOCUMENT_SRV` / `A_BillingDocumentItem` |
+| POS practised prices | **SAP CAR ← POS DM** | — | CAR ODP `2LIS_13_VDITM` (SD Sales Item) |
+| `precoAutorizado` (catalogue) | **Condition Records** — `SD_COND_RECORDS_MANAGE` | Manage Prices — Sales | `API_SLSPRICINGCONDITIONRECORD_SRV` / `A_SlsPrcgCndnRecdValidity` |
+
+**Note:** Price deviation detection (`Desvios`) continues to be calculated in CAP — there is no S/4HANA transaction that automatically compares the franchisee's practised price against the franchisor's catalogue.
+
+---
+
+### 11.3 Replenishment Orders (replaces manual/AI generation for supplier dispatch)
+
+| Step in the flow | S/4HANA Public Cloud transaction | Fiori App / Tile | OData API |
+|---|---|---|---|
+| Order creation after approval | **Create Purchase Order** — `MM_PUR_PO_MAINTAIN_0001` | Create Purchase Orders | `API_PURCHASEORDER_PROCESS_SRV` / `A_PurchaseOrder` (POST) |
+| PO tracking | **Monitor Purchase Orders** — `MM_PUR_PO_MANAGE_0001` | Manage Purchase Orders | `API_PURCHASEORDER_PROCESS_SRV` / `A_PurchaseOrder` (GET) |
+| Delivery confirmation (→ RECEIVED) | **Post Goods Receipt for PO** — `MM_MATL_GOODS_MOVEMENT_0001` | Post Goods Movements | Business Event: `PurchaseOrder.Changed` → status `RECEIVED` |
+| Supplier | **Manage Suppliers** — `MM_PUR_VENDOR_MANAGE_0001` | Manage Business Partners | `API_BUSINESS_PARTNER` / `A_Supplier` |
+| Via SAP Ariba (alternative) | Ariba Network — Purchase Order Collaboration | — | Ariba Procurement API / cXML |
+
+---
+
+### 11.4 Product Master Data (replaces `ItensCatalogo` seed CSV)
+
+| Current data (demo) | S/4HANA Public Cloud transaction | Fiori App / Tile | OData API |
+|---|---|---|---|
+| `nomeProduto`, `categoria`, `sku` | **Manage Products** — `MM_MATL_MANAGE_0001` | Manage Products | `API_PRODUCT_SRV` / `A_Product` |
+| `precoSugerido` | **Manage Prices** — `SD_COND_RECORDS_MANAGE` | Manage Prices — Sales | `API_SLSPRICINGCONDITIONRECORD_SRV` |
+| `leadTimeDias` | **Purchasing Info Record** | Manage Purchasing Info Records | `API_INFORECORD_PROCESS_SRV` |
+
+---
+
+### 11.5 Franchisees / Business Partners (replaces `Franqueados` seed CSV)
+
+| Current data (demo) | S/4HANA Public Cloud transaction | Fiori App / Tile | OData API |
+|---|---|---|---|
+| `razaoSocial`, `cnpj`, `email` | **Manage Business Partners** — `BP_MANAGE_0001` | Manage Business Partners | `API_BUSINESS_PARTNER` / `A_BusinessPartner` |
+| `status` (ACTIVE/SUSPENDED) | **Change Business Partner** — `BP_CHANGE_0001` | Change Business Partners | `API_BUSINESS_PARTNER` / `A_BusinessPartnerAddress` |
+| Franchise contract | **Manage Sales Contracts** — `SD_SELL_CONTRACT_PROCESS` | Manage Sales Contracts | `API_SALES_CONTRACT_SRV` |
+
+---
+
+### 11.6 Performance KPIs (replaces `KPI_Unidade` seed CSV)
+
+| Current data (demo) | S/4HANA Public Cloud transaction | Fiori App / Tile | OData API |
+|---|---|---|---|
+| Monthly `faturamento` | **Billing Documents** by period/store | Display Billing Documents | `API_BILLING_DOCUMENT_SRV` / `A_BillingDocument` |
+| `ticketMedio` | Calculated: revenue ÷ qtdTransacoes | — | Calculated in CAP |
+| `qtdTransacoes` | **Sales Orders** by period | Manage Sales Orders | `API_SALES_ORDER_SRV` |
+| `nps` | **SAP Emarsys** / satisfaction survey | — | Emarsys Contact API |
+| `crescimentoMoM/YoY` | Calculated in CAP comparing billing periods | — | Calculated in CAP |
+
+---
+
+### 11.7 Seasonality and Promotional Calendar
+
+| Current data (demo) | Production source | Transaction / System | Note |
+|---|---|---|---|
+| `Sazonalidade_Regional` (factor by category × region × month) | **SAP IBP** — Demand Planning | Statistical Forecasting — IBP Planning View | Seasonal factor extracted via CI-DS (Cloud Integration for Data Services) or maintained manually by the franchisor in BTP |
+| `Calendario_Promocional` (uplift per campaign) | **SAP Emarsys** — Campaign Calendar | Campaign Manager | Integration via Open Connectors REST adapter |
+
+---
+
+### 11.8 Summary: What stays in BTP vs. what comes from S/4HANA
+
+| Domain | Data source (production) | Remains in BTP |
+|---|---|---|
+| Stock balance | S/4HANA MM (`API_MATERIAL_STOCK`) | Coverage calculation + seasonality |
+| Stock movements | S/4HANA Event Mesh | Recalculation trigger |
+| Practised price | S/4HANA SD / SAP CAR | Deviation calculation vs. catalogue |
+| Product master | S/4HANA MM (`API_PRODUCT`) | Enrichment with seasonality data |
+| Business Partners | S/4HANA BP (`API_BUSINESS_PARTNER`) | Health score per franchisee |
+| Financial KPIs | S/4HANA SD Billing | Average ticket, growth, NPS calculation |
+| Replenishment order | Created in BTP → sent to S/4HANA/Ariba | Approval logic, AI justification |
+| Health score | Calculated in BTP | 100% BTP — does not exist in S/4HANA |
+| Compliance deviation | Calculated in BTP | 100% BTP — does not exist in S/4HANA |
+| AI Recommendations | SAP AI Core (GPT-4o) | Orchestration + persistence in BTP |
+| Franchisee portal | BTP Work Zone + CAP | 100% BTP — isolation by `unidade_ID` |
+| Onboarding | BTP (CAP + optionally BPA) | 100% BTP |
+
+---
+
+## 12. References
 
 - [SAP S/4HANA Retail](https://www.sap.com/products/s4hana-erp.html)
 - [SAP Customer Activity Repository](https://www.sap.com/products/customer-activity-repository.html)

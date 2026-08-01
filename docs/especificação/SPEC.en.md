@@ -876,7 +876,7 @@ StatusRecomendacao: Nova | Lida | Aplicada | Descartada
 
 ## 9. Work Zone — Tile Configuration
 
-All `manifest.json` files already have `sap.cloud.service: "myfranchise"` and `crossNavigation.inbounds` configured:
+All `manifest.json` files have `sap.cloud.service: "myfranchise"` and `crossNavigation.inbounds` configured:
 
 | App | Semantic Object | Action | Icon |
 |---|---|---|---|
@@ -884,33 +884,96 @@ All `manifest.json` files already have `sap.cloud.service: "myfranchise"` and `c
 | compliance | `Compliance` | `manage` | `alert` |
 | franchisee | `FranchiseePortal` | `display` | `home` |
 | onboarding | `Onboarding` | `manage` | `stage` |
+| inventory | `Inventory` | `manage` | `inventory` |
+| replenishment | `Replenishment` | `manage` | `order-status` |
+| recommendations | `Recommendations` | `display` | `ai` |
+| Admin | `Admin` | `manage` | `technical-object` |
 
 ---
 
-## 10. Tasks — What remains to implement
+## 9.1 Admin App — Demo Control Panel (`app/admin/`)
 
-### Week 2 (08/05–08/11) — Top priority
+**Floorplan:** Custom UI5 (not Fiori Elements) — `sap.ui.core.mvc.Controller`
+**Service:** `FranqueadoraService` (`/franqueadora/`)
+**Required role:** `Franqueadora_Gestor`
+**Semantic Object / Action:** `Admin` / `manage`
 
-- [ ] `app/network/annotations.cds` — complete ALP (chart, columns, selection variants, criticality)
-- [ ] `app/compliance/annotations.cds` — LROP Desvios (list report + object page with notifications)
-- [ ] `srv/service.js` — compliance detection handler (section 6.1 + 6.2)
-- [ ] Add the calculated field `scoreCriticality` to `Saude_Unidade` in the schema or handler
-- [ ] Enable `@odata.draft.enabled` on `ProcessosOnboarding` in the service
+### Features
 
-### Week 3 (08/12–08/18)
+| Button | CAP Action | Behavior |
+|---|---|---|
+| **Reset Demo** | `resetarDemo(...)` | Resets all `APPROVED/REJECTED/SENT` orders back to `PENDING`; clears `qtdAprovada`, `aprovador`, `dataDecisao` |
+| **Simulate Receipt** | `simularRecebimento(...)` | `APPROVED` orders → `RECEIVED`; restores `saldoAtual` in `Estoque_Unidade` based on `qtdAprovada` |
+| **Generate Orders with AI** | `gerarReposicaoTodas(...)` | Invokes the Replenishment Agent for all units (gpt-4o + fallback) |
+| **Generate Recommendations** | `gerarRecomendacoesTodas(...)` | Invokes the Recommendations Agent for all units |
+| **Refresh** | `rupturaCount(...)` + `pedidosPendentesCount(...)` | Updates live KPI tiles |
 
-- [ ] `app/franchisee/annotations.cds` — OVP with all 5 cards
-- [ ] `app/onboarding/annotations.cds` — LROP + Object Page with tasks
-- [ ] `srv/ai/recommendations-job.js` — AI Core + GenAI Hub integration
-- [ ] Test FranqueadoService data isolation (user `roberto`)
+### Live KPIs
 
-### Week 4 (08/19–08/25) — polish and deploy
+The panel displays in real time:
+- **PENDING Orders**: counter via unbound action `pedidosPendentesCount()`
+- **STOCKOUT Items**: counter via unbound action `rupturaCount()`
 
-- [ ] Build Work Zone: manual tile setup after deploy
-- [ ] MTA deploy to BTP Cloud Foundry
-- [ ] `mta.yaml` with HANA Cloud, XSUAA, AI Core services
-- [ ] Timed rehearsals — strict 15 min
-- [ ] Plan B in case the demo fails
+Both are `bindContext` calls on the OData V4 model — no polling; called on `onInit` and after each action.
+
+### File Structure
+
+```
+app/admin/dist/
+├── Component.js / Component-dbg.js    # sap.fe.core.AppComponent extend
+├── controller/Main.controller.js      # UI logic (onResetarDemo, onSimularRecebimento, etc.)
+├── view/Main.view.xml                 # Panel: Current State + Actions + Log
+├── i18n/i18n.properties               # English labels
+├── i18n/i18n_pt.properties            # Portuguese labels
+├── manifest.json                      # OData V4 model: /franqueadora/
+└── index.html                         # SAPUI5 1.136.7 bootstrap
+```
+
+### Implementation Note
+
+The Admin app uses `sap.fe.core.AppComponent` as its base (not `sap.m.App` directly), but the view is a custom `Page` — not a Fiori Elements floorplan. The OData V4 model initialises asynchronously; the controller waits for the model via `attachModelContextChange` before calling `onRefresh`.
+
+---
+
+## 10. Implementation Status
+
+> **Note:** This document was originally written as a development guide (July 2026). All items below have been completed and are deployed to production on SAP BTP Cloud Foundry. This section is preserved for historical traceability.
+
+### ✅ Completed — Week 2 (08/05–08/11)
+
+- [x] `app/network/annotations.cds` — complete ALP (chart, columns, selection variants, criticality)
+- [x] `app/compliance/annotations.cds` — LROP Desvios (list report + object page with notifications)
+- [x] `srv/service.js` — compliance detection handler + health score + KPI endpoints + demo actions
+- [x] Calculated field `scoreCriticality` implemented in the handler (`< 45` = 1, `45–69` = 2, `≥ 70` = 3)
+- [x] `@odata.draft.enabled` on `ProcessosOnboarding` in the service
+
+### ✅ Completed — Week 3 (08/12–08/18)
+
+- [x] `app/franchisee/annotations.cds` — OVP with all 5 cards
+- [x] `app/onboarding/annotations.cds` — LROP + Object Page with tasks
+- [x] `srv/ai/recommendations-job.js` — AI Core + GenAI Hub integration (mode: "GenAI Hub" confirmed in production)
+- [x] `srv/ai/reposicao-agent.js` — Replenishment Agent with regional seasonality + deterministic fallback
+- [x] FranqueadoService data isolation validated end-to-end
+- [x] `app/inventory/` — Inventory & Replenishment (LR + OP + Replenishment Orders tab)
+- [x] `app/replenishment/` — Replenishment Orders (LR + OP + Approve/Reject)
+- [x] `app/recommendations/` — AI Recommendations (LR + OP)
+- [x] Dynamic KPI tiles: `rupturaCount` + `pedidosPendentesCount` (30s refresh)
+
+### ✅ Completed — Week 4 (08/19–08/25)
+
+- [x] Build Work Zone: tiles configured and validated
+- [x] MTA deploy to BTP Cloud Foundry (org `sa-build-platform-org / DEV`, region `us10`)
+- [x] `mta.yaml` with HANA Cloud, XSUAA, AI Core services
+- [x] `app/admin/` — Admin app with demo reset + simulate receipt + operation log
+- [x] MCP Server (`joule-myfranchise-mcp`) deployed on CF — 7 tools + approval via natural language
+- [x] Demo flow validated end-to-end (see `teste/ROTEIRO_DEMO.md`)
+
+### ⬜ Post-demo (roadmap)
+
+- [ ] Level-3 agent — automatic approval via SAP Build Process Automation (BPA)
+- [ ] Joule Capability via A2A (Agent-to-Agent) — evolution of MCP to native Work Zone integration
+- [ ] SAP Analytics Cloud — executive network dashboards (Phase 2)
+- [ ] SAP Datasphere — data federation to enrich agent context with S/4HANA + CAR data
 
 ---
 
@@ -953,12 +1016,20 @@ node test_schema.js
 |---|---|---|
 | `db/schema.cds` | ✅ Complete | Unified data model |
 | `srv/service.cds` | ✅ Complete | Definition of the two OData services |
-| `srv/service.js` | ❌ To create | Compliance and score handlers |
-| `app/network/annotations.cds` | ⚠️ Stub | ALP Network Panel |
-| `app/compliance/annotations.cds` | ⚠️ Stub | LROP Compliance |
-| `app/franchisee/annotations.cds` | ⚠️ Stub | OVP Franchisee Portal |
-| `app/onboarding/annotations.cds` | ⚠️ Stub | LROP Onboarding |
-| `app/*/webapp/manifest.json` | ✅ Complete | Routing + Work Zone config |
-| `db/data/*.csv` | ✅ 35 files | Complete seed data |
-| `package.json` | ✅ Complete | Mock users + SQLite config |
-| `mta.yaml` | ❌ To create | Deploy to BTP CF (Week 4) |
+| `srv/service.js` | ✅ Production | Handlers: compliance, score, inventory, order approval, KPI endpoints, demo actions |
+| `srv/ai/recommendations-job.js` | ✅ Production | Recommendations Agent (gpt-4o + deterministic fallback) |
+| `srv/ai/reposicao-agent.js` | ✅ Production | Replenishment Agent with regional seasonality |
+| `srv/mcp-server.js` | ✅ Production | HTTP bridge to the Python MCP Server |
+| `app/network/annotations.cds` | ✅ Production | ALP Network Panel |
+| `app/compliance/annotations.cds` | ✅ Production | LROP Compliance |
+| `app/franchisee/annotations.cds` | ✅ Production | OVP Franchisee Portal |
+| `app/onboarding/annotations.cds` | ✅ Production | LROP Onboarding + Draft |
+| `app/inventory/annotations.cds` | ✅ Production | LROP Inventory & Replenishment + Orders tab |
+| `app/replenishment/annotations.cds` | ✅ Production | LROP Replenishment Orders + Approve/Reject |
+| `app/recommendations/annotations.cds` | ✅ Production | LROP AI Recommendations |
+| `app/admin/dist/` | ✅ Production | Admin app — custom UI5 (reset + simulation) |
+| `app/*/webapp/manifest.json` | ✅ Production | Routing + Work Zone config (8 apps) |
+| `db/data/*.csv` | ✅ Production | Complete seed data (43+ files) |
+| `package.json` | ✅ Production | Mock users + SQLite config |
+| `mta.yaml` | ✅ Production | BTP CF deploy — org `sa-build-platform-org / DEV`, us10 |
+| `docs/integração/mcp_server_cf.py` | ✅ Production | Python MCP Server (FastMCP) — 7 tools + XSUAA auth |
