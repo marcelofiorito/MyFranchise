@@ -163,13 +163,32 @@ O **SAP Datasphere** pode federar dados do CAR e do S/4HANA para enriquecer o co
 
 ## 7. Joule e o Papel do Copiloto Conversacional
 
-O **SAP Joule** — copiloto conversacional nativo da SAP — pode ser integrado ao RunMyFranchise para transformar verificações analíticas em conversas naturais. Exemplos de perguntas que o Joule responderia consultando as entidades do BTP:
+> **Status:** ✅ **Em produção** — MCP Server deployado no Cloud Foundry (`joule-myfranchise-mcp.cfapps.us10.hana.ondemand.com`). Fluxo de aprovação end-to-end validado com 6 pedidos via linguagem natural.
 
-- *"Quais lojas têm risco de ruptura de sandálias no Nordeste esta semana?"*
-- *"Quantas unidades de Havaianas Top o agente sugeriu para Recife?"*
-- *"Qual o score de saúde médio das lojas do cluster STD?"*
+O **SAP Joule** está integrado ao RunMyFranchise via **MCP Server (Model Context Protocol)**, transformando verificações analíticas em conversas naturais. O copiloto já responde consultas e executa aprovações em produção:
 
-Na arquitetura de produção, o RunMyFranchise pode ser registrado como uma **Joule Capability** via protocolo **A2A (Agent-to-Agent)**, permitindo que o Joule consulte entidades da extensão em linguagem natural. Nesse modelo, um agente intermediário (LangGraph ou CAP-based) expõe as entidades OData como ações disponíveis para o Joule. Alternativamente, um **MCP server (Model Context Protocol)** expondo as entidades CAP permite integração direta com ferramentas de AI assistida. Isso completa o arco: do **dado** (S/4HANA + CAR) à **inteligência** (gpt-4o via AI Core) à **conversa** (Joule via A2A).
+- *"Quais lojas têm risco de ruptura de sandálias no Nordeste esta semana?"* → `get_lojas_em_risco(regiao='NE', categoria='Sandálias')`
+- *"Quantas unidades de Havaianas Top o agente sugeriu para Recife?"* → `get_cobertura_estoque(unidade_id='u178', sku='SKU-100')`
+- *"Qual o score de saúde médio das lojas do cluster STD?"* → `get_score_rede()`
+- *"Aprova todos os pedidos de Havaianas pendentes"* → `get_pedidos_pendentes()` + `aprovar_pedido(pedido_id=...)` × N
+
+### MCP Server — 7 tools em produção
+
+| Tool | Entidade OData | Operação |
+|---|---|---|
+| `get_lojas_em_risco` | `Estoque_Unidade` | Lojas com `estoqueCriticality < 3`, ordenadas por cobertura |
+| `get_cobertura_estoque` | `Estoque_Unidade` | Cobertura em dias para uma loja/SKU específico |
+| `get_pedidos_pendentes` | `Pedidos_Reposicao` + `Unidades` | Pedidos aguardando aprovação |
+| `get_recomendacoes` | `Recomendacoes` + `Unidades` | Recomendações IA (status=NOVA) |
+| `get_score_rede` | `Saude_Dashboard` | Score de saúde de toda a rede |
+| `aprovar_pedido` | Bound action `FranqueadoraService.aprovar` | POST — PENDENTE → APROVADO |
+| `recusar_pedido` | Bound action `FranqueadoraService.recusar` | POST — PENDENTE → RECUSADO |
+
+**Autenticação:** OAuth2 `client_credentials` via XSUAA. CSRF token obtido automaticamente antes de cada POST. Documentação detalhada: `docs/integração/mcp-server.md`.
+
+### Roadmap pós-demo: Joule Capability via A2A
+
+Na evolução futura, o RunMyFranchise pode ser registrado como uma **Joule Capability** via protocolo **A2A (Agent-to-Agent)**, permitindo que o Joule acesse o MCP Server como capability nativa dentro do Work Zone. Nesse modelo, o agente intermediário (CAP-based ou LangGraph) expõe as ações OData via card A2A. A arquitetura MCP atual é o stepping stone para essa integração. Isso completa o arco: do **dado** (S/4HANA + CAR) à **inteligência** (gpt-4o via AI Core) à **conversa** (Joule via MCP → A2A).
 
 ---
 
@@ -318,8 +337,8 @@ Esta seção mapeia **cada entidade do modelo CDS** usado na demo para o sistema
 │  │ scorePerformance = f(receita, giro, crescimento vs cluster)│                   │
 │  │ scoreCompliance  = f(desvios_abertos, recorrência)         │                   │
 │  │ scoreContrato    = f(diasParaVencimento, pendências)       │                   │
-│  │ scoreGeral       = média ponderada (40% perf, 35% comp,   │                   │
-│  │                    25% contrato)                            │                   │
+│  │ scoreGeral       = média ponderada (40% perf, 40% comp,   │                   │
+│  │                    20% contrato)                            │                   │
 │  └─────────────────────────────────┬───────────────────────────┘                   │
 │                                     │                                               │
 │                                     ▼                                               │
