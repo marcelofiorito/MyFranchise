@@ -14,3 +14,5 @@ app/*/dist/
 app/*/node_modules/
 mcp-manifest.local.json
 mta-op-*/
+*.pptx
+~$*
