@@ -43,11 +43,12 @@
 | Onboarding (LR + OP + Draft) | ✅ Produção |
 | Portal do Franqueado (OVP — 5 cards) | ✅ Produção |
 | Recomendações da IA (LR + OP) | ✅ Produção |
-| Estoque & Reposição (LR + OP) | ✅ Produção |
+| Estoque & Reposição (LR + OP + aba Pedidos) | ✅ Produção — aba Pedidos de Reposição no Object Page |
 | Agente de Reposição (nível 1-2) | ✅ Produção — pedidos PENDENTE gerados por gpt-4o |
-| Navegação LR → Object Page | ✅ Todos os apps (UI5 1.136.7 fixo) |
-| Joule (copiloto conversacional) | ⬜ Pendente |
-| Agente nível 3 (aprovação via BPA) | ⬜ Pendente |
+| Pedidos de Reposição (LR + OP) | ✅ Produção — app dedicado com Aprovar / Recusar |
+| Joule (copiloto conversacional) | ✅ Produção — MCP Server + 5 tools confirmadas no Work Zone |
+| KPI tiles dinâmicos (ruptura + pendentes) | ✅ Produção — número ao vivo nos tiles do launchpad |
+| Agente nível 3 (aprovação via BPA) | ⬜ Pós-demo |
 
 **Backend:** `https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com`
 
@@ -72,37 +73,46 @@
 
 ---
 
-## Módulos (6 apps Fiori)
+## Módulos (7 apps Fiori + Joule)
 
 ### 1. Painel da Rede
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/Saude_Dashboard` → drill-down `/Unidades`
-- **Destaque:** Donut de criticidade (`@Aggregation.ApplySupported` + `Analytics.AggregatedProperty`): Crítico / Atenção / Saudável. Tabela com score colorido por criticality. Filtro por cluster/região. Navegação para Object Page da unidade.
+- **Destaque:** Donut de criticidade (`@Aggregation.ApplySupported`): Crítico / Atenção / Saudável. Tabela com score colorido. Filtro por cluster/região.
 
 ### 2. Governança & Compliance
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/Desvios`
-- **Destaque:** Detecção automática de desvios no `after CREATE VendaPraticada`. Regras configuráveis (`RegrasCompliance`). Severidade colorida (ALTA vermelho, MÉDIA amarelo). Navegação para detalhe do desvio.
+- **Destaque:** Detecção automática de desvios no `after CREATE VendaPraticada`. Severidade colorida (ALTA vermelho, MÉDIA amarelo).
 
 ### 3. Onboarding
 - **Floorplan:** List Report + Object Page + `@odata.draft.enabled`
 - **contextPath:** `/ProcessosOnboarding`
-- **Destaque:** Acompanhamento de ponta a ponta da abertura de novas lojas. A lista mostra todos os processos em andamento com status e percentual de conclusão. Ao clicar num processo, o gestor vê as **etapas e tarefas** daquele onboarding — com responsável, prazo, status e documentos. O draft salva o progresso automaticamente; nada se perde se a tela for fechada. Seed incluído com lojas em estágio de onboarding (u301, u302, u303).
+- **Destaque:** Acompanhamento ponta a ponta da abertura de novas lojas. Draft salva progresso automaticamente.
 
 ### 4. Estoque & Reposição
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/Estoque_Unidade`
-- **Destaque:** Cobertura de estoque calculada com **sazonalidade regional** (ex.: Havaianas em julho: NE fator 1,8 = RUPTURA; Sul fator 0,4 = OK). Filtro por região mostra o contraste Sul×Nordeste. `coberturaDias` e `estoqueCriticality` computados no handler considerando `Sazonalidade_Regional` e `Calendario_Promocional`. Object Page com situação + localização.
+- **Destaque:** Cobertura calculada com sazonalidade regional. Object Page com aba **Pedidos de Reposição** — ao clicar num item em ruptura, o gestor vê os pedidos gerados pelo agente para aquele SKU/loja. KPI tile dinâmico: número de itens em ruptura (refresh 30s).
 
-### 5. Recomendações da IA
+### 5. Pedidos de Reposição
+- **Floorplan:** List Report + Object Page
+- **contextPath:** `/Pedidos_Reposicao`
+- **Destaque:** App dedicado para o gestor aprovar/recusar pedidos gerados pelo Agente de Reposição. Filtros por status, região e origem (Agente IA / Manual). Botões **Aprovar** e **Recusar** com diálogo de parâmetros. KPI tile dinâmico: número de pedidos pendentes (refresh 30s).
+
+### 6. Recomendações da IA
 - **Floorplan:** List Report + Object Page
 - **contextPath:** `/MinhasRecomendacoes`
-- **Destaque:** Lista recomendações com prioridade colorida (ALTA vermelho). Object Page mostra a **descrição completa gerada pelo gpt-4o** — SKUs, percentuais, impacto, ação com prazo — sem truncar.
+- **Destaque:** Recomendações geradas pelo gpt-4o com descrição completa, prioridade colorida.
 
-### 6. Portal do Franqueado
-- **Floorplan:** Overview Page (OVP) — 5 cards (`sap.ovp.app.Component`)
-- **Cards:** Minha Performance (faturamento 6 meses em BRL, período "Jun/2026"), Score de Saúde (criticality colorido), Ações Pendentes (desvios com ícones), Recomendações da IA (gpt-4o), Posição na Rede (benchmark do cluster)
-- **Destaque:** Subtítulo "Loja Porto Alegre" em cada card. Criticality via `DataFieldForAnnotation→DataPoint`. Currency `BRL`. Middleware de fallback de atributos JWT (IAS não envia `unidade_ID`/`cluster`).
+### 7. Portal do Franqueado
+- **Floorplan:** Overview Page (OVP) — 5 cards
+- **Destaque:** Faturamento, Score, Desvios, Recomendações IA, Benchmark do cluster. Cada card restrito à loja do franqueado.
+
+### Joule (copiloto conversacional)
+- **MCP Server:** `joule-myfranchise-mcp` (Python FastMCP, CF)
+- **5 tools:** `get_lojas_em_risco`, `get_cobertura_estoque`, `get_pedidos_pendentes`, `get_recomendacoes`, `get_score_rede`
+- **Exemplo:** *"Quais lojas têm ruptura de Havaianas no Nordeste?"* → resposta com dados reais do HANA em tempo real
 
 ---
 
@@ -173,22 +183,16 @@ SAPUI5 1.136.7                        # runtime Fiori Elements (versão fixada)
 MyFranchise/
 ├── db/
 │   ├── schema.cds              # Modelo de dados (todos os módulos)
-│   └── data/                   # 43 arquivos CSV de seed
-│       ├── myfranchise-Franqueados.csv        (8 franqueados)
-│       ├── myfranchise-Unidades.csv           (20 unidades + 3 onboarding)
-│       ├── myfranchise-KPI_Unidade.csv        (120 KPIs — 20×6 meses)
-│       ├── myfranchise-Saude_Unidade.csv      (20 scores)
-│       ├── myfranchise-Desvios.csv            (7 desvios — Loja 147)
+│   └── data/                   # CSVs de seed
 │       ├── myfranchise-Estoque_Unidade.csv    (13 SKUs com cobertura sazonal)
-│       ├── myfranchise-Sazonalidade_Regional.csv (13 fatores NE/S/SE/CO/N)
-│       ├── myfranchise-Calendario_Promocional.csv
-│       ├── myfranchise-ProcessosOnboarding.csv / Etapas / Tarefas
-│       └── ... (code lists e demais entidades)
+│       ├── myfranchise-Pedidos_Reposicao.csv  (6 pedidos PENDENTE — gpt-4o)
+│       ├── myfranchise-OrigemPedido.csv        (AGENTE / MANUAL)
+│       └── ... (demais entidades e code lists)
 ├── srv/
 │   ├── service.cds             # FranqueadoraService + FranqueadoService
-│   ├── service.js              # Handlers: detecção de desvios, recálculo score
-│   ├── franqueado-service.js   # Impl FranqueadoService: enriquecimento MeuEstoque
-│   ├── server.js               # Middleware: fallback atributos JWT do Franqueado
+│   ├── service.js              # Handlers: desvios, score, estoque, aprovação pedidos, KPI endpoints
+│   ├── franqueado-service.js   # Impl FranqueadoService
+│   ├── server.js               # Middleware JWT + endpoints /kpi/ruptura e /kpi/pedidos-pendentes
 │   └── ai/
 │       ├── recommendations-job.js   # Agente de recomendações (gpt-4o + fallback)
 │       └── reposicao-agent.js       # Agente de reposição sazonal (gpt-4o + fallback)
@@ -196,14 +200,16 @@ MyFranchise/
 │   ├── network/          # Painel da Rede (LR + donut + OP)
 │   ├── compliance/       # Governança & Compliance (LR + OP)
 │   ├── onboarding/       # Onboarding (LR + OP×2 + Draft)
-│   ├── inventory/        # Estoque & Reposição (LR + OP)
+│   ├── inventory/        # Estoque & Reposição (LR + OP + aba Pedidos) — KPI tile
+│   ├── replenishment/    # Pedidos de Reposição (LR + OP + Aprovar/Recusar) — KPI tile
 │   ├── recommendations/  # Recomendações da IA (LR + OP)
 │   └── franchisee/       # Portal do Franqueado (OVP — 5 cards)
+├── integração/
+│   └── joule.md          # Setup do Joule MCP no Work Zone
 ├── teste/
-│   └── ROTEIRO_DEMO.md         # Roteiro 4 atos, checklist, plano B
-├── mta.yaml                    # Deploy CF (10 módulos, 6 serviços)
-├── xs-security.json            # XSUAA (roles, scopes, atributos)
-├── package.json
+│   └── ROTEIRO_DEMO.md   # Roteiro 4 atos, checklist, plano B
+├── mta.yaml              # Deploy CF (11 módulos, 6 serviços)
+├── xs-security.json      # XSUAA (roles, scopes, atributos)
 └── README.md
 ```
 
@@ -268,14 +274,15 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 
 ### Work Zone — tiles
 
-| App | `semanticObject` | `action` | Role |
-|---|---|---|---|
-| Painel da Rede | `NetworkPanel` | `display` | Franqueadora_Gestor |
-| Governança & Compliance | `Compliance` | `manage` | Franqueadora_Gestor |
-| Onboarding | `Onboarding` | `manage` | Franqueadora_Gestor |
-| Estoque & Reposição | `Inventory` | `manage` | Franqueadora_Gestor |
-| Recomendações da IA | `Recommendations` | `display` | Franqueado |
-| Portal do Franqueado | `FranchiseePortal` | `display` | Franqueado |
+| App | `semanticObject` | `action` | Role | KPI tile |
+|---|---|---|---|---|
+| Painel da Rede | `NetworkPanel` | `display` | Franqueadora_Gestor | — |
+| Governança & Compliance | `Compliance` | `manage` | Franqueadora_Gestor | — |
+| Onboarding | `Onboarding` | `manage` | Franqueadora_Gestor | — |
+| Estoque & Reposição | `Inventory` | `manage` | Franqueadora_Gestor | `RUPTURA` count |
+| Pedidos de Reposição | `Replenishment` | `manage` | Franqueadora_Gestor | `PENDENTE` count |
+| Recomendações da IA | `Recommendations` | `display` | Franqueado | — |
+| Portal do Franqueado | `FranchiseePortal` | `display` | Franqueado | — |
 
 ---
 
@@ -290,22 +297,18 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 ## Roadmap (pós-demo)
 
 ### Inteligência e Automação
-- **Joule** — copiloto conversacional sobre os dados da rede ("quais lojas têm risco de ruptura hoje?")
-- **Agente de Reposição nível 3** — aprovação automática via SAP Build Process Automation (human-in-the-loop); hoje os pedidos ficam em PENDENTE
+- **Agente de Reposição nível 3** — aprovação automática via SAP Build Process Automation; hoje o gestor aprova manualmente no app Pedidos de Reposição
 - **SAP Build Process Automation** — workflows de aprovação para compliance, reposição e onboarding
-- **SAP Analytics Cloud** — dashboards executivos para conselho e diretoria (hoje: Fiori Elements)
+- **SAP Analytics Cloud** — dashboards executivos (hoje: Fiori Elements)
 
 ### Integração com Sistemas Retail SAP
-- **SAP S/4HANA Retail** — integração com gestão de merchandise e pedidos de reposição automáticos
-- **SAP Customer Activity Repository (CAR)** — dados reais de vendas no PDV para substituir o seed CSV; demanda em tempo real alimenta o agente de reposição
-- **SAP Omnichannel Point-of-Sale (POS DM)** — captura de transações das lojas em tempo real; base para detecção de desvios de preço e ruptura
-- **SAP Ariba** — gestão de fornecedores e pedidos de compra para fechar o ciclo de reposição
-- **SAP Integrated Business Planning (IBP)** — previsão de demanda com sazonalidade regional para alimentar o agente
-- **SAP Emarsys** — campanhas de marketing direcionadas por cluster/região, integradas ao calendário promocional
+- **SAP S/4HANA Retail** — pedidos de reposição automáticos
+- **SAP Customer Activity Repository (CAR)** — dados reais de vendas no PDV
+- **SAP Ariba** — gestão de fornecedores para fechar o ciclo de reposição
+- **SAP Integrated Business Planning (IBP)** — previsão de demanda com sazonalidade regional
 
 ### Dados e Plataforma
-- **SAP Datasphere** — federação de dados de múltiplas fontes (PDV, ERP, e-commerce)
-- **Módulo de Expansão** — score de praças para abertura de novas lojas
+- **SAP Datasphere** — federação de dados de múltiplas fontes
 - **IAS Assertion Attributes** — mapear `unidade_ID`/`cluster` via IdP (remover middleware de fallback)
 - **HANA Sequences** — substituir lógica de código de unidade por sequence nativa
 

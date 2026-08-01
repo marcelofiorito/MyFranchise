@@ -1,7 +1,7 @@
 {
   "_version": "1.65.0",
   "sap.app": {
-    "id": "myfranchise.inventory",
+    "id": "myfranchise.replenishment",
     "type": "application",
     "i18n": "i18n/i18n.properties",
     "applicationVersion": {
@@ -20,17 +20,17 @@
     },
     "crossNavigation": {
       "inbounds": {
-        "Inventory-manage": {
-          "semanticObject": "Inventory",
+        "Replenishment-manage": {
+          "semanticObject": "Replenishment",
           "action": "manage",
           "title": "{{appTitle}}",
           "subTitle": "{{appDescription}}",
-          "icon": "sap-icon://retail-store",
-          "numberUnit": "em ruptura",
+          "icon": "sap-icon://product",
+          "numberUnit": "pendentes",
           "numberState": "Negative",
           "indicatorDataSource": {
             "dataSource": "mainService",
-            "path": "Estoque_Unidade/$count?$filter=status_code%20eq%20%27RUPTURA%27",
+            "path": "Pedidos_Reposicao/$count?$filter=status_code%20eq%20%27PENDENTE%27",
             "refresh": 30
           },
           "signature": {
@@ -44,7 +44,7 @@
   "sap.ui": {
     "technology": "UI5",
     "icons": {
-      "icon": "sap-icon://retail-store"
+      "icon": "sap-icon://product"
     },
     "fullWidth": true
   },
@@ -72,37 +72,37 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "myfranchise.inventory.i18n.i18n"
+          "bundleName": "myfranchise.replenishment.i18n.i18n"
         }
       }
     },
     "routing": {
       "routes": [
         {
-          "name": "EstoqueList",
+          "name": "PedidosList",
           "pattern": ":?query:",
-          "target": "EstoqueList"
+          "target": "PedidosList"
         },
         {
-          "name": "EstoqueObjectPage",
-          "pattern": "Estoque_Unidade({key}):?query:",
-          "target": "EstoqueObjectPage"
+          "name": "PedidoObjectPage",
+          "pattern": "Pedidos_Reposicao({key}):?query:",
+          "target": "PedidoObjectPage"
         }
       ],
       "targets": {
-        "EstoqueList": {
+        "PedidosList": {
           "type": "Component",
-          "id": "EstoqueList",
+          "id": "PedidosList",
           "name": "sap.fe.templates.ListReport",
           "options": {
             "settings": {
-              "contextPath": "/Estoque_Unidade",
+              "contextPath": "/Pedidos_Reposicao",
               "variantManagement": "Page",
               "initialLoad": true,
               "navigation": {
-                "Estoque_Unidade": {
+                "Pedidos_Reposicao": {
                   "detail": {
-                    "route": "EstoqueObjectPage"
+                    "route": "PedidoObjectPage"
                   }
                 }
               },
@@ -116,13 +116,13 @@
             }
           }
         },
-        "EstoqueObjectPage": {
+        "PedidoObjectPage": {
           "type": "Component",
-          "id": "EstoqueObjectPage",
+          "id": "PedidoObjectPage",
           "name": "sap.fe.templates.ObjectPage",
           "options": {
             "settings": {
-              "contextPath": "/Estoque_Unidade",
+              "contextPath": "/Pedidos_Reposicao",
               "editableHeaderContent": false
             }
           }
@@ -136,7 +136,7 @@
   },
   "sap.fiori": {
     "registrationIds": [
-      "myfranchise-inventory"
+      "myfranchise-replenishment"
     ],
     "archeType": "transactional"
   }

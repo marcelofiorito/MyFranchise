@@ -31,6 +31,7 @@ entity StatusContrato     : CodeList { key code : String(20); }
 // Estoque / Reposição
 entity StatusEstoque      : CodeList { key code : String(20); }  // OK, ATENCAO, RUPTURA
 entity StatusPedidoRep    : CodeList { key code : String(20); }  // PENDENTE, APROVADO, RECUSADO, ENVIADO, RECEBIDO
+entity OrigemPedido       : CodeList { key code : String(20); }  // AGENTE, MANUAL
 
 
 // ═══════════════════════════════════════════════════════════
@@ -354,6 +355,10 @@ entity Estoque_Unidade : cuid, managed {
   // 1=vermelho (RUPTURA/risco), 2=amarelo (ATENCAO), 3=verde (OK)
   estoqueCriticality : Integer    @title : '{i18n>Estoque_criticality}'      @Core.Computed: true;
   dataAtualizacao  : DateTime     @title : '{i18n>Estoque_dataAtualizacao}';
+  // Navegação para pedidos de reposição do mesmo SKU nesta unidade
+  pedidos          : Association to many Pedidos_Reposicao
+                       on  pedidos.unidade = unidade
+                       and pedidos.sku     = sku;
 }
 
 /**
@@ -399,7 +404,7 @@ entity Pedidos_Reposicao : cuid, managed {
   status           : Association to StatusPedidoRep @title : '{i18n>PedidoRep_status}';
   aprovador        : String(100)  @title : '{i18n>PedidoRep_aprovador}';
   dataDecisao      : DateTime     @title : '{i18n>PedidoRep_dataDecisao}';
-  origem           : String(20)   @title : '{i18n>PedidoRep_origem}';  // AGENTE | MANUAL
+  origem           : Association to OrigemPedido @title : '{i18n>PedidoRep_origem}';  // AGENTE | MANUAL
   // 1=vermelho (Alta urgência), 2=amarelo (Media), 3=verde (Baixa)
   urgenciaCriticality : Integer   @title : '{i18n>PedidoRep_criticality}' @Core.Computed: true;
 }

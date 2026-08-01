@@ -76,13 +76,20 @@ service FranqueadoraService {
     unidade.codigo      as unidadeCodigo : String,
     unidade.cidade      as unidadeCidade : String,
     unidade.regiao.code as regiaoCode  : String,
-    unidade.cluster.code as clusterCode : String
+    unidade.cluster.code as clusterCode : String,
+    pedidos
   };
   @readonly
   entity Sazonalidade_Regional  as projection on mf.Sazonalidade_Regional;
   @readonly
   entity Calendario_Promocional as projection on mf.Calendario_Promocional;
-  entity Pedidos_Reposicao      as projection on mf.Pedidos_Reposicao;
+  entity Pedidos_Reposicao      as projection on mf.Pedidos_Reposicao {
+    *,
+    unidade.nome        as unidadeNome   : String,
+    unidade.cidade      as unidadeCidade : String,
+    unidade.regiao.code as regiaoCode    : String,
+    origem.name         as origemLabel   : String
+  };
 
   // Agente de Reposição — detecta risco de ruptura e gera pedidos (gpt-4o)
   action gerarReposicao(unidade_ID : String) returns {
@@ -94,6 +101,20 @@ service FranqueadoraService {
     unidades : Integer;
     pedidos  : Integer;
     modo     : String;
+  };
+
+  // KPI para tiles do Work Zone
+  function rupturaCount()  returns Integer;
+  function pedidosPendentesCount() returns Integer;
+
+  // Aprovação/rejeição de pedidos pelo gestor (bound ao Pedido)
+  action Pedidos_Reposicao.aprovar(qtdAprovada : Integer, observacao : String) returns {
+    status   : String;
+    mensagem : String;
+  };
+  action Pedidos_Reposicao.recusar(motivo : String) returns {
+    status   : String;
+    mensagem : String;
   };
 
   // ── Code Lists ───────────────────────────────────────────
@@ -115,6 +136,7 @@ service FranqueadoraService {
   @readonly entity StatusContrato     as projection on mf.StatusContrato;
   @readonly entity StatusEstoque      as projection on mf.StatusEstoque;
   @readonly entity StatusPedidoRep    as projection on mf.StatusPedidoRep;
+  @readonly entity OrigemPedido       as projection on mf.OrigemPedido;
 }
 
 

@@ -98,6 +98,9 @@ modules:
         - name: inventory
           artifacts: [inventory.zip]
           target-path: app/
+        - name: replenishment
+          artifacts: [replenishment.zip]
+          target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
   - name: network
@@ -148,6 +151,15 @@ modules:
   - name: inventory
     type: html5
     path: app/inventory
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: replenishment
+    type: html5
+    path: app/replenishment
     build-parameters:
       build-result: dist
       builder: custom

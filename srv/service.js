@@ -53,6 +53,9 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
     // O before garante que as colunas-base entrem no $select (o FE pede só as
     // colunas visíveis; sem os campos-base o cálculo não teria dados).
     this.before('READ', Estoque_Unidade, (req) => {
+      // Não adicionar colunas em requisições $count — o HANA rejeita
+      // colunas não-agregadas em GROUP BY de COUNT queries.
+      if (req._.req?.path?.endsWith('/$count') || req.query?.SELECT?.one) return;
       const cols = req.query?.SELECT?.columns;
       if (Array.isArray(cols)) {
         const nomes = new Set(cols.map(c => c.ref?.[c.ref.length - 1]).filter(Boolean));
@@ -62,7 +65,7 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       }
     });
     this.after('READ', Estoque_Unidade, async (rows) => {
-      if (!rows) return;
+      if (!rows || typeof rows === 'number' || (Array.isArray(rows) && rows.length === 0)) return;
       await reposicao.enriquecerEstoque(this, Array.isArray(rows) ? rows : [rows]);
     });
 
@@ -75,6 +78,54 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
 
     this.on('gerarReposicaoTodas', async () => {
       return await reposicao.gerarParaTodas(this);
+    });
+
+    this.on('rupturaCount', async () => {
+      const db = await cds.connect.to('db');
+      const [{ CNT }] = await db.run(
+        `SELECT COUNT(*) CNT FROM MYFRANCHISE_ESTOQUE_UNIDADE WHERE STATUS_CODE='RUPTURA'`
+      );
+      return CNT;
+    });
+
+    this.on('pedidosPendentesCount', async () => {
+      const db = await cds.connect.to('db');
+      const [{ CNT }] = await db.run(
+        `SELECT COUNT(*) CNT FROM MYFRANCHISE_PEDIDOS_REPOSICAO WHERE STATUS_CODE='PENDENTE'`
+      );
+      return CNT;
+    });
+
+    const { Pedidos_Reposicao } = this.entities;
+
+    this.on('aprovar', Pedidos_Reposicao, async (req) => {
+      const pedido_ID = req.params[0].ID ?? req.params[0];
+      const { qtdAprovada, observacao } = req.data;
+      const pedido = await SELECT.one.from(Pedidos_Reposicao).where({ ID: pedido_ID });
+      if (!pedido) return req.error(404, `Pedido não encontrado`);
+      if (pedido.status_code !== 'PENDENTE') return req.error(409, `Pedido já está com status ${pedido.status_code}`);
+      await UPDATE(Pedidos_Reposicao).set({
+        status_code : 'APROVADO',
+        qtdAprovada : qtdAprovada ?? pedido.qtdSugerida,
+        aprovador   : req.user?.id ?? 'gestor',
+        dataDecisao : new Date().toISOString()
+      }).where({ ID: pedido_ID });
+      return { status: 'APROVADO', mensagem: observacao ?? `Aprovado — qtd: ${qtdAprovada ?? pedido.qtdSugerida}` };
+    });
+
+    this.on('recusar', Pedidos_Reposicao, async (req) => {
+      const pedido_ID = req.params[0].ID ?? req.params[0];
+      const { motivo } = req.data;
+      const pedido = await SELECT.one.from(Pedidos_Reposicao).where({ ID: pedido_ID });
+      if (!pedido) return req.error(404, `Pedido não encontrado`);
+      if (pedido.status_code !== 'PENDENTE') return req.error(409, `Pedido já está com status ${pedido.status_code}`);
+      await UPDATE(Pedidos_Reposicao).set({
+        status_code  : 'RECUSADO',
+        aprovador    : req.user?.id ?? 'gestor',
+        dataDecisao  : new Date().toISOString(),
+        justificativa: `[RECUSADO] ${motivo ?? ''}\n\n${pedido.justificativa ?? ''}`
+      }).where({ ID: pedido_ID });
+      return { status: 'RECUSADO', mensagem: motivo ?? 'Recusado pelo gestor' };
     });
 
     return super.init();

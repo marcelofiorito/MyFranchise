@@ -112,6 +112,32 @@ annotate service.Estoque_Unidade with @(
       $Type : 'UI.ReferenceFacet',
       Target: '@UI.FieldGroup#Localizacao',
       Label : '{i18n>Estoque_facetLocalizacao}'
+    },
+    {
+      $Type : 'UI.ReferenceFacet',
+      Target: 'pedidos/@UI.LineItem#Pedidos',
+      Label : '{i18n>Estoque_facetPedidos}'
     }
+  ]
+);
+
+// ── Pedidos de Reposição — tabela inline no OP do Estoque ─────────────────────
+// A anotação é feita em Pedidos_Reposicao com qualifier #Pedidos,
+// referenciada pelo Facet acima via 'pedidos/@UI.LineItem#Pedidos'.
+annotate service.Pedidos_Reposicao with @(
+  UI.LineItem #Pedidos: [
+    { Value: nomeProduto,        Label: '{i18n>ItensCatalogo_nomeProduto}' },
+    { Value: qtdSugerida,        Label: '{i18n>PedidoRep_qtdSugerida}' },
+    { Value: qtdAprovada,        Label: '{i18n>PedidoRep_qtdAprovada}' },
+    {
+      Value      : status_code,
+      Label      : '{i18n>PedidoRep_status}',
+      Criticality: urgenciaCriticality,
+      ![@UI.Importance]: #High
+    },
+    { Value: fornecedorSugerido, Label: '{i18n>PedidoRep_fornecedor}' },
+    { Value: prazoDesejado,      Label: '{i18n>PedidoRep_prazoDesejado}' },
+    { Value: origem,             Label: '{i18n>PedidoRep_origem}' },
+    { Value: justificativa,      Label: '{i18n>PedidoRep_justificativa}', ![@UI.MultiLineText]: true }
   ]
 );

@@ -22,7 +22,7 @@ const cds = require('@sap/cds');
  */
 const FRANQUEADO_DEFAULTS = { unidade_ID: 'u147', cluster: 'STD' };
 
-cds.on('bootstrap', () => {
+cds.on('bootstrap', (app) => {
   cds.middlewares.add(function franqueado_attrs(req, _res, next) {
     const user = cds.context && cds.context.user;
     if (user && typeof user.is === 'function' && user.is('Franqueado')) {
@@ -35,6 +35,33 @@ cds.on('bootstrap', () => {
     }
     next();
   }, { after: 'auth' });
+
+  // Endpoints de KPI para tiles dinâmicos do Work Zone.
+  // O tile espera um número puro em text/plain — OData functions
+  // retornam {"value":N} que o launchpad não consegue interpretar.
+  app.get('/kpi/ruptura', async (_req, res) => {
+    try {
+      const db = await cds.connect.to('db');
+      const [{ CNT }] = await db.run(
+        `SELECT COUNT(*) CNT FROM MYFRANCHISE_ESTOQUE_UNIDADE WHERE STATUS_CODE='RUPTURA'`
+      );
+      res.json(Number(CNT));
+    } catch (e) {
+      res.json(0);
+    }
+  });
+
+  app.get('/kpi/pedidos-pendentes', async (_req, res) => {
+    try {
+      const db = await cds.connect.to('db');
+      const [{ CNT }] = await db.run(
+        `SELECT COUNT(*) CNT FROM MYFRANCHISE_PEDIDOS_REPOSICAO WHERE STATUS_CODE='PENDENTE'`
+      );
+      res.json(Number(CNT));
+    } catch (e) {
+      res.json(0);
+    }
+  });
 });
 
 module.exports = cds.server;
