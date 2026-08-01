@@ -57,7 +57,7 @@
 
 ## SAP BTP Architecture
 
-![RunMyFranchise Architecture](docs/imagens/arquitetura.png)
+![RunMyFranchise Architecture](docs/imagens/arquitetura_solucao_franquias_v2.png)
 
 ### Technical Decisions
 
@@ -243,7 +243,7 @@ MyFranchise/
 │   ├── franchisee/    # Franchisee Portal (OVP)
 │   └── admin/         # Admin — Demo Control (custom UI5)
 ├── docs/
-│   ├── arquitetura.png          # Architecture diagram
+│   ├── arquitetura_solucao_franquias_v2.png  # Architecture diagram
 │   ├── BPMN.png                 # Demo flow BPMN
 │   ├── especificação/           # Technical specification (SPEC.md / SPEC.en.md)
 │   ├── integração/              # Integration analysis + MCP server docs
