@@ -45,10 +45,11 @@
 | Recomendações da IA (LR + OP) | ✅ Produção |
 | Estoque & Reposição (LR + OP + aba Pedidos) | ✅ Produção — aba Pedidos de Reposição no Object Page |
 | Agente de Reposição (nível 1-2) | ✅ Produção — pedidos PENDENTE gerados por gpt-4o |
-| Pedidos de Reposição (LR + OP) | ✅ Produção — app dedicado com Aprovar / Recusar |
-| Joule (copiloto conversacional) | ✅ Produção — MCP Server + 5 tools confirmadas no Work Zone |
+| Pedidos de Reposição (LR + OP + Aprovar/Recusar) | ✅ Produção — bound actions + app dedicado |
+| Joule (copiloto conversacional) | ✅ Produção — MCP Server + 7 tools (leitura + aprovação via linguagem natural) |
 | KPI tiles dinâmicos (ruptura + pendentes) | ✅ Produção — número ao vivo nos tiles do launchpad |
-| Agente nível 3 (aprovação via BPA) | ⬜ Pós-demo |
+| App Admin (reset + simulação demo) | ✅ Produção — resetarDemo + simularRecebimento com 1 clique |
+| Agente nível 3 (aprovação automática via BPA) | ⬜ Pós-demo — hoje aprovação é manual (Joule ou app) |
 
 **Backend:** `https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com`
 
@@ -73,7 +74,7 @@
 
 ---
 
-## Módulos (7 apps Fiori + Joule)
+## Módulos (8 apps Fiori + Joule)
 
 ### 1. Painel da Rede
 - **Floorplan:** List Report + Object Page
@@ -109,10 +110,15 @@
 - **Floorplan:** Overview Page (OVP) — 5 cards
 - **Destaque:** Faturamento, Score, Desvios, Recomendações IA, Benchmark do cluster. Cada card restrito à loja do franqueado.
 
+### 8. Admin (controle da demo)
+- **Floorplan:** UI5 customizado (page + botões)
+- **Destaque:** Painel de controle para pré-demo. Mostra KPIs ao vivo (pedidos PENDENTE + itens em RUPTURA). Botões: **Resetar Demo** (volta pedidos para PENDENTE), **Simular Recebimento** (APROVADO → RECEBIDO + saldo reposto no estoque), **Gerar Pedidos com IA**, **Gerar Recomendações**. Log de operações com timestamp.
+
 ### Joule (copiloto conversacional)
 - **MCP Server:** `joule-myfranchise-mcp` (Python FastMCP, CF)
-- **5 tools:** `get_lojas_em_risco`, `get_cobertura_estoque`, `get_pedidos_pendentes`, `get_recomendacoes`, `get_score_rede`
-- **Exemplo:** *"Quais lojas têm ruptura de Havaianas no Nordeste?"* → resposta com dados reais do HANA em tempo real
+- **7 tools:** `get_lojas_em_risco`, `get_cobertura_estoque`, `get_pedidos_pendentes`, `get_recomendacoes`, `get_score_rede`, `aprovar_pedido`, `recusar_pedido`
+- **Fluxo validado:** aprovação de 6 pedidos por linguagem natural end-to-end
+- **Exemplo:** *"Aprova todos os pedidos de Havaianas pendentes"* → Joule lista, identifica IDs e aprova todos automaticamente
 
 ---
 
