@@ -145,20 +145,39 @@ A ideia central é mostrar **os mesmos acontecimentos** através de diferentes "
 ---
 
 ### 3.6 Perspectiva do Integrador (a construir)
-**Sistema:** SAP Integration Suite — Monitor de iFlows  
+**Sistema:** SAP Integration Suite — Monitor de iFlows + SAP Advanced Event Mesh  
 **O que muda em tempo real:**
-- iFlow "Goods Movement → BTP" — mostra mensagem processada quando entrega chega
-- iFlow "BTP → S/4HANA Purchase Order" — mostra criação da PO após aprovação
-- iFlow "CAR → BTP Vendas" — mostra ingestão de dados de venda das lojas
-- Message Monitoring — log de cada mensagem com status (Success / Error)
+- **AEM Event Monitor** — cada evento publicado pelo S/4HANA ou pelo BTP aparece no broker: `MaterialDocument.Created`, `Pedido.Aprovado`, `Desvio.Detectado`
+- **Integration Suite Message Monitor** — cada iFlow executado aparece com status (Success/Error), payload e tempo de processamento
+- **AEM Topic Hierarchy** — visualização dos tópicos ativos e mensagens em trânsito entre S/4HANA, BTP, SAC e SBPA
+- Prova em tempo real que a aprovação no Joule disparou um evento real que atravessou o broker e chegou ao S/4HANA
 
 **Dependência técnica:**
-- Requer formation BTP + S/4HANA Public Cloud configurada
-- iFlows a criar no Integration Suite
-- Seed de dados mínimo no S/4HANA (BPs, Plants, materiais)
-- É a perspectiva de maior esforço técnico
+- SAP Advanced Event Mesh provisionado no BTP
+- Formation BTP + S/4HANA + AEM configurada
+- iFlows criados no Integration Suite para os eventos principais
+- É a perspectiva de maior esforço técnico junto com a do SBPA
 
 **Perfil do comprador:** arquiteto de integração, consultor SAP BTP, equipe de TI
+
+---
+
+### 3.7 Perspectiva do Processo Automatizado — SBPA (a construir)
+**Sistema:** SAP Build Process Automation — Process Monitor  
+**O que muda em tempo real:**
+- Ao aprovar um pedido via Joule, uma instância de processo SBPA é criada instantaneamente
+- O Process Monitor mostra a instância em andamento: tarefas abertas, responsável, prazo
+- Cada etapa do fluxo (enviar PO, aguardar fornecedor, confirmar entrega) aparece com status
+- Ao chegar o Goods Receipt no S/4HANA, o processo avança automaticamente para "Concluído"
+- Desvios de compliance disparam um segundo processo: notificação ao franqueado → prazo → escalation
+
+**Dependência técnica:**
+- SBPA provisionado no BTP (já disponível na maioria dos tenants)
+- Processos a criar no SBPA para: Pedido de Reposição pós-aprovação e Desvio de Compliance
+- Integração AEM → SBPA via trigger de evento
+- Esforço médio — SBPA tem ferramentas low-code
+
+**Perfil do comprador:** COO, Head of Operations, consultor de processos, equipe de transformação digital
 
 ---
 
@@ -171,7 +190,8 @@ A ideia central é mostrar **os mesmos acontecimentos** através de diferentes "
 | Franqueado | ✅ Já existe | — | — |
 | Analista de DB | HANA Explorer — já disponível | Baixo | Alta |
 | Analista de Analytics (SAC) | Live Connection HANA → SAC | Médio | Alta |
-| Integrador (IS + S/4) | Formation BTP+S/4+IS + iFlows + seed S/4 | Alto | Baixa (fase 2) |
+| Integrador (IS + AEM) | Formation BTP+S/4+IS+AEM + iFlows | Alto | Média (fase 3) |
+| Processos Automatizados (SBPA) | SBPA + processos configurados + AEM trigger | Médio-Alto | Média (fase 3) |
 
 ---
 
@@ -214,7 +234,8 @@ Cada perspectiva gera um vídeo independente:
 | "The Franchisee View" | 2 min | Franqueado, gerente de loja |
 | "The Analytics View" (SAC) | 3 min | CFO, Head of BI |
 | "The Database View" | 2 min | CTO, arquiteto |
-| "The Integration View" (IS) | 3 min | Arquiteto SAP, equipe TI |
+| "The Integration View" (IS + AEM) | 3 min | Arquiteto SAP, equipe TI |
+| "The Process Automation View" (SBPA) | 3 min | COO, Head of Operations, consultor de processos |
 | **"The Full Picture"** (split screen) | **5 min** | **Todos — vídeo âncora** |
 
 O vídeo "The Full Picture" mostra todas as perspectivas simultaneamente — é o vídeo que vai para o site, LinkedIn, email de prospecção. Os vídeos individuais vão para conversas técnicas específicas.

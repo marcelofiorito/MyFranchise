@@ -152,12 +152,122 @@ SAP POS DM / Unified POS ──► SAP CAR
                       (federação para SAC / analytics)
 ```
 
-A integração com o ERP core opera em dois modos complementares:
+A integração com o ERP core opera em três modos complementares:
 
-- **SAP Event Mesh** (padrão publish-subscribe): o S/4HANA emite Business Events via Enterprise Event Enablement quando há movimentações de estoque relevantes. O RunMyFranchise consome esses eventos em tempo real para recalcular cobertura e disparar alertas de ruptura — sem polling e sem replicação de dados.
-- **SAP Integration Suite** (APIs síncronas): para operações que exigem leitura sob demanda (consulta de saldo pontual) ou escrita (criação de Purchase Order no Ariba), o Integration Suite atua como barramento com roteamento, transformação e segurança centralizados.
+- **SAP Advanced Event Mesh** (padrão publish-subscribe empresarial): substitui o Event Mesh básico com capacidades de broker distribuído, roteamento por tópico hierárquico e garantia de entrega. O S/4HANA emite Business Events via Enterprise Event Enablement; o AEM distribui para múltiplos consumidores simultaneamente (RunMyFranchise, SAC, SBPA) sem acoplamento direto. O padrão de tópico é `sap/s4/beh/{objeto}/{versão}/{objeto}/{ação}` — ex: `sap/s4/beh/materialdocument/v1/MaterialDocument/Created`.
+
+- **SAP Integration Suite** (APIs síncronas + iFlows): para operações que exigem leitura sob demanda (consulta de saldo pontual) ou escrita (criação de Purchase Order no Ariba/S4), o Integration Suite atua como barramento com roteamento, transformação e segurança centralizados. O Monitor de Mensagens do Integration Suite comprova em tempo real cada iFlow executado — tornando o fluxo auditável e demonstrável para perfis técnicos.
+
+- **SAP Build Process Automation (SBPA)** (workflows com aprovação humana): quando um pedido de reposição é aprovado via Joule ou app Fiori, o evento `Pedidos_Reposicao.status → APROVADO` pode disparar um processo SBPA. O SBPA gerencia o fluxo até o fornecedor: notificação, prazo de resposta, escalation automático se não houver ação, e confirmação de recebimento. O **Process Monitor do SBPA** mostra cada instância de processo em andamento — outra perspectiva demonstrável em tempo real.
 
 O **SAP Datasphere** pode federar dados do CAR e do S/4HANA para enriquecer o contexto do agente sem movimentação de dados.
+
+---
+
+## 6.1 Advanced Event Mesh — Arquitetura de Eventos
+
+O AEM é o backbone de eventos do RunMyFranchise em produção. Todos os processos relevantes são orientados a eventos — sem polling, sem replicação desnecessária.
+
+### Tópicos publicados pelo S/4HANA
+
+| Tópico AEM | Trigger no S/4HANA | Consumidor no RunMyFranchise |
+|---|---|---|
+| `sap/s4/beh/materialdocument/v1/MaterialDocument/Created` | Goods Issue (saída de estoque) | Atualiza `saldoAtual`; recalcula cobertura; dispara agente se ruptura |
+| `sap/s4/beh/materialdocument/v1/MaterialDocument/Created` | Goods Receipt (entrada de estoque) | Atualiza `saldoAtual`; muda status `Pedidos_Reposicao` → RECEBIDO |
+| `sap/s4/beh/purchaseorder/v1/PurchaseOrder/Changed` | Confirmação do fornecedor | Status `Pedidos_Reposicao` → ENVIADO |
+| `sap/s4/beh/businesspartner/v1/BusinessPartner/Changed` | Alteração cadastral do BP | Atualiza dados do franqueado |
+| `sap/s4/beh/product/v1/Product.Changed` | Alteração de master data | Atualiza preço sugerido, lead time |
+
+### Tópicos publicados pelo RunMyFranchise (BTP → outros consumidores)
+
+| Tópico AEM | Trigger no BTP | Consumidor |
+|---|---|---|
+| `runmyfranchise/reposicao/v1/Pedido/Aprovado` | Status → APROVADO | SBPA (dispara processo de compra) |
+| `runmyfranchise/reposicao/v1/Pedido/Criado` | Agente gera pedido PENDENTE | SAC (atualiza dashboard de pedidos pendentes) |
+| `runmyfranchise/compliance/v1/Desvio/Detectado` | Desvio de preço detectado | SBPA (notificação ao franqueado) / SAC |
+| `runmyfranchise/saude/v1/Score/Critico` | Score da loja cai abaixo de 45 | SBPA (dispara plano de ação) / SAC |
+
+### Padrão de consumo no CAP
+
+```javascript
+// srv/events/s4-events.js
+const messaging = await cds.connect.to('messaging')
+
+messaging.on('sap/s4/beh/materialdocument/v1/MaterialDocument/Created',
+  async (msg) => {
+    const { Plant, MaterialDocument } = msg.data
+    // Busca saldo atualizado via API síncrona
+    const stock = await s4hana.get(`/API_MATERIAL_STOCK/A_MatlStkInAcctMod`)
+      .filter({ Plant, Material: await getMaterialBySku(Plant) })
+    // Atualiza Estoque_Unidade e recalcula cobertura
+    await UPDATE(Estoque_Unidade)
+      .set({ saldoAtual: stock.MatlWrhsStkQtyInMatlBaseUnit })
+      .where({ unidade_ID: plantToUnidade(Plant) })
+    // Dispara agente se necessário
+    await reposicaoAgent.verificar(Plant)
+  }
+)
+```
+
+---
+
+## 6.2 SAP Build Process Automation — Automação de Processos
+
+O SBPA fecha o loop entre a aprovação do gestor e a execução logística, eliminando o acompanhamento manual por e-mail.
+
+### Processo 1: Pedido de Reposição (pós-aprovação)
+
+```
+Pedido APROVADO no BTP
+    │
+    ▼ [Evento: runmyfranchise/reposicao/v1/Pedido/Aprovado]
+    │
+SAP Build Process Automation
+    │
+    ├── Tarefa 1: Enviar PO ao fornecedor (Integration Suite → S/4HANA)
+    │       Prazo: 4h úteis
+    │       Escalation: gestor de compras se não executado
+    │
+    ├── Tarefa 2: Aguardar confirmação do fornecedor
+    │       Timeout: 2 dias úteis
+    │       Escalation: alerta ao gestor da rede
+    │
+    ├── Tarefa 3: Confirmar entrega (Goods Receipt no S/4HANA)
+    │       Trigger: evento MaterialDocument.Created (tipo GR)
+    │       Ação: atualiza Pedidos_Reposicao → RECEBIDO
+    │
+    └── Tarefa 4: Notificar franqueado
+            Canal: Work Zone / e-mail
+            Conteúdo: "Reposição de {produto} confirmada — {qtd} unidades"
+```
+
+### Processo 2: Desvio de Compliance (notificação e correção)
+
+```
+Desvio detectado no BTP (after CREATE VendaPraticada)
+    │
+    ▼ [Evento: runmyfranchise/compliance/v1/Desvio/Detectado]
+    │
+SAP Build Process Automation
+    │
+    ├── Tarefa 1: Notificar franqueado (Work Zone / e-mail)
+    │       Prazo para correção: configurável por RegrasCompliance
+    │
+    ├── Tarefa 2: Aguardar resposta do franqueado
+    │       Portal: MinhasNotificacoes (FranqueadoService)
+    │
+    └── Tarefa 3: Escalar para gestor se prazo vencido
+            Ação: muda status Desvio → VENCIDO; alerta no Painel da Rede
+```
+
+### O Process Monitor como perspectiva de demo
+
+O **SAP Build Process Automation Process Monitor** mostra em tempo real:
+- Instâncias de processos em andamento (por tipo, status, prazo)
+- Tarefas abertas por responsável
+- Histórico de execuções com audit trail completo
+
+Para a demo, ao aprovar um pedido via Joule, uma instância do processo SBPA é criada instantaneamente e aparece no monitor — provando que a aprovação não ficou no ar, mas disparou um fluxo concreto com responsável, prazo e escalation.
 
 ---
 
