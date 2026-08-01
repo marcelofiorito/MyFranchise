@@ -158,7 +158,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 
 ### Fluxo da Demo
 
-![Fluxo da Demo — BPMN](docs/imagens/BPMN.png)
+![Fluxo da Demo — BPMN](docs/imagens/bpmn_pt.png)
 
 ## Tech Stack
 

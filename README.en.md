@@ -177,7 +177,7 @@ Same product, same month → opposite risk by region. The agent calculates cover
 
 ### Demo Flow
 
-![Demo Flow — BPMN](docs/imagens/BPMN.png)
+![Demo Flow — BPMN](docs/imagens/bpmn_en.png)
 
 ### Data validated in production — Porto Alegre Store (u147)
 
