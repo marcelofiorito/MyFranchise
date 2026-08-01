@@ -240,17 +240,17 @@ Acesse **http://localhost:4004**
 | Usuário | Senha | Role | Serviço |
 |---|---|---|---|
 | `gestor` | `gestor` | Franqueadora_Gestor | `/franqueadora` |
-| `roberto` | `roberto` | Franqueado (Loja 147 / cluster STD) | `/franqueado` |
+| `roberto` | `roberto` | Franqueado (Loja Porto Alegre / u147 / cluster STD) | `/franqueado` |
 
 ### Endpoints úteis
 ```bash
 # Painel — todas as unidades com cobertura sazonal
 GET /franqueadora/Estoque_Unidade?$filter=sku eq 'SKU-100'
 
-# Desvios da Loja 147
+# Desvios da Loja Porto Alegre (147)
 GET /franqueadora/Desvios?$filter=unidade_ID eq 'u147'
 
-# KPIs jan–jun (Loja 147)
+# KPIs jan–jun (Loja Porto Alegre / 147)
 GET /franqueadora/KPI_Unidade?$filter=unidade_ID eq 'u147'&$orderby=periodo
 
 # Agente de recomendações (gpt-4o)

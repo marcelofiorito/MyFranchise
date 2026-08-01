@@ -24,9 +24,9 @@ Plataforma SAP BTP para gestão de redes de franquias. Centraliza a visão da re
 
 **Alexandre Mendes** — Diretor de Operações e Expansão, rede de 280 lojas fashion/lifestyle. Quer dobrar a rede em 3 anos. Problema: cada franqueado é uma ilha, KPIs chegam com atraso, compliance é manual, onboarding leva meses.
 
-### Cenário de demo — Loja 147
+### Cenário de demo — Loja Porto Alegre (147)
 
-A Loja 147 (Porto Alegre, cluster Standard) é a unidade usada nos blocos de demo ao vivo:
+A Loja Porto Alegre (147, cluster Standard) é a unidade usada nos blocos de demo ao vivo:
 - Score de Saúde: **32/100** (crítico — vermelho no ALP)
 - 4 desvios detectados: SKU-004 Tênis Casual (-14,3% Alta), SKU-011 Boné Aba Curva (-24,1% Alta), SKU-003 Vestido Midi (-8,8% Média), SKU-999 produto não autorizado (Mix Alta)
 - Franqueado: Roberto Mendes (`unidade_ID: 'u147'`, `cluster: 'STD'`)

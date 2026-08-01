@@ -9,7 +9,7 @@
 
 ## 1. Contexto e Motivação
 
-O RunMyFranchise foi construído para o Dragons' Den 2026. A demo tem 15 minutos, é ao vivo, e foca num roteiro específico com a Loja 147 e a ruptura de Havaianas no Nordeste.
+O RunMyFranchise foi construído para o Dragons' Den 2026. A demo tem 15 minutos, é ao vivo, e foca num roteiro específico com a Loja Porto Alegre (147) e a ruptura de Havaianas no Nordeste.
 
 Após o evento, o projeto tem potencial de se tornar um **ativo de pré-vendas reutilizável** — capaz de demonstrar a proposta de valor para diferentes perfis de compradores (CIO, COO, analista de TI, gestor de negócio) com a mesma narrativa, mas perspectivas diferentes.
 
@@ -82,7 +82,7 @@ A ideia central é mostrar **os mesmos acontecimentos** através de diferentes "
 - Tile "Replenishment Orders" — contador de pedidos pendentes muda
 - App Estoque & Reposição — status dos itens muda de RUPTURA → OK
 - App Pedidos de Reposição — status evolui PENDENTE → APROVADO → RECEBIDO
-- Painel da Rede — score da loja 147 sobe conforme desvios são resolvidos
+- Painel da Rede — score da Loja Porto Alegre (147) sobe conforme desvios são resolvidos
 
 **Perfil do comprador:** COO, Diretor de Operações, Gestor de Franquias
 
@@ -133,7 +133,7 @@ A ideia central é mostrar **os mesmos acontecimentos** através de diferentes "
 **O que muda em tempo real:**
 - Tabelas `MYFRANCHISE_ESTOQUE_UNIDADE` — coluna `STATUS_CODE` muda de RUPTURA → OK
 - Tabela `MYFRANCHISE_PEDIDOS_REPOSICAO` — coluna `STATUS_CODE` evolui pelo fluxo completo
-- Tabela `MYFRANCHISE_SAUDE_UNIDADE` — `SCORESAUDE` da loja 147 sobe
+- Tabela `MYFRANCHISE_SAUDE_UNIDADE` — `SCORESAUDE` da Loja Porto Alegre (147) sobe
 - Queries ao vivo provam que os dados são reais — não há mágica, é SQL puro
 
 **Dependência técnica:**

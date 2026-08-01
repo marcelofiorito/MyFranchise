@@ -4,7 +4,7 @@
 
 **Dragons' Den: Learn to Win 2026 · 26/08 · 15 min demo + 5 min Q&A · ao vivo**
 
-> Fio condutor: **Alexandre Mendes** (Diretor de Operações, 280 lojas) abre o Work Zone e encontra duas crises simultâneas — a Loja 147 (Porto Alegre) em compliance e ruptura de inverno, e o Nordeste em ruptura de verão. Em 15 minutos, o sistema detectou, a IA recomendou, o agente gerou os pedidos e o Joule aprovou tudo. Zero planilha, zero e-mail, zero auditoria manual.
+> Fio condutor: **Alexandre Mendes** (Diretor de Operações, 280 lojas) abre o Work Zone e encontra duas crises simultâneas — a Loja Porto Alegre (147) em compliance e ruptura de inverno, e o Nordeste em ruptura de verão. Em 15 minutos, o sistema detectou, a IA recomendou, o agente gerou os pedidos e o Joule aprovou tudo. Zero planilha, zero e-mail, zero auditoria manual.
 
 ---
 
@@ -26,7 +26,7 @@
 **App:** Painel da Rede (login Gestor)
 
 1. Abrir. **Donut de criticidade** na cara: lojas Crítico / Atenção / Saudável. *"Isso é a rede inteira, agora."*
-2. Filtrar pelo cluster ou ver a tabela → **Loja 147 em vermelho, score 32**. Clicar na linha.
+2. Filtrar pelo cluster ou ver a tabela → **Loja Porto Alegre (147) em vermelho, score 32**. Clicar na linha.
 3. Object Page da unidade. Speech:
 
 > *"Score 32 — vermelho. Por quê? Faturamento caindo mês a mês, 4 desvios de compliance ativos com produto vendido fora do mix autorizado, e um item em ruptura de estoque. Não é um problema isolado — é um padrão. O sistema já sabe. Vamos entender cada camada."*
@@ -52,9 +52,9 @@
 **App:** Estoque & Reposição (Gestor)
 
 1. Abrir. Filtrar por status **RUPTURA** → 5 itens: **3 no NE** (Havaianas — fator sazonal 1,8 em julho) e **2 no Sul** (Bota Couro Inverno, u147 — fator 1,7 no inverno).
-2. *"Mesmo produto, mesmo mês — risco oposto por região. A Bota Couro Inverno da 147 está em ruptura porque o Sul tem demanda 1,7x no inverno. O agente calcula a cobertura com o fator sazonal de cada região."*
+2. *"Mesmo produto, mesmo mês — risco oposto por região. A Bota Couro Inverno da Loja Porto Alegre (147) está em ruptura porque o Sul tem demanda 1,7x no inverno. O agente calcula a cobertura com o fator sazonal de cada região."*
 3. *"Ruptura de estoque = venda perdida = faturamento cai = performance cai = score cai. O sistema fechou o ciclo."*
-4. Clicar na Bota Couro Inverno da 147 → Object Page → aba **Pedidos de Reposição** → pedido gerado pelo gpt-4o com justificativa detalhada.
+4. Clicar na Bota Couro Inverno da Loja Porto Alegre (147) → Object Page → aba **Pedidos de Reposição** → pedido gerado pelo gpt-4o com justificativa detalhada.
 5. *"O agente não só detectou — ele já calculou a quantidade, sugeriu o fornecedor e escreveu a justificativa. Rodando no AI Core, dentro do BTP."*
 6. Mostrar o tile **"Pedidos de Reposição: 6 pendentes"** no launchpad.
 
@@ -90,7 +90,7 @@
 
 ### FECHAMENTO (≈1 min, sem tela)
 
-*"Em 15 minutos: o gestor viu a rede inteira, detectou o compliance da 147 no momento da venda, o agente calculou a reposição com sazonalidade regional, o Joule aprovou 6 pedidos por linguagem natural, e o franqueado recebeu a recomendação da IA no celular. Tudo no SAP BTP: CAP + HANA Cloud + AI Core + Work Zone + Joule. Um dia de trabalho de franqueadora, num único fluxo."*
+*"Em 15 minutos: o gestor viu a rede inteira, detectou o compliance da Loja Porto Alegre (147) no momento da venda, o agente calculou a reposição com sazonalidade regional, o Joule aprovou 6 pedidos por linguagem natural, e o franqueado recebeu a recomendação da IA no celular. Tudo no SAP BTP: CAP + HANA Cloud + AI Core + Work Zone + Joule. Um dia de trabalho de franqueadora, num único fluxo."*
 
 Ponte para roadmap: *"A próxima evolução: SAP Ariba fecha o ciclo de reposição automaticamente — fornecedor confirma envio, loja dá entrada, estoque atualiza. Zero loop humano. É o Agente nível 3."*
 
@@ -111,13 +111,13 @@ Abrir o app **Admin** no Work Zone e executar em ordem:
 ## Checklist de VALIDAÇÃO (ensaiar 3x antes do dia)
 
 ### Dados batem com a narrativa?
-- [ ] Loja 147 aparece vermelha (score 32) no Painel e no Portal
-- [ ] 4 desvios da 147 no Compliance com severidades certas (2 Alta, 1 Média, 1 Mix)
-- [ ] Bota Couro Inverno da 147 aparece em RUPTURA no Estoque
+- [ ] Loja Porto Alegre (147) aparece vermelha (score 32) no Painel e no Portal
+- [ ] 4 desvios da Loja Porto Alegre (147) no Compliance com severidades certas (2 Alta, 1 Média, 1 Mix)
+- [ ] Bota Couro Inverno da Loja Porto Alegre (147) aparece em RUPTURA no Estoque
 - [ ] 3 itens NE + 2 Sul em RUPTURA (total 5)
 - [ ] Tile "Pedidos de Reposição" mostra 6 PENDENTE
 - [ ] Tile "Estoque & Reposição" mostra 5 em RUPTURA
-- [ ] Recomendações da 147 existem (modo `"GenAI Hub"`, não fallback)
+- [ ] Recomendações da Loja Porto Alegre (147) existem (modo `"GenAI Hub"`, não fallback)
 - [ ] KPIs jan–jun mostram a queda (189k → 162k)
 
 ### Joule funciona?
