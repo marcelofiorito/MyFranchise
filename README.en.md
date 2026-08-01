@@ -57,7 +57,7 @@
 
 ## SAP BTP Architecture
 
-![RunMyFranchise Architecture](docs/imagens/arquitetura_solucao_franquias_v2.png)
+![RunMyFranchise Architecture](docs/imagens/arquitetura_solucao_franquias_v2_en.png)
 
 ### Technical Decisions
 
