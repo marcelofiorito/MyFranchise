@@ -1,0 +1,11 @@
+code,locale,name
+ABERTO,en,Open
+NOTIFICADO,en,Notified
+EM_CORRECAO,en,Under Correction
+RESOLVIDO,en,Resolved
+IGNORADO,en,Dismissed
+ABERTO,pt,Aberto
+NOTIFICADO,pt,Notificado
+EM_CORRECAO,pt,Em Correção
+RESOLVIDO,pt,Resolvido
+IGNORADO,pt,Ignorado

@@ -1,0 +1,9 @@
+code,locale,name
+ENVIADA,en,Sent
+LIDA,en,Read
+ACAO_TOMADA,en,Action Taken
+VENCIDA,en,Overdue
+ENVIADA,pt,Enviada
+LIDA,pt,Lida
+ACAO_TOMADA,pt,Ação Tomada
+VENCIDA,pt,Vencida

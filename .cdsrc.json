@@ -1,6 +1,6 @@
 {
   "i18n": {
-    "default_language": "pt",
+    "default_language": "en",
     "fallback_bundle": "i18n",
     "languages": ["pt", "en"]
   },

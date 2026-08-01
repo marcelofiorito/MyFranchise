@@ -1,0 +1,11 @@
+code,locale,name
+ATIVO,en,Active
+VENCENDO_90DIAS,en,Expiring in 90 Days
+VENCENDO_30DIAS,en,Expiring in 30 Days
+VENCIDO,en,Expired
+RENOVADO,en,Renewed
+ATIVO,pt,Ativo
+VENCENDO_90DIAS,pt,Vencendo em 90 dias
+VENCENDO_30DIAS,pt,Vencendo em 30 dias
+VENCIDO,pt,Vencido
+RENOVADO,pt,Renovado

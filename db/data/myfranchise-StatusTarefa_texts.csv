@@ -1,0 +1,11 @@
+code,locale,name
+PENDENTE,en,Pending
+EM_ANDAMENTO,en,In Progress
+CONCLUIDA,en,Completed
+BLOQUEADA,en,Blocked
+VENCIDA,en,Overdue
+PENDENTE,pt,Pendente
+EM_ANDAMENTO,pt,Em Andamento
+CONCLUIDA,pt,Concluída
+BLOQUEADA,pt,Bloqueada
+VENCIDA,pt,Vencida
