@@ -2,7 +2,7 @@
 
 **🇧🇷 Português** · [🇬🇧 English](README.en.md)
 
-> **SAP BTP solution for franchise network management**
+> **Solução SAP BTP para gestão de redes de franquias**
 > Dragons' Den: Learn to Win Edition 2026 — SAP Solution Advisory
 
 ---
@@ -14,6 +14,42 @@
 **Solução:** Plataforma SAP BTP que conecta franqueadora e franqueados em tempo real: painel da rede, compliance automático, agentes de IA para recomendações e reposição de estoque, e portal do franqueado com dashboard próprio.
 
 **Persona âncora:** Alexandre Mendes — Diretor de Operações, rede de 280 lojas fashion/lifestyle, quer dobrar a rede sem multiplicar o caos.
+
+---
+
+## Caso de Foco — Ruptura de Estoque
+
+Ruptura de estoque é um dos principais riscos operacionais em redes de franquias: falta de produto gera venda perdida, insatisfação do franqueado e dano à marca. O diferencial está em **antecipar** a ruptura considerando sazonalidade regional — a mesma estratégia de reposição não serve para todas as regiões.
+
+**Demonstração com dados reais (julho — mês de referência):**
+
+| Loja | Região | SKU | Cobertura (jul) | Status |
+|---|---|---|---|---|
+| Recife (u178) | NE | Havaianas Top | 2,6 dias | 🔴 RUPTURA |
+| Salvador (u156) | NE | Havaianas Top | 1,8 dias | 🔴 RUPTURA |
+| Porto Alegre (u147) | S | Havaianas Top | 66,7 dias | 🟢 OK |
+| Porto Alegre (u147) | S | Bota Couro Inverno | 1,8 dias | 🔴 RUPTURA |
+
+Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertura com fator sazonal regional e gera pedidos de reposição com justificativa do gpt-4o, considerando também o calendário de promoções.
+
+> **Cenário da demo:** o caso de ruptura de estoque é o foco principal da demonstração de 26/08. Outros cenários (compliance, onboarding, recomendações IA) poderão ser incluídos conforme análise do time.
+
+### Fluxo da Demo
+
+![Fluxo da Demo — BPMN](docs/imagens/bpmn_pt.png)
+
+### Dados validados em produção — Loja Porto Alegre (u147)
+
+| Dado | Valor |
+|---|---|
+| Health Score | **32 / 100** — crítico (vermelho) |
+| Compliance | 45% |
+| Faturamento jun/2026 | R$ 162.378 (queda de R$ 199k em fev → R$ 162k em jun) |
+| Desvios detectados | 4 (Tênis Casual −14,3% ALTA, Boné −24,1% ALTA, Vestido −8,8% MÉDIA, Short não autorizado) |
+| Recomendações IA | 3 — via gpt-4o (`modo: "GenAI Hub"` confirmado) |
+| Donut da rede | 4 críticos / 9 em atenção / 7 saudáveis (20 unidades) |
+
+**Roteiro detalhado:** ver `teste/ROTEIRO_DEMO.md` (4 atos: Visão Geral → Causa Raiz → IA → Endpoint)
 
 ---
 
@@ -59,17 +95,6 @@
 
 ![Arquitetura RunMyFranchise](docs/imagens/arquitetura_solucao_franquias_v2.png)
 
-### Decisões Técnicas
-
-| Decisão | Escolha | Motivo |
-|---|---|---|
-| Frontend | Fiori Elements + Build Work Zone | Annotation-driven, sem app nativo |
-| Backend | SAP CAP Node.js, OData V4 | `@sap/cds ^10` |
-| Banco de dados | HANA Cloud (prod) / SQLite in-memory (dev) | `@cap-js/hana ^2.8` / `@cap-js/sqlite ^2.1.3` |
-| IA | AI Core + GenAI Hub (gpt-4o) | `@sap-ai-sdk/orchestration ^2.13` |
-| UI5 runtime | Versão fixa `1.136.7` | Alinha build e runtime; evita comportamento `Active` no FE V4 |
-| Perfis CAP | `hana-cloud`/`xsuaa` como default; `[development]` ativa sqlite+mocked | Evita apps vazios em CF |
-
 ---
 
 ## Módulos (8 apps Fiori + Joule)
@@ -110,13 +135,32 @@
 
 ### 8. Admin (controle da demo)
 - **Floorplan:** UI5 customizado (page + botões)
-- **Destaque:** Painel de controle para pré-demo. Mostra KPIs ao vivo (pedidos PENDENTE + itens em RUPTURA). Botões: **Resetar Demo** (volta pedidos para PENDENTE), **Simular Recebimento** (APROVADO → RECEBIDO + saldo reposto no estoque), **Gerar Pedidos com IA**, **Gerar Recomendações**. Log de operações com timestamp.
+- **Serviço:** `FranqueadoraService` — role `Franqueadora_Gestor`
+- **Destaque:** Painel de controle para pré-demo. Mostra KPIs ao vivo (pedidos PENDENTE + itens em RUPTURA). Botões:
+  - **Resetar Demo** — volta todos os pedidos para PENDENTE, limpa campos de decisão
+  - **Simular Recebimento** — transiciona APROVADO → RECEBIDO e repõe saldo no estoque
+  - **Gerar Pedidos com IA** — executa o Agente de Reposição para todas as lojas
+  - **Gerar Recomendações** — executa o Agente de Recomendações para todas as lojas
+  - Log de operações com timestamp (últimas 20 ações)
 
 ### Joule (copiloto conversacional)
 - **MCP Server:** `joule-myfranchise-mcp` (Python FastMCP, CF)
-- **7 tools:** `get_lojas_em_risco`, `get_cobertura_estoque`, `get_pedidos_pendentes`, `get_recomendacoes`, `get_score_rede`, `aprovar_pedido`, `recusar_pedido`
+  `https://joule-myfranchise-mcp.cfapps.us10.hana.ondemand.com`
+- **7 tools:**
+
+| Tool | Descrição |
+|---|---|
+| `get_lojas_em_risco` | Lojas em risco de ruptura, filtradas por região/categoria |
+| `get_cobertura_estoque` | Cobertura em dias para uma loja/SKU específico |
+| `get_pedidos_pendentes` | Pedidos de reposição aguardando aprovação |
+| `get_recomendacoes` | Recomendações da IA por loja e prioridade |
+| `get_score_rede` | Scores de saúde na rede |
+| `aprovar_pedido` | Aprovar pedido pendente (PENDENTE → APROVADO) |
+| `recusar_pedido` | Recusar pedido pendente (PENDENTE → RECUSADO) |
+
 - **Fluxo validado:** aprovação de 6 pedidos por linguagem natural end-to-end
 - **Exemplo:** *"Aprova todos os pedidos de Havaianas pendentes"* → Joule lista, identifica IDs e aprova todos automaticamente
+- **Auth:** OAuth2 `client_credentials` via XSUAA; busca CSRF token antes de ações POST
 
 ---
 
@@ -139,42 +183,87 @@
 
 ---
 
-## Caso de Foco — Ruptura de Estoque
+## Fórmula do Health Score
 
-Ruptura de estoque é um dos principais riscos operacionais em redes de franquias: falta de produto gera venda perdida, insatisfação do franqueado e dano à marca. O diferencial está em **antecipar** a ruptura considerando sazonalidade regional — a mesma estratégia de reposição não serve para todas as regiões.
+```
+scoreSaude = (performancePct × 0,40) + (compliancePct × 0,40) + (scoreContrato × 0,20)
 
-**Demonstração com dados reais (julho — mês de referência):**
+performancePct = min(kpi.faturamento / benchmark.faturamentoMedio × 100, 100)
+                 default 50 se não há KPI ou benchmark disponível
 
-| Loja | Região | SKU | Cobertura (jul) | Status |
-|---|---|---|---|---|
-| Recife (u178) | NE | Havaianas Top | 2,6 dias | 🔴 RUPTURA |
-| Salvador (u156) | NE | Havaianas Top | 1,8 dias | 🔴 RUPTURA |
-| Porto Alegre (u147) | S | Havaianas Top | 66,7 dias | 🟢 OK |
-| Porto Alegre (u147) | S | Bota Couro Inverno | 1,8 dias | 🔴 RUPTURA |
+compliancePct  = max(0, 100 − desviosAbertos × 12)
+                 cada desvio ABERTO ou NOTIFICADO custa 12 pontos
 
-Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertura com fator sazonal regional e gera pedidos de reposição com justificativa do gpt-4o, considerando também o calendário de promoções.
+scoreContrato:   ATIVO            → 100
+                 VENCENDOEM90DIAS →  60
+                 VENCENDOEM30DIAS →  30
+                 outro / expirado →   0
 
-> **Cenário da demo:** o caso de ruptura de estoque é o foco principal da demonstração de 26/08. Outros cenários (compliance, onboarding, recomendações IA) poderão ser incluídos conforme análise do time.
+Limiares de criticidade:
+  scoreSaude < 45  → 1 CRÍTICO  (vermelho)
+  45 ≤ score < 70  → 2 ATENÇÃO  (amarelo)
+  score ≥ 70       → 3 SAUDÁVEL (verde)
+```
 
-### Fluxo da Demo
+---
 
-![Fluxo da Demo — BPMN](docs/imagens/bpmn_pt.png)
+## Modelo de Segurança
+
+O isolamento de dados entre franqueados é implementado via **autorização baseada em instância** com XSUAA e SAP Cloud Identity Services (IAS):
+
+- Cada usuário franqueado recebe um atributo customizado `unidade_ID` no IAS/XSUAA durante o onboarding.
+- O CAP aplica automaticamente filtros em tempo de query via anotações `@restrict`: `where: 'unidade_ID = $user.unidade_ID'`.
+- Nenhuma query entre franqueados é possível sem o role `Franqueadora_Gestor`.
+- Modelo padrão: **single-tenant com segurança em nível de linha** — adequado para centenas de unidades. Para escala SaaS multi-tenant, o CAP suporta evolução para `@multitenancy` com tenants isolados por assinante.
+
+---
+
+## Documentação
+
+Todos os documentos do projeto, organizados por categoria. Cada documento contém um link de retorno ao README.
+
+| Categoria | Documento | Descrição |
+|---|---|---|
+| Negócio | [Product Requirements Document](docs/requisitos/PRD.md) | Requisitos funcionais, personas, histórias de usuário e critérios de aceite |
+| Negócio | [Roteiro de Demo](teste/ROTEIRO_DEMO.md) | 4 atos, narrativa de ruptura, checklist pré-demo e plano B |
+| Técnica | [Especificação Técnica](docs/especificação/SPEC.md) | Modelo de dados, serviços OData, handlers CAP e anotações de segurança |
+| Técnica | [Integração SAP Retail Portfolio](docs/integração/Integração.md) | Análise de fit com S/4HANA, IBP, CAR e Ariba |
+| Técnica | [Setup Joule no Work Zone](docs/integração/joule.md) | Pré-requisitos e configuração do MCP Server no Work Zone |
+| Técnica | [MCP Server — Joule](docs/integração/mcp-server.md) | 7 ferramentas, arquitetura do servidor, deploy e troubleshooting |
+| Ideias | [Visão de Produto Pós-Demo](docs/ideias/visao-produto.md) | Roadmap conceitual para uso como ativo de pré-vendas após a demo |
+| Arquitetura | [Diagrama de Arquitetura (Draw.io)](docs/imagens/arquitetura-runmyfranchise.drawio) | Fonte editável do diagrama de arquitetura (Draw.io com estilo SAP) |
+| Arquitetura | [SAP Shape Libraries](docs/sap-shape-libraries/) | Bibliotecas de shapes SAP utilizadas no diagrama Draw.io |
+
+---
+
+## Decisões Técnicas
+
+| Decisão | Escolha | Motivo |
+|---|---|---|
+| Frontend | Fiori Elements + Build Work Zone | Annotation-driven, sem app nativo |
+| Backend | SAP CAP Node.js, OData V4 | `@sap/cds ^10` |
+| Banco de dados | HANA Cloud (prod) / SQLite in-memory (dev) | `@cap-js/hana ^2.8` / `@cap-js/sqlite ^2.1.3` |
+| IA | AI Core + GenAI Hub (gpt-4o) | `@sap-ai-sdk/orchestration ^2.13` |
+| UI5 runtime | Versão fixa `1.136.7` | Alinha build e runtime; evita comportamento `Active` no FE V4 |
+| Perfis CAP | `hana-cloud`/`xsuaa` como default; `[development]` ativa sqlite+mocked | Evita apps vazios em CF |
+
+---
 
 ## Tech Stack
 
 ```
-@sap/cds                   ^10.0.5     # CAP backend (OData V4)
+@sap/cds                   ^10.0.5     # Backend CAP (OData V4)
 @cap-js/sqlite             ^2.1.3      # SQLite em memória (dev)
 @cap-js/hana               ^2.8.0      # HANA Cloud (prod)
 @sap-ai-sdk/orchestration  ^2.13.0     # GenAI Hub — gpt-4o
-@sap/xssec                 ^4.13.3     # autorização XSUAA
-express                    ^4.22.2     # runtime HTTP
+@sap/xssec                 ^4.13.3     # Autorização XSUAA
+express                    ^4.22.2     # Runtime HTTP
 
-SAP HANA Cloud                         # banco de dados em produção
-SAP Build Work Zone                    # portal e launchpad (managed approuter)
-SAP AI Core + GenAI Hub               # agentes de IA (gpt-4o)
-SAP IAS + XSUAA                       # identidade e autorização
-SAPUI5 1.136.7                        # runtime Fiori Elements (versão fixada)
+SAP HANA Cloud                         # Banco de dados em produção
+SAP Build Work Zone                    # Portal e launchpad (managed approuter)
+SAP AI Core + GenAI Hub               # Agentes de IA (gpt-4o)
+SAP IAS + XSUAA                       # Identidade e autorização
+SAPUI5 1.136.7                        # Runtime Fiori Elements (versão fixada)
 ```
 
 **Perfis CAP:** `hana-cloud`/`xsuaa` como **default**; `[development]` ativa sqlite+mocked automaticamente com `cds watch`.
@@ -197,23 +286,29 @@ MyFranchise/
 │   ├── service.js              # Handlers: desvios, score, estoque, aprovação pedidos, KPI endpoints
 │   ├── franqueado-service.js   # Impl FranqueadoService
 │   ├── server.js               # Middleware JWT + endpoints /kpi/ruptura e /kpi/pedidos-pendentes
+│   ├── mcp-server.js           # Bridge MCP Server Node.js (CF)
 │   └── ai/
 │       ├── recommendations-job.js   # Agente de recomendações (gpt-4o + fallback)
 │       └── reposicao-agent.js       # Agente de reposição sazonal (gpt-4o + fallback)
 ├── app/
 │   ├── network/          # Painel da Rede (LR + donut + OP)
 │   ├── compliance/       # Governança & Compliance (LR + OP)
-│   ├── onboarding/       # Onboarding (LR + OP×2 + Draft)
+│   ├── onboarding/       # Onboarding (LR + OP + Draft)
 │   ├── inventory/        # Estoque & Reposição (LR + OP + aba Pedidos) — KPI tile
 │   ├── replenishment/    # Pedidos de Reposição (LR + OP + Aprovar/Recusar) — KPI tile
 │   ├── recommendations/  # Recomendações da IA (LR + OP)
-│   └── franchisee/       # Portal do Franqueado (OVP — 5 cards)
+│   ├── franchisee/       # Portal do Franqueado (OVP — 5 cards)
+│   └── admin/            # Admin — Controle da Demo (UI5 customizado)
 ├── docs/
 │   ├── especificação/SPEC.md               # Especificação técnica
 │   ├── requisitos/PRD.md                   # Product Requirements Document
 │   ├── integração/                         # Setup Joule, MCP Server, integração SAP
 │   ├── ideias/visao-produto.md             # Roadmap pós-demo
-│   └── arquitetura_solucao_franquias_v2.png  # Diagrama de arquitetura (v2)
+│   └── imagens/
+│       ├── arquitetura_solucao_franquias_v2_en.png  # Diagrama de arquitetura (EN)
+│       ├── arquitetura_solucao_franquias_v2.png     # Diagrama de arquitetura (PT)
+│       ├── bpmn_en.png                              # Fluxo da demo BPMN (EN)
+│       └── bpmn_pt.png                              # Fluxo da demo BPMN (PT)
 ├── teste/
 │   └── ROTEIRO_DEMO.md   # Roteiro 4 atos, checklist, plano B
 ├── mta.yaml              # Deploy CF (11 módulos, 6 serviços)
@@ -287,8 +382,8 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 | Painel da Rede | `NetworkPanel` | `display` | Franqueadora_Gestor | — |
 | Governança & Compliance | `Compliance` | `manage` | Franqueadora_Gestor | — |
 | Onboarding | `Onboarding` | `manage` | Franqueadora_Gestor | — |
-| Estoque & Reposição | `Inventory` | `manage` | Franqueadora_Gestor | `RUPTURA` count |
-| Pedidos de Reposição | `Replenishment` | `manage` | Franqueadora_Gestor | `PENDENTE` count |
+| Estoque & Reposição | `Inventory` | `manage` | Franqueadora_Gestor | contagem `RUPTURA` |
+| Pedidos de Reposição | `Replenishment` | `manage` | Franqueadora_Gestor | contagem `PENDENTE` |
 | Recomendações da IA | `Recommendations` | `display` | Franqueado | — |
 | Portal do Franqueado | `FranchiseePortal` | `display` | Franqueado | — |
 
@@ -298,7 +393,7 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 
 - **Atributos JWT do Franqueado:** o IdP (IAS) não envia `unidade_ID`/`cluster` na asserção. `srv/server.js` injeta o default `u147`/`STD` via middleware CAP. Para produção real, mapear via IAS assertion attributes.
 - **Cold start HANA/AI Core:** fazer 1 request de aquecimento antes da demo (HANA e AI Core têm cold start de segundos).
-- **Navegação LR→OP:** requer `contextPath` (não `entitySet`) + `navigation` explícito + `ResponsiveTable` no manifest, e UI5 runtime **versão fixa** (não `/resources/latest`). A versão `1.136.7` foi validada.
+- **Navegação LR→OP:** requer `contextPath` (não `entitySet`) + `navigation` explícito + `ResponsiveTable` no manifest, e UI5 runtime em **versão fixa** (não `/resources/latest`). A versão `1.136.7` foi validada.
 
 ---
 
@@ -319,24 +414,6 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 - **SAP Datasphere** — federação de dados de múltiplas fontes
 - **IAS Assertion Attributes** — mapear `unidade_ID`/`cluster` via IdP (remover middleware de fallback)
 - **HANA Sequences** — substituir lógica de código de unidade por sequence nativa
-
----
-
-## 📚 Documentação
-
-Todos os documentos do projeto, organizados por categoria. Cada documento contém um link de retorno ao README.
-
-| Categoria | Documento | Descrição |
-|---|---|---|
-| Produto | [Product Requirements Document](docs/requisitos/PRD.md) | Requisitos funcionais, personas, critérios de aceite |
-| Produto | [Visão de Produto Pós-Demo](docs/ideias/visao-produto.md) | Roadmap conceitual para uso como ativo de pré-vendas |
-| Técnica | [Especificação Técnica](docs/especificação/SPEC.md) | Modelo de dados, serviços OData, handlers, segurança |
-| Técnica | [Integração SAP Retail Portfolio](docs/integração/Integração.md) | Análise de fit com S/4HANA, IBP, CAR, Ariba |
-| Técnica | [Setup Joule no Work Zone](docs/integração/joule.md) | Pré-requisitos e configuração do MCP no Work Zone |
-| Técnica | [MCP Server — Joule](docs/integração/mcp-server.md) | 6 ferramentas, arquitetura do servidor, troubleshooting |
-| Demo | [Roteiro de Demo](teste/ROTEIRO_DEMO.md) | 5 atos, narrativa de ruptura, checklist pré-demo, plano B |
-| Arquitetura | [Diagrama de Arquitetura (v2)](docs/imagens/arquitetura_solucao_franquias_v2.png) | 8 apps + MCP Server + Joule como canal de acesso |
-| Arquitetura | [Slide SAP-branded (PPTX)](docs/arquitetura_solucao_franquias_v2.pptx) | Slide PowerPoint SAP 2026 com arquitetura atualizada |
 
 ---
 

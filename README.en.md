@@ -17,6 +17,42 @@
 
 ---
 
+## Focus Scenario — Inventory Stockout
+
+Inventory stockout is one of the key operational risks in franchise networks: out-of-stock products cause lost sales, franchisee dissatisfaction, and brand damage. The differentiator lies in **anticipating** the stockout by factoring in regional seasonality — the same replenishment strategy does not work for all regions.
+
+**Demo with real data (July — reference month):**
+
+| Store | Region | SKU | Coverage (Jul) | Status |
+|---|---|---|---|---|
+| Recife (u178) | NE | Havaianas Top | 2.6 days | 🔴 STOCKOUT |
+| Salvador (u156) | NE | Havaianas Top | 1.8 days | 🔴 STOCKOUT |
+| Porto Alegre (u147) | S | Havaianas Top | 66.7 days | 🟢 OK |
+| Porto Alegre (u147) | S | Bota Couro Inverno | 1.8 days | 🔴 STOCKOUT |
+
+Same product, same month → opposite risk by region. The agent calculates coverage with the regional seasonal factor and generates replenishment orders with gpt-4o justification, also considering the promotional calendar.
+
+> **Demo scenario:** the inventory stockout case is the main focus of the August 26 demonstration. Other scenarios (compliance, onboarding, AI recommendations) may be included based on team analysis.
+
+### Demo Flow
+
+![Demo Flow — BPMN](docs/imagens/bpmn_en.png)
+
+### Data validated in production — Porto Alegre Store (u147)
+
+| Data | Value |
+|---|---|
+| Health Score | **32 / 100** — critical (red) |
+| Compliance | 45% |
+| Revenue Jun/2026 | R$ 162,378 (decline from R$ 199k in Feb → R$ 162k in Jun) |
+| Detected deviations | 4 (Casual Sneaker −14.3% ALTA, Cap −24.1% ALTA, Dress −8.8% MÉDIA, unauthorized Short) |
+| AI Recommendations | 3 — via gpt-4o (`mode: "GenAI Hub"` confirmed) |
+| Network donut | 4 critical / 9 warning / 7 healthy (20 units) |
+
+**Detailed script:** see `teste/DEMO_SCRIPT.en.md` (4 acts: Overview → Root Cause → AI → Endpoint)
+
+---
+
 ## Competition Context
 
 | Item | Detail |
@@ -58,17 +94,6 @@
 ## SAP BTP Architecture
 
 ![RunMyFranchise Architecture](docs/imagens/arquitetura_solucao_franquias_v2_en.png)
-
-### Technical Decisions
-
-| Decision | Choice | Reason |
-|---|---|---|
-| Frontend | Fiori Elements + Build Work Zone | Annotation-driven, no custom app |
-| Backend | SAP CAP Node.js, OData V4 | `@sap/cds ^10` |
-| Database | HANA Cloud (prod) / SQLite in-memory (dev) | `@cap-js/hana ^2.8` / `@cap-js/sqlite ^2.1.3` |
-| AI | AI Core + GenAI Hub (gpt-4o) | `@sap-ai-sdk/orchestration ^2.13` |
-| UI5 runtime | Fixed version `1.136.7` | Aligns build and runtime; avoids `Active` behavior in FE V4 |
-| CAP profiles | `hana-cloud`/`xsuaa` as default; `[development]` enables sqlite+mocked | Prevents empty apps in CF |
 
 ---
 
@@ -158,39 +183,69 @@
 
 ---
 
-## Focus Scenario — Inventory Stockout
+## Health Score Formula
 
-Inventory stockout is one of the key operational risks in franchise networks: out-of-stock products cause lost sales, franchisee dissatisfaction, and brand damage. The differentiator lies in **anticipating** the stockout by factoring in regional seasonality — the same replenishment strategy does not work for all regions.
+```
+scoreSaude = (performancePct × 0.40) + (compliancePct × 0.40) + (scoreContrato × 0.20)
 
-**Demo with real data (July — reference month):**
+performancePct = min(kpi.faturamento / benchmark.faturamentoMedio × 100, 100)
+                 defaults to 50 if no KPI or benchmark is available
 
-| Store | Region | SKU | Coverage (Jul) | Status |
-|---|---|---|---|---|
-| Recife (u178) | NE | Havaianas Top | 2.6 days | 🔴 STOCKOUT |
-| Salvador (u156) | NE | Havaianas Top | 1.8 days | 🔴 STOCKOUT |
-| Porto Alegre (u147) | S | Havaianas Top | 66.7 days | 🟢 OK |
-| Porto Alegre (u147) | S | Bota Couro Inverno | 1.8 days | 🔴 STOCKOUT |
+compliancePct  = max(0, 100 − openDeviations × 12)
+                 each ABERTO or NOTIFICADO deviation costs 12 points
 
-Same product, same month → opposite risk by region. The agent calculates coverage with the regional seasonal factor and generates replenishment orders with gpt-4o justification, also considering the promotional calendar.
+scoreContrato:   ATIVO            → 100
+                 VENCENDOEM90DIAS →  60
+                 VENCENDOEM30DIAS →  30
+                 other / expired  →   0
 
-> **Demo scenario:** the inventory stockout case is the main focus of the August 26 demonstration. Other scenarios (compliance, onboarding, AI recommendations) may be included based on team analysis.
+Criticality thresholds:
+  scoreSaude < 45  → 1 CRITICAL (red)
+  45 ≤ score < 70  → 2 WARNING  (yellow)
+  score ≥ 70       → 3 HEALTHY  (green)
+```
 
-### Demo Flow
+---
 
-![Demo Flow — BPMN](docs/imagens/bpmn_en.png)
+## Security Model
 
-### Data validated in production — Porto Alegre Store (u147)
+Data isolation between franchisees is implemented via **instance-based authorization** with XSUAA and SAP Cloud Identity Services (IAS):
 
-| Data | Value |
-|---|---|
-| Health Score | **32 / 100** — critical (red) |
-| Compliance | 45% |
-| Revenue Jun/2026 | R$ 162,378 (decline from R$ 199k in Feb → R$ 162k in Jun) |
-| Detected deviations | 4 (Casual Sneaker −14.3% ALTA, Cap −24.1% ALTA, Dress −8.8% MÉDIA, unauthorized Short) |
-| AI Recommendations | 3 — via gpt-4o (`mode: "GenAI Hub"` confirmed) |
-| Network donut | 4 critical / 9 warning / 7 healthy (20 units) |
+- Each franchisee user receives a custom `unidade_ID` attribute in IAS/XSUAA during onboarding.
+- CAP automatically applies query-time filters via `@restrict` annotations: `where: 'unidade_ID = $user.unidade_ID'`.
+- No cross-franchisee query is possible without the `Franqueadora_Gestor` role.
+- Default model: **single-tenant with row-level security** — suitable for hundreds of units. For SaaS multi-tenant scale, CAP supports promotion to `@multitenancy` with isolated subscriber tenants.
 
-**Detailed script:** see `teste/ROTEIRO_DEMO.md` (4 acts: Overview → Root Cause → AI → Endpoint)
+---
+
+## Documentation
+
+All project documents, organized by category. Each document contains a back-link to this README.
+
+| Category | Document | Description |
+|---|---|---|
+| Business | [Product Requirements Document](docs/requisitos/PRD.en.md) | Functional requirements, personas, user stories, and acceptance criteria |
+| Business | [Demo Script](teste/DEMO_SCRIPT.en.md) | 4 acts, stockout narrative, pre-demo checklist, and plan B |
+| Technical | [Technical Specification](docs/especificação/SPEC.en.md) | Data model, OData services, CAP handlers, and security annotations |
+| Technical | [SAP Retail Portfolio Integration](docs/integração/Integration.en.md) | Fit analysis with S/4HANA, IBP, CAR, and Ariba |
+| Technical | [Joule Setup in Work Zone](docs/integração/joule.md) | Prerequisites and MCP Server configuration in Work Zone |
+| Technical | [MCP Server — Joule](docs/integração/mcp-server.md) | 7 tools, server architecture, deployment, and troubleshooting |
+| Ideas | [Post-Demo Product Vision](docs/ideias/visao-produto.md) | Conceptual roadmap for use as a pre-sales asset after the demo |
+| Architecture | [Architecture Diagram (Draw.io)](docs/imagens/arquitetura-runmyfranchise.drawio) | Editable source for the architecture diagram (SAP-styled Draw.io) |
+| Architecture | [SAP Shape Libraries](docs/sap-shape-libraries/) | SAP-branded shape libraries used in the Draw.io diagram |
+
+---
+
+## Technical Decisions
+
+| Decision | Choice | Reason |
+|---|---|---|
+| Frontend | Fiori Elements + Build Work Zone | Annotation-driven, no custom app |
+| Backend | SAP CAP Node.js, OData V4 | `@sap/cds ^10` |
+| Database | HANA Cloud (prod) / SQLite in-memory (dev) | `@cap-js/hana ^2.8` / `@cap-js/sqlite ^2.1.3` |
+| AI | AI Core + GenAI Hub (gpt-4o) | `@sap-ai-sdk/orchestration ^2.13` |
+| UI5 runtime | Fixed version `1.136.7` | Aligns build and runtime; avoids `Active` behavior in FE V4 |
+| CAP profiles | `hana-cloud`/`xsuaa` as default; `[development]` enables sqlite+mocked | Prevents empty apps in CF |
 
 ---
 
@@ -224,65 +279,150 @@ MyFranchise/
 │   └── data/                   # Seed CSVs
 │       ├── myfranchise-Estoque_Unidade.csv    (13 SKUs with seasonal coverage)
 │       ├── myfranchise-Pedidos_Reposicao.csv  (6 PENDING orders — gpt-4o)
+│       ├── myfranchise-OrigemPedido.csv        (AGENTE / MANUAL)
 │       └── ... (all entities and code lists)
 ├── srv/
 │   ├── service.cds             # FranqueadoraService + FranqueadoService
 │   ├── service.js              # Handlers: deviations, score, inventory, order approval, KPI endpoints
 │   ├── franqueado-service.js   # FranqueadoService implementation
+│   ├── server.js               # JWT middleware + /kpi/ruptura and /kpi/pedidos-pendentes endpoints
 │   ├── mcp-server.js           # MCP Server Node.js bridge (CF)
 │   └── ai/
 │       ├── recommendations-job.js  # Recommendations Agent (gpt-4o + fallback)
 │       └── reposicao-agent.js      # Replenishment Agent (gpt-4o + fallback)
 ├── app/
-│   ├── network/       # Network Panel (ALP + Object Page)
-│   ├── compliance/    # Governance & Compliance (LROP)
-│   ├── onboarding/    # Onboarding (LROP + Draft)
-│   ├── inventory/     # Inventory & Replenishment (LROP)
-│   ├── replenishment/ # Replenishment Orders (LROP + actions)
-│   ├── recommendations/ # AI Recommendations (LROP)
-│   ├── franchisee/    # Franchisee Portal (OVP)
-│   └── admin/         # Admin — Demo Control (custom UI5)
+│   ├── network/          # Network Panel (LR + donut + OP)
+│   ├── compliance/       # Governance & Compliance (LR + OP)
+│   ├── onboarding/       # Onboarding (LR + OP + Draft)
+│   ├── inventory/        # Inventory & Replenishment (LR + OP + Orders tab) — KPI tile
+│   ├── replenishment/    # Replenishment Orders (LR + OP + Approve/Reject) — KPI tile
+│   ├── recommendations/  # AI Recommendations (LR + OP)
+│   ├── franchisee/       # Franchisee Portal (OVP — 5 cards)
+│   └── admin/            # Admin — Demo Control (custom UI5)
 ├── docs/
-│   ├── arquitetura_solucao_franquias_v2.png  # Architecture diagram
-│   ├── BPMN.png                 # Demo flow BPMN
-│   ├── especificação/           # Technical specification (SPEC.md / SPEC.en.md)
-│   ├── integração/              # Integration analysis + MCP server docs
-│   └── requisitos/              # PRD
-├── mta.yaml            # MTA deployment descriptor (BTP Cloud Foundry)
-└── xs-security.json    # XSUAA roles and scopes
+│   ├── especificação/SPEC.en.md            # Technical specification
+│   ├── requisitos/PRD.en.md                # Product Requirements Document
+│   ├── integração/                         # Joule setup, MCP Server, SAP integration
+│   ├── ideias/visao-produto.md             # Post-demo product roadmap
+│   └── imagens/
+│       ├── arquitetura_solucao_franquias_v2_en.png  # Architecture diagram (EN)
+│       ├── arquitetura_solucao_franquias_v2.png     # Architecture diagram (PT)
+│       ├── bpmn_en.png                              # Demo flow BPMN (EN)
+│       └── bpmn_pt.png                              # Demo flow BPMN (PT)
+├── teste/
+│   └── DEMO_SCRIPT.en.md # Demo script (4 acts, checklist, plan B)
+├── mta.yaml              # CF deployment (11 modules, 6 services)
+├── xs-security.json      # XSUAA (roles, scopes, attributes)
+└── README.en.md
 ```
 
 ---
 
-## Security Model
+## Running Locally
 
-Data isolation between franchisees is implemented via **instance-based authorization** with XSUAA and SAP Cloud Identity Services (IAS):
+### Prerequisites
+```bash
+npm install -g @sap/cds-dk
+```
 
-- Each franchisee user receives a custom `unidade_ID` attribute in IAS/XSUAA during onboarding.
-- CAP automatically applies query-time filters via `@restrict` annotations: `where: 'unidade_ID = $user.unidade_ID'`.
-- No cross-franchisee query is possible without the `Franqueadora_Gestor` role.
-- Default model: **single-tenant with row-level security** — suitable for hundreds of units. For SaaS multi-tenant scale, CAP supports promotion to `@multitenancy` with isolated subscriber tenants.
+### Start
+```bash
+npm install
+cds watch
+```
+Open **http://localhost:4004**
+
+### Test Users
+
+| User | Password | Role | Service |
+|---|---|---|---|
+| `gestor` | `gestor` | Franqueadora_Gestor | `/franqueadora` |
+| `roberto` | `roberto` | Franchisee (Porto Alegre / u147 / STD cluster) | `/franqueado` |
+
+### Useful Endpoints
+```bash
+# Panel — all units with seasonal coverage
+GET /franqueadora/Estoque_Unidade?$filter=sku eq 'SKU-100'
+
+# Deviations for Porto Alegre Store (147)
+GET /franqueadora/Desvios?$filter=unidade_ID eq 'u147'
+
+# KPIs Jan–Jun (Porto Alegre / 147)
+GET /franqueadora/KPI_Unidade?$filter=unidade_ID eq 'u147'&$orderby=periodo
+
+# Recommendations Agent (gpt-4o)
+POST /franqueadora/gerarRecomendacoes   { "unidade_ID": "u147" }
+
+# Replenishment Agent (gpt-4o, with seasonality)
+POST /franqueadora/gerarReposicao       { "unidade_ID": "u178" }
+
+# Franchisee portal
+GET /franqueado/MeusKPIs
+GET /franqueado/MeuEstoque
+GET /franqueado/MinhasRecomendacoes
+```
 
 ---
 
-## Health Score Formula
+## Deploy (Cloud Foundry)
 
+```bash
+mbt build
+cf deploy mta_archives/myfranchise_1.0.0.mtar -f
 ```
-scoreSaude = (performancePct × 0.40) + (compliancePct × 0.40) + (scoreContrato × 0.20)
 
-performancePct = min(kpi.faturamento / benchmark.faturamentoMedio × 100, 100)
-                 defaults to 50 if no KPI or benchmark is available
+The `mta.yaml` publishes 10 modules: `myfranchise-srv`, `db-deployer`, 6 HTML5 apps, `appcontent`, `destinationcontent`. Services: HANA (hdi-shared), XSUAA, HTML5 Repo (host + runtime), Destination, AI Core (existing `default_aicore`).
 
-compliancePct  = max(0, 100 − openDeviations × 12)
-                 each ABERTO or NOTIFICADO deviation costs 12 points
+**After each appcontent deploy:** remove and re-add the apps in the Work Zone Content Manager to clear the cache (the site does not reload automatically).
 
-scoreContrato:   ATIVO           → 100
-                 VENCENDOEM90DIAS → 60
-                 VENCENDOEM30DIAS → 30
-                 other / expired  →  0
+### Work Zone — Tiles
 
-Criticality thresholds:
-  scoreSaude < 45  → 1 CRITICAL (red)
-  45 ≤ score < 70  → 2 WARNING  (yellow)
-  score ≥ 70       → 3 HEALTHY  (green)
-```
+| App | `semanticObject` | `action` | Role | KPI tile |
+|---|---|---|---|---|
+| Network Panel | `NetworkPanel` | `display` | Franqueadora_Gestor | — |
+| Governance & Compliance | `Compliance` | `manage` | Franqueadora_Gestor | — |
+| Onboarding | `Onboarding` | `manage` | Franqueadora_Gestor | — |
+| Inventory & Replenishment | `Inventory` | `manage` | Franqueadora_Gestor | `STOCKOUT` count |
+| Replenishment Orders | `Replenishment` | `manage` | Franqueadora_Gestor | `PENDING` count |
+| AI Recommendations | `Recommendations` | `display` | Franqueado | — |
+| Franchisee Portal | `FranchiseePortal` | `display` | Franqueado | — |
+
+---
+
+## Production Notes
+
+- **Franchisee JWT Attributes:** The IdP (IAS) does not send `unidade_ID`/`cluster` in the assertion. `srv/server.js` injects the defaults `u147`/`STD` via CAP middleware. For real production, map via IAS assertion attributes.
+- **HANA/AI Core cold start:** Run 1 warm-up request before the demo (HANA and AI Core have a cold start of several seconds).
+- **LR→OP navigation:** requires `contextPath` (not `entitySet`) + explicit `navigation` + `ResponsiveTable` in the manifest, and UI5 runtime at a **pinned version** (not `/resources/latest`). Version `1.136.7` has been validated.
+
+---
+
+## Roadmap (Post-Demo)
+
+### Intelligence and Automation
+- **Level-3 Replenishment Agent** — automatic approval via SAP Build Process Automation; today the manager approves manually in the Replenishment Orders app
+- **SAP Build Process Automation** — approval workflows for compliance, replenishment, and onboarding
+- **SAP Analytics Cloud** — executive dashboards (today: Fiori Elements)
+
+### Integration with SAP Retail Systems
+- **SAP S/4HANA Retail** — automatic replenishment orders
+- **SAP Customer Activity Repository (CAR)** — real POS sales data
+- **SAP Ariba** — supplier management to close the replenishment cycle
+- **SAP Integrated Business Planning (IBP)** — demand forecasting with regional seasonality
+
+### Data and Platform
+- **SAP Datasphere** — data federation from multiple sources
+- **IAS Assertion Attributes** — map `unidade_ID`/`cluster` via IdP (remove fallback middleware)
+- **HANA Sequences** — replace unit code logic with native sequence
+
+---
+
+## References
+
+- [CAP Documentation](https://cap.cloud.sap/docs/)
+- [SAP Fiori Elements — Feature Showcase](https://github.com/SAP-samples/fiori-elements-feature-showcase)
+- [cap-sflight (ALP/chart reference)](https://github.com/SAP-samples/cap-sflight)
+- [cap-cert-petrobras (LR→OP navigation reference)](https://github.com/marcelofiorito/cap-cert-petrobras)
+- [SAP Build Work Zone](https://help.sap.com/docs/build-work-zone-standard-edition)
+- [SAP AI Core + GenAI Hub](https://help.sap.com/docs/sap-ai-core)
+- [OData Annotation Vocabulary](https://ui5.sap.com/#/topic/030faebe70b34198b17a93b4c6e7b4d7)
