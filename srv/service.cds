@@ -89,6 +89,15 @@ service FranqueadoraService {
     unidade.cidade      as unidadeCidade : String,
     unidade.regiao.code as regiaoCode    : String,
     origem.name         as origemLabel   : String
+  } actions {
+    action aprovar(qtdAprovada : Integer, observacao : String) returns {
+      status   : String;
+      mensagem : String;
+    };
+    action recusar(motivo : String) returns {
+      status   : String;
+      mensagem : String;
+    };
   };
 
   // Agente de Reposição — detecta risco de ruptura e gera pedidos (gpt-4o)
@@ -106,16 +115,6 @@ service FranqueadoraService {
   // KPI para tiles do Work Zone
   function rupturaCount()  returns Integer;
   function pedidosPendentesCount() returns Integer;
-
-  // Aprovação/rejeição de pedidos pelo gestor (bound ao Pedido)
-  action Pedidos_Reposicao.aprovar(qtdAprovada : Integer, observacao : String) returns {
-    status   : String;
-    mensagem : String;
-  };
-  action Pedidos_Reposicao.recusar(motivo : String) returns {
-    status   : String;
-    mensagem : String;
-  };
 
   // ── Code Lists ───────────────────────────────────────────
   @readonly entity StatusFranqueado   as projection on mf.StatusFranqueado;
