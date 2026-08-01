@@ -1,3 +1,5 @@
+[← README (PT)](../../README.md) · [← README (EN)](../../README.en.md)
+
 # Product Requirements Document
 # RunMyFranchise — Franchise Network Management Platform
 
@@ -623,3 +625,8 @@ The following features are out of scope for the MVP version and will be evaluate
 ---
 
 *Document generated in July 2026. Next review planned after MVP delivery (August 2026).*
+
+
+---
+
+[← Voltar ao README (PT)](../../README.md) · [← README (EN)](../../README.en.md)

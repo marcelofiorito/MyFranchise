@@ -1,3 +1,5 @@
+[← README](../../README.md)
+
 # RunMyFranchise — Especificação Técnica
 
 **🇧🇷 Português** · [🇬🇧 English](SPEC.en.md)
@@ -1033,3 +1035,8 @@ node test_schema.js
 | `package.json` | ✅ Produção | Mock users + SQLite config |
 | `mta.yaml` | ✅ Produção | Deploy BTP CF — org `sa-build-platform-org / DEV`, us10 |
 | `docs/integração/mcp_server_cf.py` | ✅ Produção | MCP Server Python (FastMCP) — 7 tools + auth XSUAA |
+
+
+---
+
+[← Voltar ao README](../../README.md)

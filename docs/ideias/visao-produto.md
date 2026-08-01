@@ -1,3 +1,5 @@
+[← README](../../README.md)
+
 # RunMyFranchise — Visão de Produto Pós-Demo
 
 **Status:** Conceito aprovado — documentação de ideias para execução futura  
@@ -277,3 +279,8 @@ O `delay` configurável permite rodar em modo "apresentação ao vivo" (30s entr
 3. **Fase 2:** começar pela Live Connection HANA → SAC — menor esforço, maior impacto visual
 4. **Paralelo:** preparar as queries SQL para a perspectiva do DB analyst (custo zero)
 5. **Antes da Fase 3:** alinhar com o time de S/4HANA sobre isolamento de dados no tenant compartilhado
+
+
+---
+
+[← Voltar ao README](../../README.md)

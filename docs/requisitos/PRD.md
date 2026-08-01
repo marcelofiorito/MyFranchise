@@ -1,3 +1,5 @@
+[← README](../../README.md)
+
 # Product Requirements Document
 # RunMyFranchise — Plataforma de Gestão de Redes de Franquias
 
@@ -623,3 +625,8 @@ As seguintes funcionalidades estão fora do escopo da versão MVP e serão avali
 ---
 
 *Documento gerado em julho 2026. Próxima revisão prevista após entrega do MVP (agosto 2026).*
+
+
+---
+
+[← Voltar ao README](../../README.md)

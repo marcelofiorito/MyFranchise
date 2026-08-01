@@ -1,3 +1,5 @@
+[← README](../../README.md)
+
 # RunMyFranchise — MCP Server (Joule)
 
 **🇧🇷 Português** · [🇬🇧 English](mcp-server.en.md)
@@ -303,3 +305,8 @@ curl https://joule-myfranchise-mcp.cfapps.us10.hana.ondemand.com/health
 | `409 Conflict` no `aprovar_pedido` | Pedido não está em status `PENDENTE` | Verificar status com `get_pedidos_pendentes()` antes de aprovar |
 | `404 Not Found` no pedido | UUID incorreto | Usar `get_pedidos_pendentes()` para obter o UUID correto |
 | DNS rebinding protection error | CF_HOST não configurado ou incorreto | Definir `CF_HOST` com o hostname exato do app no CF |
+
+
+---
+
+[← Voltar ao README](../../README.md)

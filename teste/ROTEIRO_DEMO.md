@@ -1,3 +1,5 @@
+[← README](../README.md)
+
 # Roteiro de Demo — RunMyFranchise
 
 **🇧🇷 Português** · [🇬🇧 English](DEMO_SCRIPT.en.md)
@@ -160,3 +162,8 @@ Abrir o app **Admin** no Work Zone e executar em ordem:
 ## Onboarding (opcional / se perguntarem sobre expansão)
 
 *"Abrir loja deixa de ser um projeto de meses e vira um processo rastreável."* Mostrar o app Onboarding (LROP + Draft) — etapas, tarefas, responsável, prazo. Draft salva o progresso automaticamente.
+
+
+---
+
+[← Voltar ao README](../README.md)

@@ -57,7 +57,7 @@
 
 ## Arquitetura SAP BTP
 
-![Arquitetura RunMyFranchise](docs/arquitetura.png)
+![Arquitetura RunMyFranchise](docs/arquitetura_solucao_franquias_v2.png)
 
 
 
@@ -210,8 +210,12 @@ MyFranchise/
 │   ├── replenishment/    # Pedidos de Reposição (LR + OP + Aprovar/Recusar) — KPI tile
 │   ├── recommendations/  # Recomendações da IA (LR + OP)
 │   └── franchisee/       # Portal do Franqueado (OVP — 5 cards)
-├── integração/
-│   └── joule.md          # Setup do Joule MCP no Work Zone
+├── docs/
+│   ├── especificação/SPEC.md               # Especificação técnica
+│   ├── requisitos/PRD.md                   # Product Requirements Document
+│   ├── integração/                         # Setup Joule, MCP Server, integração SAP
+│   ├── ideias/visao-produto.md             # Roadmap pós-demo
+│   └── arquitetura_solucao_franquias_v2.png  # Diagrama de arquitetura (v2)
 ├── teste/
 │   └── ROTEIRO_DEMO.md   # Roteiro 4 atos, checklist, plano B
 ├── mta.yaml              # Deploy CF (11 módulos, 6 serviços)
@@ -317,6 +321,24 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 - **SAP Datasphere** — federação de dados de múltiplas fontes
 - **IAS Assertion Attributes** — mapear `unidade_ID`/`cluster` via IdP (remover middleware de fallback)
 - **HANA Sequences** — substituir lógica de código de unidade por sequence nativa
+
+---
+
+## 📚 Documentação
+
+Todos os documentos do projeto, organizados por categoria. Cada documento contém um link de retorno ao README.
+
+| Categoria | Documento | Descrição |
+|---|---|---|
+| Produto | [Product Requirements Document](docs/requisitos/PRD.md) | Requisitos funcionais, personas, critérios de aceite |
+| Produto | [Visão de Produto Pós-Demo](docs/ideias/visao-produto.md) | Roadmap conceitual para uso como ativo de pré-vendas |
+| Técnica | [Especificação Técnica](docs/especificação/SPEC.md) | Modelo de dados, serviços OData, handlers, segurança |
+| Técnica | [Integração SAP Retail Portfolio](docs/integração/Integração.md) | Análise de fit com S/4HANA, IBP, CAR, Ariba |
+| Técnica | [Setup Joule no Work Zone](docs/integração/joule.md) | Pré-requisitos e configuração do MCP no Work Zone |
+| Técnica | [MCP Server — Joule](docs/integração/mcp-server.md) | 6 ferramentas, arquitetura do servidor, troubleshooting |
+| Demo | [Roteiro de Demo](teste/ROTEIRO_DEMO.md) | 5 atos, narrativa de ruptura, checklist pré-demo, plano B |
+| Arquitetura | [Diagrama de Arquitetura (v2)](docs/arquitetura_solucao_franquias_v2.png) | 8 apps + MCP Server + Joule como canal de acesso |
+| Arquitetura | [Slide SAP-branded (PPTX)](docs/arquitetura_solucao_franquias_v2.pptx) | Slide PowerPoint SAP 2026 com arquitetura atualizada |
 
 ---
 

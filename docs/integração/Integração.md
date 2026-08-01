@@ -1,3 +1,5 @@
+[← README](../../README.md)
+
 # RunMyFranchise — Análise Técnica: SAP Retail Portfolio vs. Gestão de Franquias
 
 **🇧🇷 Português** · [🇬🇧 English](Integração.en.md)
@@ -691,3 +693,8 @@ Esta seção detalha as **transações específicas do S/4HANA Public Cloud** qu
 - [SAP S/4HANA — API_PURCHASEORDER_PROCESS_SRV](https://api.sap.com/api/API_PURCHASEORDER_PROCESS_SRV/overview)
 - [SAP S/4HANA — API_BUSINESS_PARTNER](https://api.sap.com/api/API_BUSINESS_PARTNER/overview)
 - [SAP Cloud Identity Services — SCIM API](https://help.sap.com/docs/cloud-identity-services)
+
+
+---
+
+[← Voltar ao README](../../README.md)
