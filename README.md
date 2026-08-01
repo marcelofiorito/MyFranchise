@@ -59,8 +59,6 @@
 
 ![Arquitetura RunMyFranchise](docs/imagens/arquitetura_solucao_franquias_v2.png)
 
-
-
 ### Decisões Técnicas
 
 | Decisão | Escolha | Motivo |
