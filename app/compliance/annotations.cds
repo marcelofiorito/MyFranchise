@@ -73,8 +73,8 @@ annotate service.Desvios with @(
     { Value: tipo_code,          Label: '{i18n>Alertas_tipo}'             },
     { Value: sku,                Label: '{i18n>Desvios_sku}'              },
     { Value: nomeProduto,        Label: '{i18n>Desvios_nomeProduto}',     ![@UI.Importance]: #High },
-    { Value: precoAutorizado,    Label: '{i18n>Desvios_precoAutorizado}'  },
-    { Value: precoPraticado,     Label: '{i18n>Desvios_precoPraticado}'   },
+    { Value: precoAutorizado,    Label: '{i18n>Desvios_precoAutorizado}',  Criticality: severidadeCriticality },
+    { Value: precoPraticado,     Label: '{i18n>Desvios_precoPraticado}',   Criticality: severidadeCriticality },
     {
       Value      : percentualDesvio,
       Label      : '{i18n>Desvios_percentualDesvio}',
