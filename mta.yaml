@@ -101,6 +101,9 @@ modules:
         - name: replenishment
           artifacts: [replenishment.zip]
           target-path: app/
+        - name: admin
+          artifacts: [admin.zip]
+          target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
   - name: network
@@ -160,6 +163,15 @@ modules:
   - name: replenishment
     type: html5
     path: app/replenishment
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: admin
+    type: html5
+    path: app/admin
     build-parameters:
       build-result: dist
       builder: custom

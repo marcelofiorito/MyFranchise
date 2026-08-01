@@ -96,6 +96,24 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       return CNT;
     });
 
+    this.on('resetarDemo', async () => {
+      const { Pedidos_Reposicao } = this.entities;
+      // Volta todos os pedidos APROVADO/RECUSADO/ENVIADO para PENDENTE
+      // e limpa os campos de decisão — preserva os dados do agente
+      await UPDATE(Pedidos_Reposicao)
+        .set({
+          status_code : 'PENDENTE',
+          qtdAprovada : null,
+          aprovador   : null,
+          dataDecisao : null,
+        })
+        .where(`status_code != 'PENDENTE'`);
+      const [{ CNT }] = await cds.run(
+        `SELECT COUNT(*) CNT FROM MYFRANCHISE_PEDIDOS_REPOSICAO WHERE STATUS_CODE='PENDENTE'`
+      );
+      return { pedidos: Number(CNT), mensagem: `Demo resetada — ${CNT} pedidos voltaram a PENDENTE.` };
+    });
+
     const { Pedidos_Reposicao } = this.entities;
 
     this.on('aprovar', Pedidos_Reposicao, async (req) => {

@@ -112,6 +112,12 @@ service FranqueadoraService {
     modo     : String;
   };
 
+  // Reset de demo — volta todos os pedidos para PENDENTE e limpa decisões
+  action resetarDemo() returns {
+    pedidos  : Integer;
+    mensagem : String;
+  };
+
   // KPI para tiles do Work Zone
   function rupturaCount()  returns Integer;
   function pedidosPendentesCount() returns Integer;

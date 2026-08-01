@@ -1,0 +1,86 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "myfranchise.admin",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {
+      "mainService": {
+        "uri": "franqueadora/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "Admin-manage": {
+          "semanticObject": "Admin",
+          "action": "manage",
+          "title": "{{appTitle}}",
+          "subTitle": "{{appDescription}}",
+          "icon": "sap-icon://technical-object",
+          "signature": { "parameters": {}, "additionalParameters": "allowed" }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://technical-object" },
+    "fullWidth": false
+  },
+  "sap.ui5": {
+    "flexEnabled": false,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": { "sap.m": {}, "sap.ui.core": {}, "sap.ui.layout": {}, "sap.fe.templates": {}, "sap.fe.core": {} }
+    },
+    "models": {
+      "": {
+        "type": "sap.ui.model.odata.v4.ODataModel",
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "myfranchise.admin.i18n.i18n" }
+      }
+    },
+    "rootView": {
+      "viewName": "myfranchise.admin.view.Main",
+      "type": "XML",
+      "id": "app"
+    },
+    "routing": {
+      "routes": [
+        {
+          "name": "MainRoute",
+          "pattern": ":?query:",
+          "target": "MainTarget"
+        }
+      ],
+      "targets": {
+        "MainTarget": {
+          "type": "View",
+          "id": "MainTarget",
+          "viewType": "XML",
+          "viewName": "myfranchise.admin.view.Main"
+        }
+      }
+    }
+  },
+  "sap.cloud": { "public": true, "service": "myfranchise.service" },
+  "sap.fiori": {
+    "registrationIds": ["myfranchise-admin"],
+    "archeType": "transactional"
+  }
+}

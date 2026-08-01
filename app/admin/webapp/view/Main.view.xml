@@ -1,0 +1,93 @@
+<mvc:View
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:f="sap.f"
+  xmlns:layout="sap.ui.layout"
+  controllerName="myfranchise.admin.controller.Main"
+  displayBlock="true">
+
+  <App>
+    <Page title="RunMyFranchise — Admin Demo" showNavButton="false">
+      <content>
+        <layout:VerticalLayout width="100%" class="sapUiMediumMargin">
+
+          <!-- KPIs ao vivo -->
+          <Panel headerText="Estado Atual" expandable="false">
+            <content>
+              <HBox wrap="Wrap" alignItems="Center" class="sapUiSmallMargin">
+                <ObjectStatus
+                  title="Pedidos PENDENTE"
+                  text="{admin>/pendentes}"
+                  state="{admin>/pendentesState}"
+                  class="sapUiMediumMarginEnd"/>
+                <ObjectStatus
+                  title="Itens em RUPTURA"
+                  text="{admin>/ruptura}"
+                  state="Error"
+                  class="sapUiMediumMarginEnd"/>
+                <Button
+                  text="Atualizar"
+                  icon="sap-icon://refresh"
+                  press=".onRefresh"
+                  class="sapUiSmallMarginEnd"/>
+              </HBox>
+            </content>
+          </Panel>
+
+          <!-- Ações da demo -->
+          <Panel headerText="Ações da Demo" expandable="false">
+            <content>
+              <VBox class="sapUiSmallMargin">
+
+                <Title text="Pedidos de Reposição" class="sapUiSmallMarginBottom" level="H4"/>
+                <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+                  <Button
+                    text="🔄 Resetar Demo (volta todos a PENDENTE)"
+                    type="Emphasized"
+                    icon="sap-icon://reset"
+                    press=".onResetarDemo"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+                  <Button
+                    text="🤖 Gerar Novos Pedidos com IA"
+                    type="Default"
+                    icon="sap-icon://ai"
+                    press=".onGerarReposicaoTodas"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+                </HBox>
+
+                <Title text="Recomendações da IA" class="sapUiSmallMarginBottom sapUiMediumMarginTop" level="H4"/>
+                <HBox wrap="Wrap">
+                  <Button
+                    text="🤖 Gerar Recomendações (todas as lojas)"
+                    type="Default"
+                    icon="sap-icon://ai"
+                    press=".onGerarRecomendacoesTodas"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+                </HBox>
+
+              </VBox>
+            </content>
+          </Panel>
+
+          <!-- Log de operações -->
+          <Panel headerText="Log" expandable="true" expanded="true">
+            <content>
+              <List
+                id="logList"
+                items="{admin>/log}"
+                noDataText="Nenhuma operação realizada."
+                class="sapUiSmallMargin">
+                <StandardListItem
+                  title="{admin>msg}"
+                  description="{admin>ts}"
+                  icon="{admin>icon}"
+                  iconInset="false"/>
+              </List>
+            </content>
+          </Panel>
+
+        </layout:VerticalLayout>
+      </content>
+    </Page>
+  </App>
+</mvc:View>
