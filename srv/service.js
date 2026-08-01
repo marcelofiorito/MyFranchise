@@ -82,6 +82,20 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       }
     });
 
+    // Calcula urgenciaCriticality para Pedidos_Reposicao
+    // 1=vermelho (PENDENTE/RECUSADO), 2=amarelo (APROVADO/ENVIADO), 3=verde (RECEBIDO)
+    this.after('READ', 'Pedidos_Reposicao', (rows) => {
+      if (!rows) return;
+      const list = Array.isArray(rows) ? rows : [rows];
+      for (const r of list) {
+        r.urgenciaCriticality =
+          r.status_code === 'PENDENTE'  ? 1 :
+          r.status_code === 'RECUSADO'  ? 1 :
+          r.status_code === 'APROVADO'  ? 2 :
+          r.status_code === 'ENVIADO'   ? 2 : 3; // RECEBIDO = verde
+      }
+    });
+
     // Agente de Reposição — detecta risco de ruptura e gera pedidos (gpt-4o + fallback)
     this.on('gerarReposicao', async (req) => {
       const { unidade_ID } = req.data;
@@ -110,21 +124,39 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
     });
 
     this.on('resetarDemo', async () => {
-      const { Pedidos_Reposicao } = this.entities;
-      // Volta todos os pedidos APROVADO/RECUSADO/ENVIADO para PENDENTE
-      // e limpa os campos de decisão — preserva os dados do agente
+      const { Pedidos_Reposicao, Estoque_Unidade } = this.entities;
+
+      // 1. Volta todos os pedidos para PENDENTE
       await UPDATE(Pedidos_Reposicao)
-        .set({
-          status_code : 'PENDENTE',
-          qtdAprovada : null,
-          aprovador   : null,
-          dataDecisao : null,
-        })
+        .set({ status_code: 'PENDENTE', qtdAprovada: null, aprovador: null, dataDecisao: null })
         .where(`status_code != 'PENDENTE'`);
+
+      // 2. Reverte saldos de estoque para os valores originais do seed
+      const seed = [
+        { ID: 'es001', saldoAtual: 45,  status_code: 'ATENCAO' },
+        { ID: 'es002', saldoAtual: 30,  status_code: 'RUPTURA' },
+        { ID: 'es003', saldoAtual: 20,  status_code: 'RUPTURA' },
+        { ID: 'es004', saldoAtual: 55,  status_code: 'ATENCAO' },
+        { ID: 'es005', saldoAtual: 80,  status_code: 'OK'      },
+        { ID: 'es006', saldoAtual: 70,  status_code: 'OK'      },
+        { ID: 'es007', saldoAtual: 38,  status_code: 'ATENCAO' },
+        { ID: 'es008', saldoAtual: 25,  status_code: 'RUPTURA' },
+        { ID: 'es009', saldoAtual: 18,  status_code: 'RUPTURA' },
+        { ID: 'es010', saldoAtual: 22,  status_code: 'RUPTURA' },
+        { ID: 'es011', saldoAtual: 60,  status_code: 'OK'      },
+        { ID: 'es012', saldoAtual: 90,  status_code: 'OK'      },
+        { ID: 'es013', saldoAtual: 50,  status_code: 'OK'      },
+      ];
+      for (const item of seed) {
+        await UPDATE(Estoque_Unidade)
+          .set({ saldoAtual: item.saldoAtual, status_code: item.status_code })
+          .where({ ID: item.ID });
+      }
+
       const [{ CNT }] = await cds.run(
         `SELECT COUNT(*) CNT FROM MYFRANCHISE_PEDIDOS_REPOSICAO WHERE STATUS_CODE='PENDENTE'`
       );
-      return { pedidos: Number(CNT), mensagem: `Demo resetada — ${CNT} pedidos voltaram a PENDENTE.` };
+      return { pedidos: Number(CNT), mensagem: `Demo resetada — ${CNT} pedidos PENDENTE, estoque revertido ao estado inicial.` };
     });
 
     this.on('simularRecebimento', async () => {
