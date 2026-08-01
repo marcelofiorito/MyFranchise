@@ -16,4 +16,5 @@ mcp-manifest.local.json
 mta-op-*/
 *.pptx
 ~$*
-*.png
+# PNG fora de docs/ é ignorado — capturas de tela e exports temporários
+# Imagens dentro de docs/ são rastreadas pelo git add explícito
