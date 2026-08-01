@@ -118,6 +118,12 @@ service FranqueadoraService {
     mensagem : String;
   };
 
+  // Simulação de recebimento — marca pedidos APROVADO como RECEBIDO e repõe o estoque
+  action simularRecebimento() returns {
+    pedidos  : Integer;
+    mensagem : String;
+  };
+
   // KPI para tiles do Work Zone
   function rupturaCount()  returns Integer;
   function pedidosPendentesCount() returns Integer;

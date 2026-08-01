@@ -77,6 +77,23 @@ sap.ui.define([
       }).catch(e => MessageBox.error("Erro: " + (e.message || String(e))));
     },
 
+    onSimularRecebimento: function() {
+      MessageBox.confirm("Marca pedidos APROVADO como RECEBIDO e repõe o saldo no estoque. Continuar?", {
+        title: "Simular Recebimento",
+        onClose: (a) => {
+          if (a !== MessageBox.Action.OK) return;
+          const ctx = this._oModel().bindContext("/simularRecebimento(...)");
+          ctx.execute().then(() => {
+            const r = ctx.getBoundContext().getObject();
+            const msg = r.mensagem || "Recebimento simulado!";
+            MessageToast.show(msg);
+            this._log("sap-icon://shipping-status", msg);
+            this.onRefresh();
+          }).catch(e => MessageBox.error("Erro: " + (e.message || String(e))));
+        }
+      });
+    },
+
     onGerarRecomendacoes: function() {
       MessageToast.show("Gerando recomendações com IA... (~30s)");
       const ctx = this._oModel().bindContext("/gerarRecomendacoesTodas(...)");

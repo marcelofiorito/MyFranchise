@@ -48,6 +48,12 @@
                     press=".onResetarDemo"
                     class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
                   <Button
+                    text="📦 Simular Recebimento (repõe estoque)"
+                    type="Accept"
+                    icon="sap-icon://shipping-status"
+                    press=".onSimularRecebimento"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+                  <Button
                     text="🤖 Gerar Novos Pedidos com IA"
                     type="Default"
                     icon="sap-icon://ai"

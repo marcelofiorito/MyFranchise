@@ -68,11 +68,15 @@
 
 1. Abrir o Joule no Work Zone.
 2. Perguntar: **"Quais lojas têm ruptura de Havaianas no Nordeste?"**
-3. O Joule aciona `get_lojas_em_risco` em tempo real → resposta com lojas, cobertura em dias vs. lead time.
-4. Perguntar: **"Quantos pedidos de reposição estão aguardando aprovação?"**
+3. O Joule aciona `get_lojas_em_risco` → resposta com lojas, cobertura em dias vs. lead time.
+4. Perguntar: **"Tem pedido de reposição aguardando aprovação?"**
 5. Joule aciona `get_pedidos_pendentes` → lista com loja, produto, quantidade, justificativa do gpt-4o.
+6. Perguntar: **"Aprova todos os pedidos de Havaianas pendentes"**
+7. Joule chama `get_pedidos_pendentes` → identifica IDs → chama `aprovar_pedido` para cada um → confirma aprovação com loja, produto e quantidade.
 
-**Ponto de valor:** copiloto conversacional com dados reais — sem dashboard, sem filtro, sem tela.
+**Ponto de valor:** o gestor fechou o loop de reposição por linguagem natural — sem abrir nenhum app, sem copiar IDs, sem formulário.
+
+> **Nota para o apresentador:** O Joule vai responder algo como *"estes pedidos seguirão para a fase de envio conforme a janela logística de cada fornecedor"*. Isso é o gancho perfeito para o roadmap — responda: *"Exatamente. Hoje o gestor aprova aqui e o pedido vai para APROVADO. A próxima evolução é a integração com SAP Ariba: quando o fornecedor confirma o envio, o pedido vai automaticamente para ENVIADO; quando a loja dá entrada, para RECEBIDO — e o estoque é atualizado sem intervenção humana. É o Agente nível 3."*
 
 ---
 
@@ -120,4 +124,6 @@ Se sobrar tempo ou perguntarem sobre expansão: mostrar o app de **Onboarding** 
 - "Escala para 280 lojas?" → HANA Cloud + agregação no banco; o donut usa `$apply`/aggregation nativa.
 - "Segurança dos dados do franqueado?" → autorização por atributo (`@restrict`), cada um só vê a própria unidade.
 - "Quanto tempo para implementar?" → CAP + Fiori Elements = pouco código, muito por annotation; MVP em semanas.
-- "Roadmap?" → SAC, Datasphere, Joule (já citados na arquitetura).
+- "O que acontece depois que o pedido é aprovado?" → hoje vai para APROVADO e segue para o fornecedor. A próxima evolução é integração com **SAP Ariba**: o fornecedor confirma envio → ENVIADO; loja dá entrada → RECEBIDO e o estoque atualiza automaticamente. É o Agente nível 3 — elimina o loop humano de acompanhamento.
+- "O Joule substitui os apps?" → complementa. O gestor usa os apps para análise detalhada e o Joule para decisões rápidas em mobilidade — aprovar 6 pedidos em 30 segundos sem abrir nenhuma tela.
+- "Roadmap?" → SAC (analytics executivo), Datasphere (federação PDV+ERP), SAP Ariba (ciclo de reposição fechado), BPA (aprovação automática por regra), S/4HANA Retail (demanda em tempo real).

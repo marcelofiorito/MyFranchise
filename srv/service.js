@@ -114,6 +114,31 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       return { pedidos: Number(CNT), mensagem: `Demo resetada — ${CNT} pedidos voltaram a PENDENTE.` };
     });
 
+    this.on('simularRecebimento', async () => {
+      const { Pedidos_Reposicao, Estoque_Unidade } = this.entities;
+      const pedidos = await SELECT.from(Pedidos_Reposicao).where({ status_code: 'APROVADO' });
+      if (!pedidos.length) return { pedidos: 0, mensagem: 'Nenhum pedido APROVADO para simular.' };
+      for (const p of pedidos) {
+        const qtd = p.qtdAprovada || p.qtdSugerida || 0;
+        if (qtd) {
+          const item = await SELECT.one.from(Estoque_Unidade)
+            .where({ unidade_ID: p.unidade_ID, sku: p.sku });
+          if (item) {
+            const novoSaldo = (item.saldoAtual || 0) + qtd;
+            const novoStatus = novoSaldo >= item.estoqueMinimo ? 'OK'
+              : novoSaldo >= item.estoqueMinimo * 0.5 ? 'ATENCAO' : 'RUPTURA';
+            await UPDATE(Estoque_Unidade)
+              .set({ saldoAtual: novoSaldo, status_code: novoStatus })
+              .where({ ID: item.ID });
+          }
+        }
+        await UPDATE(Pedidos_Reposicao)
+          .set({ status_code: 'RECEBIDO', dataDecisao: new Date().toISOString() })
+          .where({ ID: p.ID });
+      }
+      return { pedidos: pedidos.length, mensagem: `${pedidos.length} pedidos RECEBIDOS e estoque reposto.` };
+    });
+
     const { Pedidos_Reposicao } = this.entities;
 
     this.on('aprovar', Pedidos_Reposicao, async (req) => {
