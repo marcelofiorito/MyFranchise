@@ -69,6 +69,19 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       await reposicao.enriquecerEstoque(this, Array.isArray(rows) ? rows : [rows]);
     });
 
+    // Calcula severidadeCriticality para Desvios (ALTA=1, MEDIA=2, BAIXA=3)
+    this.after('READ', Desvios, (rows) => {
+      if (!rows) return;
+      const list = Array.isArray(rows) ? rows : [rows];
+      for (const r of list) {
+        if (r.severidade_code) {
+          r.severidadeCriticality =
+            r.severidade_code === 'ALTA'  ? 1 :
+            r.severidade_code === 'MEDIA' ? 2 : 3;
+        }
+      }
+    });
+
     // Agente de Reposição — detecta risco de ruptura e gera pedidos (gpt-4o + fallback)
     this.on('gerarReposicao', async (req) => {
       const { unidade_ID } = req.data;

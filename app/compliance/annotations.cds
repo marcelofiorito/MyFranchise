@@ -68,18 +68,24 @@ annotate service.Desvios with @(
 
   // ── Colunas da lista ──────────────────────────────────────
   UI.LineItem: [
-    { Value: unidade.nome,       Label: '{i18n>Unidades_nome}'            },
-    { Value: unidade.cidade,     Label: '{i18n>Unidades_cidade}'          },
+    { Value: unidadeNome,        Label: '{i18n>Unidades_nome}',           ![@UI.Importance]: #High },
+    { Value: unidadeCidade,      Label: '{i18n>Unidades_cidade}'          },
     { Value: tipo_code,          Label: '{i18n>Alertas_tipo}'             },
     { Value: sku,                Label: '{i18n>Desvios_sku}'              },
-    { Value: nomeProduto,        Label: '{i18n>Desvios_nomeProduto}'      },
+    { Value: nomeProduto,        Label: '{i18n>Desvios_nomeProduto}',     ![@UI.Importance]: #High },
     { Value: precoAutorizado,    Label: '{i18n>Desvios_precoAutorizado}'  },
     { Value: precoPraticado,     Label: '{i18n>Desvios_precoPraticado}'   },
-    { Value: percentualDesvio,   Label: '{i18n>Desvios_percentualDesvio}' },
+    {
+      Value      : percentualDesvio,
+      Label      : '{i18n>Desvios_percentualDesvio}',
+      Criticality: severidadeCriticality,
+      ![@UI.Importance]: #High
+    },
     {
       Value      : severidade_code,
       Label      : '{i18n>Desvios_severidade}',
-      Criticality: severidadeCriticality
+      Criticality: severidadeCriticality,
+      ![@UI.Importance]: #High
     },
     { Value: status_code,        Label: '{i18n>Desvios_status}'           },
     { Value: dataDeteccao,       Label: '{i18n>Desvios_dataDeteccao}'     }
