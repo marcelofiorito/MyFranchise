@@ -59,6 +59,12 @@ annotate service.Desvios with {
 
 annotate service.Desvios with @(
 
+  UI.DataPoint #Status: {
+    Value       : status_code,
+    Title       : '{i18n>Desvios_status}',
+    Criticality : severidadeCriticality
+  },
+
   UI.HeaderInfo: {
     TypeName       : '{i18n>Desvios}',
     TypeNamePlural : '{i18n>Desvios_plural}',
@@ -87,7 +93,7 @@ annotate service.Desvios with @(
       Criticality: severidadeCriticality,
       ![@UI.Importance]: #High
     },
-    { Value: status_code,        Label: '{i18n>Desvios_status}'           },
+    { Value: status_code,        Label: '{i18n>Desvios_status}',         Criticality: severidadeCriticality, ![@UI.Importance]: #High },
     { Value: dataDeteccao,       Label: '{i18n>Desvios_dataDeteccao}'     }
   ],
 
