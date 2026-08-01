@@ -42,6 +42,18 @@ annotate service.Desvios with {
       ]
     }
   );
+  unidadeNome @(
+    title: '{i18n>Unidades_nome}',
+    Common.ValueList: {
+      CollectionPath: 'Unidades',
+      Parameters    : [
+        { $Type: 'Common.ValueListParameterOut',
+          LocalDataProperty: unidadeNome, ValueListProperty: 'nome' },
+        { $Type: 'Common.ValueListParameterDisplayOnly',
+          ValueListProperty: 'cidade' }
+      ]
+    }
+  );
 }
 // ─────────────────────────────────────────────────────────────
 
@@ -78,7 +90,7 @@ annotate service.Desvios with @(
     tipo_code,
     severidade_code,
     status_code,
-    unidade_ID
+    unidadeNome
   ],
 
   // ── Selection Variants ────────────────────────────────────

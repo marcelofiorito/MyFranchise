@@ -32,7 +32,11 @@ service FranqueadoraService {
   entity Catalogos        as projection on mf.Catalogos;
   entity ItensCatalogo    as projection on mf.ItensCatalogo;
   entity VendaPraticada   as projection on mf.VendaPraticada;
-  entity Desvios          as projection on mf.Desvios;
+  entity Desvios          as projection on mf.Desvios {
+    *,
+    unidade.nome   as unidadeNome  : String,
+    unidade.cidade as unidadeCidade: String
+  };
   entity RegrasCompliance as projection on mf.RegrasCompliance;
   entity NotificacoesCompliance as projection on mf.NotificacoesCompliance;
 
