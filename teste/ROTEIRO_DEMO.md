@@ -26,32 +26,37 @@
 **App:** Painel da Rede (login Gestor)
 
 1. Abrir. **Donut de criticidade** na cara: lojas Crítico / Atenção / Saudável. *"Isso é a rede inteira, agora."*
-2. Filtrar pelo cluster ou ver a tabela → **Loja 147 em vermelho, score 32**. *"Antes, isso era planilha no fim do mês. Agora é tempo real."*
-3. Clicar na linha → Object Page da unidade com dados, score e alertas.
+2. Filtrar pelo cluster ou ver a tabela → **Loja 147 em vermelho, score 32**. Clicar na linha.
+3. Object Page da unidade. Speech:
 
-**Frase de valor:** *"Priorização por exceção — o vermelho salta, o gestor não precisa procurar."*
+> *"Score 32 — vermelho. Por quê? Faturamento caindo mês a mês, 4 desvios de compliance ativos com produto vendido fora do mix autorizado, e um item em ruptura de estoque. Não é um problema isolado — é um padrão. O sistema já sabe. Vamos entender cada camada."*
+
+4. *"Antes, isso era uma planilha consolidada no fim do mês. Agora é tempo real — e o vermelho salta antes do dano ser irreversível."*
+
+**Frase de valor:** *"Priorização por exceção — o score é a soma de compliance, performance e contrato. O gestor não precisa procurar o problema. O problema vem até ele."*
 
 ---
 
-### ATO 2 — Compliance · o problema se explica sozinho (≈2 min)
+### ATO 2 — Compliance · a camada de compliance do score (≈2 min)
 **App:** Governança & Compliance (Gestor)
 
-1. Abrir. Filtrar pela Loja 147 → **4 desvios**: Tênis −14,3% (Alta), Boné −24,1% (Alta), Vestido −8,8% (Média), produto não autorizado (Alta).
-2. *"Ninguém auditou isso à mão. O sistema detectou o desvio de preço no momento da venda — handler automático no backend."*
-3. Alta = vermelho. *"A franqueadora já sabe onde apertar antes do fim do mês."*
+1. Abrir. Filtrar pela **Loja Porto Alegre** (ValueHelp no campo Loja) → **4 desvios**: Tênis −14,3% (Alta), Boné −24,1% (Alta), Vestido −8,8% (Média), produto não autorizado (Mix/Alta).
+2. *"Aqui está o compliance baixo que derrubou o score. Ninguém auditou isso à mão — o sistema detectou o desvio de preço no momento da venda, comparou com o catálogo autorizado e registrou automaticamente."*
+3. Alta = vermelho. *"40% do score vem do compliance. Com 4 desvios Alta, o impacto é direto no 32."*
 
-**Frase de valor:** *"Compliance automático e proativo — da auditoria mensal à detecção em tempo real."*
+**Frase de valor:** *"Da auditoria mensal à detecção em tempo real — o problema não espera o fim do mês para aparecer."*
 
 ---
 
-### ATO 3 — Estoque & Reposição · IA que age antes da ruptura (≈3 min) ⭐ clímax técnico
+### ATO 3 — Estoque & Reposição · a camada de performance do score (≈3 min) ⭐ clímax técnico
 **App:** Estoque & Reposição (Gestor)
 
 1. Abrir. Filtrar por status **RUPTURA** → 5 itens: **3 no NE** (Havaianas — fator sazonal 1,8 em julho) e **2 no Sul** (Bota Couro Inverno, u147 — fator 1,7 no inverno).
-2. *"Mesmo produto, mesmo mês — risco oposto por região. O agente calcula a cobertura com o fator sazonal de cada região."*
-3. Clicar na Bota Couro Inverno da 147 → Object Page → aba **Pedidos de Reposição** → pedido gerado pelo gpt-4o com justificativa detalhada.
-4. *"O agente não só detectou — ele já calculou a quantidade, sugeriu o fornecedor e escreveu a justificativa. Rodando no AI Core, dentro do BTP."*
-5. Mostrar o tile **"Pedidos de Reposição: 6 pendentes"** no launchpad.
+2. *"Mesmo produto, mesmo mês — risco oposto por região. A Bota Couro Inverno da 147 está em ruptura porque o Sul tem demanda 1,7x no inverno. O agente calcula a cobertura com o fator sazonal de cada região."*
+3. *"Ruptura de estoque = venda perdida = faturamento cai = performance cai = score cai. O sistema fechou o ciclo."*
+4. Clicar na Bota Couro Inverno da 147 → Object Page → aba **Pedidos de Reposição** → pedido gerado pelo gpt-4o com justificativa detalhada.
+5. *"O agente não só detectou — ele já calculou a quantidade, sugeriu o fornecedor e escreveu a justificativa. Rodando no AI Core, dentro do BTP."*
+6. Mostrar o tile **"Pedidos de Reposição: 6 pendentes"** no launchpad.
 
 **Frase de valor:** *"Do dado à proposta de ação em segundos — sem regra fixa, com raciocínio de IA sobre os dados reais."*
 
