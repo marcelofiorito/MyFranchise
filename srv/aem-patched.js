@@ -71,12 +71,20 @@ if (!AdvancedEventMesh) {
       })
 
       const t0 = Date.now()
-      // super.init() é não-bloqueante — servidor HTTP sobe normalmente
+      // super.init() é não-bloqueante — servidor HTTP sobe normalmente.
+      // Race condition: cds.once('listening') no plugin é registrado DENTRO de super.init(),
+      // mas o evento 'listening' já disparou antes disso. Chamamos startListening() manualmente.
       super.init()
         .then(() => {
           clearTimeout(timeoutHandle)
           LOG.info(`[AEM] Connected in ${((Date.now()-t0)/1000).toFixed(1)}s`)
           _flush('✅ AEM ready (Basic Auth)')
+          // Consumer nunca subiu via cds.once('listening') — aciona diretamente
+          if (typeof this.startListening === 'function') {
+            this.startListening()
+              .then(() => LOG.info('[AEM] ✅ Consumer connected — escutando fila'))
+              .catch(e => LOG.warn('[AEM] startListening failed:', e.message))
+          }
         })
         .catch(err => {
           clearTimeout(timeoutHandle)
