@@ -311,15 +311,16 @@ function buildServer() {
         }
 
         const obs = observacao || 'Approved via Joule'
+        const db = await cds.connect.to('db')
         let aprovados = 0
         for (const p of pedidos) {
-          const qtd = p.qtdSugerida || p.QTDSUGERIDA || 0
-          await UPDATE('myfranchise.Pedidos_Reposicao').set({
+          const qtd = Number(p.qtdsugerida || p.qtdSugerida || 0)
+          await db.run(UPDATE('myfranchise.Pedidos_Reposicao').set({
             status_code: 'APROVADO',
             qtdAprovada: qtd,
             aprovador: 'joule',
             dataDecisao: new Date().toISOString()
-          }).where({ ID: p.ID })
+          }).where({ ID: p.ID }))
           aprovados++
         }
 
@@ -348,10 +349,11 @@ function buildServer() {
         const qtdVal    = Number(pedido.qtdsugerida || 0);
         if (statusVal !== 'PENDENTE') return err(`Order already has status: ${statusVal}`);
         const qtd = qtd_aprovada || qtdVal;
-        await UPDATE('myfranchise.Pedidos_Reposicao').set({
+        const db2 = await cds.connect.to('db');
+        await db2.run(UPDATE('myfranchise.Pedidos_Reposicao').set({
           status_code: 'APROVADO', qtdAprovada: qtd,
           aprovador: 'joule', dataDecisao: new Date().toISOString()
-        }).where({ ID: pedido_id });
+        }).where({ ID: pedido_id }));
         return ok({ sucesso: true, status: 'APROVADO', mensagem: observacao || `Approved — qty: ${qtd}` });
       } catch (e) { LOG.error('aprovar_pedido', e); return err(e.message); }
     }
@@ -370,10 +372,11 @@ function buildServer() {
         if (!pedido) return err(`Order not found: ${pedido_id}`);
         const statusVal = pedido.status_code;
         if (statusVal !== 'PENDENTE') return err(`Order already has status: ${statusVal}`);
-        await UPDATE('myfranchise.Pedidos_Reposicao').set({
+        const db2 = await cds.connect.to('db');
+        await db2.run(UPDATE('myfranchise.Pedidos_Reposicao').set({
           status_code: 'RECUSADO',
           aprovador: 'joule', dataDecisao: new Date().toISOString()
-        }).where({ ID: pedido_id });
+        }).where({ ID: pedido_id }));
         return ok({ sucesso: true, status: 'RECUSADO', mensagem: motivo || 'Order rejected via Joule' });
       } catch (e) { LOG.error('recusar_pedido', e); return err(e.message); }
     }
