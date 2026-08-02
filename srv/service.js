@@ -212,7 +212,7 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
         dataDecisao : new Date().toISOString()
       }).where({ ID: pedido_ID });
       if (this.emitPedidoStatusChanged)
-        await this.emitPedidoStatusChanged({ ...pedido, status_code: 'APROVADO' }).catch(() => {});
+        await this.emitPedidoStatusChanged({ ...pedido, status_code: 'APROVADO', qtdAprovada: qtdAprovada ?? pedido.qtdSugerida }).catch(() => {});
       return { status: 'APROVADO', mensagem: observacao ?? `Aprovado — qtd: ${qtdAprovada ?? pedido.qtdSugerida}` };
     });
 
