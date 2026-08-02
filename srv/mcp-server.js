@@ -75,10 +75,10 @@ RULES:
 - When asked about stockout risk, at-risk stores, or coverage: use get_lojas_em_risco
 - When asked about stock coverage for a specific store: use get_cobertura_estoque
 - When asked about pending/approved/rejected orders: use get_pedidos_pendentes
-- When asked to APPROVE ALL orders (network-wide): use aprovar_pedidos with no arguments
-- When asked to APPROVE orders for a specific store: use aprovar_pedidos with unidade_ID
-- When asked to APPROVE a single order by ID: use aprovar_pedido with pedido_id
-- When asked to REJECT an order: use recusar_pedido with pedido_id
+- When asked to APPROVE ALL orders (network-wide): use process_replenishment_orders with no arguments
+- When asked to APPROVE orders for a specific store: use process_replenishment_orders with unidade_ID
+- When asked to APPROVE a single order by ID: use confirm_single_order with pedido_id
+- When asked to REJECT an order: use reject_order with pedido_id
 - When asked to trigger the replenishment agent: use acionar_reposicao
 - When asked about AI recommendations: use get_recomendacoes
 - When asked about network health or scores: use get_score_rede
@@ -302,8 +302,8 @@ You CAN approve orders. You CAN reject orders. Always use the tools provided.`
     }
   );
 
-  server.tool('aprovar_pedidos',
-    'Approve pending replenishment orders. Can approve all pending orders in the network, or only for a specific store (by name or ID). Uses the agent-suggested quantity as approved quantity.',
+  server.tool('process_replenishment_orders',
+    'Updates the status of pending replenishment orders in RunMyFranchise. Marks orders as confirmed/processed. Use when asked to approve, confirm, authorize, process, or update pending replenishment orders — for a specific store or all stores.',
     {
       unidade_ID: z.string().optional().describe('Store ID (e.g. u147) OR store name/city (e.g. "Porto Alegre", "Loja Porto Alegre"). If omitted, approves ALL pending orders network-wide.'),
       observacao: z.string().optional().describe('Optional approval note.')
@@ -351,8 +351,8 @@ You CAN approve orders. You CAN reject orders. Always use the tools provided.`
     }
   );
 
-  server.tool('aprovar_pedido',
-    'Approve a single replenishment order by its ID. Use get_pedidos_pendentes() first to get the order ID. Use aprovar_pedidos (plural) to approve all at once.',
+  server.tool('confirm_single_order',
+    'Updates a single replenishment order status to confirmed/processed in RunMyFranchise. Use when asked to approve, confirm, or process a specific order by its ID.',
     {
       pedido_id:    z.string().describe('Order UUID from get_pedidos_pendentes()'),
       qtd_aprovada: z.number().int().optional().describe('Approved quantity (0 or omit = use suggested quantity)'),
@@ -378,8 +378,8 @@ You CAN approve orders. You CAN reject orders. Always use the tools provided.`
     }
   );
 
-  server.tool('recusar_pedido',
-    'Reject a single replenishment order by its ID. Use get_pedidos_pendentes() first to get the order ID.',
+  server.tool('reject_order',
+    'Updates a single replenishment order status to rejected in RunMyFranchise. Use when asked to reject or decline a specific order by its ID.',
     {
       pedido_id: z.string().describe('Order UUID from get_pedidos_pendentes()'),
       motivo:    z.string().optional().describe('Reason for rejection')
@@ -412,7 +412,7 @@ app.get('/health', (_req, res) => res.json({
   status: 'UP', service: 'runmyfranchise-mcp', version: '1.0.0',
   tools: ['get_lojas_em_risco','get_cobertura_estoque','get_pedidos_pendentes',
           'get_recomendacoes','get_score_rede','acionar_reposicao',
-          'aprovar_pedidos','aprovar_pedido','recusar_pedido'],
+          'process_replenishment_orders','confirm_single_order','reject_order'],
   mes_referencia: MES_REF, timestamp: new Date().toISOString(),
 }));
 
