@@ -15,18 +15,24 @@
       }
     },
     "messaging": {
+      "kind": "file-based-messaging",
+      "format": "cloudevents",
       "[production]": {
         "kind": "advanced-event-mesh",
         "impl": "./srv/aem-patched.js",
-        "vcap": { "name": "advanced-event-mesh" },
-        "session": {
-          "authenticationScheme": "AuthenticationScheme_oauth2"
+        "skipManagement": true,
+        "queue": {
+          "name": "myfranchise-srv/f3901205"
+        },
+        "consumer": {
+          "queueDescriptor": {
+            "name": "myfranchise-srv/f3901205",
+            "type": "Queue"
+          },
+          "acknowledgeMode": "CLIENT",
+          "requiredSettlementOutcomes": []
         }
-      },
-      "[development]": {
-        "kind": "file-based-messaging"
-      },
-      "format": "cloudevents"
+      }
     }
   },
   "log": {

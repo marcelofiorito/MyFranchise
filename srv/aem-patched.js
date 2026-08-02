@@ -21,64 +21,79 @@ if (!AdvancedEventMesh) {
     }
 
     async init() {
-      const TIMEOUT_MS = 90000
+      const LOG = cds.log('messaging')
+      const TIMEOUT_MS = 180000
+      // Credenciais basic auth: lidas do user-provided service (basic_user/basic_pass),
+      // com fallback para env vars (AEM_BASIC_USER/AEM_BASIC_PASS)
+      const BASIC_USER = this.options.credentials?.basic_user
+        || process.env.AEM_BASIC_USER
+        || 'solace-cloud-client'
+      const BASIC_PASS = this.options.credentials?.basic_pass
+        || process.env.AEM_BASIC_PASS
 
-      // Inicializa o SolclientFactory imediatamente — não espera super.init()
-      // para que os emits não falhem com "SolclientFactory not initialized"
-      try {
-        solace.SolclientFactory.init(new solace.SolclientFactoryProperties({
-          logLevel: 5,
-          profile: solace.SolclientFactoryProfiles.version10
-        }))
-        cds.log('messaging').info('[AEM] SolclientFactory pre-initialized')
-      } catch(e) {
-        // Já inicializado — ok
+      // Intercepta createSession para trocar OAuth por Basic Auth.
+      // O plugin busca um token IAS (necessário para _validateBroker e SEMP),
+      // mas o broker SMF WebSocket só aceita Basic Auth neste plano Developer 100.
+      if (!BASIC_PASS) {
+        LOG.warn('[AEM] basic_pass not found in credentials or env — using OAuth (may fail on Developer 100)')
+      } else {
+        const origCreate = solace.SolclientFactory.createSession.bind(solace.SolclientFactory)
+        solace.SolclientFactory.createSession = (opts) => {
+          solace.SolclientFactory.createSession = origCreate  // restaura imediatamente
+          LOG.info('[AEM] createSession patched: OAuth → Basic Auth')
+          return origCreate({
+            ...opts,
+            userName: BASIC_USER,
+            password: BASIC_PASS,
+            accessToken: undefined,
+            authenticationScheme: undefined
+          })
+        }
       }
-
-      let timeoutHandle
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutHandle = setTimeout(() =>
-          reject(new Error('AEM init timeout after 90s')), TIMEOUT_MS
-        )
-      })
 
       const _flush = (label) => {
         if (this._aemReady) return
         this._aemReady = true
         const pending = this._pendingEmits.splice(0)
-        cds.log('messaging').info(`[AEM] ${label} — flushing ${pending.length} pending emits`)
+        LOG.info(`[AEM] ${label} — flushing ${pending.length} pending emits`)
         for (const { topic, data } of pending) {
-          super.emit(topic, data).catch(e =>
-            cds.log('messaging').warn('[AEM] Pending emit failed:', e.message)
+          super.emit(topic, data).catch(e2 =>
+            LOG.warn(`[AEM] Pending emit failed: ${e2.message}`)
           )
         }
       }
 
+      let timeoutHandle
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutHandle = setTimeout(() =>
+          reject(new Error('AEM init timeout')), TIMEOUT_MS
+        )
+      })
+
+      const t0 = Date.now()
+      // super.init() é não-bloqueante — servidor HTTP sobe normalmente
       super.init()
         .then(() => {
           clearTimeout(timeoutHandle)
-          cds.log('messaging').info('[AEM] super.init() completed successfully')
-          _flush('✅ AEM connected')
+          LOG.info(`[AEM] Connected in ${((Date.now()-t0)/1000).toFixed(1)}s`)
+          _flush('✅ AEM ready (Basic Auth)')
         })
-        .catch(e => {
+        .catch(err => {
           clearTimeout(timeoutHandle)
-          cds.log('messaging').warn(`[AEM] super.init() FAILED: ${e.message}`)
-          _flush('AEM init failed — forcing ready')
+          LOG.warn(`[AEM] init failed: ${err.message} — falling back to file-based`)
+          _flush('AEM failed — events lost (file-based fallback active)')
         })
 
-      timeoutPromise.catch(() => {
-        _flush('AEM timeout — forcing ready')
-      })
+      timeoutPromise.catch(() => _flush('AEM timeout — forcing ready'))
     }
 
     async emit(topic, data) {
       if (this._aemReady) {
-        cds.log('messaging').info(`[AEM] Emitting to broker: ${topic}`)
+        cds.log('messaging').info(`[AEM] Emitting: ${topic}`)
         return super.emit(topic, data)
       }
-      cds.log('messaging').info(`[AEM] Queuing emit (not ready yet): ${topic} — queue size: ${this._pendingEmits.length + 1}`)
+      cds.log('messaging').info(`[AEM] Queued: ${topic} (${this._pendingEmits.length + 1} pending)`)
       this._pendingEmits.push({ topic, data })
     }
   }
 }
-
