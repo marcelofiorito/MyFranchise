@@ -30,12 +30,45 @@ except ImportError:
 
 # ─── Configuração ─────────────────────────────────────────────────
 SRV_URL       = os.environ.get("SRV_URL", "http://localhost:4004")
+NODE_MCP_URL  = os.environ.get("NODE_MCP_URL", "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com/mcp")
 TOKEN_URL     = os.environ.get("TOKEN_URL", "")
 CLIENT_ID     = os.environ.get("CLIENT_ID", "")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET", "")
 MES_REF       = int(os.environ.get("MES_REFERENCIA", "7"))
 PORT          = int(os.environ.get("PORT", "8080"))
 CF_HOST       = os.environ.get("CF_HOST", "joule-myfranchise-mcp.cfapps.us10.hana.ondemand.com")
+
+# ─── Relay para Node.js MCP (acesso direto ao HANA, mais rápido) ──
+_node_req_id = 0
+def node_call(tool_name: str, arguments: dict) -> str:
+    """Chama o Node.js MCP diretamente — evita HTTP OData intermediário."""
+    global _node_req_id
+    _node_req_id += 1
+    try:
+        # initialize
+        requests.post(NODE_MCP_URL, json={
+            "jsonrpc": "2.0", "method": "initialize",
+            "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "python-relay", "version": "1.0"}},
+            "id": _node_req_id
+        }, headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}, timeout=5)
+
+        # tools/call
+        _node_req_id += 1
+        resp = requests.post(NODE_MCP_URL, json={
+            "jsonrpc": "2.0", "method": "tools/call",
+            "params": {"name": tool_name, "arguments": arguments},
+            "id": _node_req_id
+        }, headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}, timeout=25)
+
+        # Parse SSE response
+        for line in resp.text.splitlines():
+            if line.startswith("data: "):
+                data = json.loads(line[6:])
+                content = data.get("result", {}).get("content", [{}])
+                return content[0].get("text", "{}") if content else "{}"
+        return "{}"
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 # ─── Token cache ──────────────────────────────────────────────────
 _token_cache: dict = {}
@@ -129,136 +162,38 @@ mcp = FastMCP("RunMyFranchise Joule", **_mcp_kwargs)
 def get_lojas_em_risco(regiao: str = "", categoria: str = "") -> str:
     """
     List stores at risk of stockout (coverage < lead time), considering regional seasonality.
-    regiao: region filter (NE, S, SE, CO, N). categoria: product category filter (e.g. Sandálias).
+    regiao: region filter (NE, S, SE, CO, N). categoria: product category filter.
     Example: get_lojas_em_risco(regiao='NE')
     """
-    try:
-        data  = odata("Estoque_Unidade", {
-            "$select": "unidade_ID,unidadeNome,unidadeCidade,regiaoCode,sku,nomeProduto,categoria,saldoAtual,coberturaDias,leadTimeDias,estoqueCriticality",
-            "$top": "200",
-        })
-        items = data.get("value", [])
-        if regiao:
-            items = [i for i in items if i.get("regiaoCode") == regiao]
-        if categoria:
-            items = [i for i in items if (i.get("categoria") or "").lower() == categoria.lower()]
-        items = [i for i in items if int(i.get("estoqueCriticality") or 3) < 3]
-        items.sort(key=lambda i: float(i.get("coberturaDias") or 999))
-
-        if not items:
-            return json.dumps({"total": 0, "mensagem": "No stores at risk with these filters.", "mes_referencia": MES_REF})
-
-        return json.dumps({
-            "total": len(items),
-            "mes_referencia": MES_REF,
-            "lojas": [{
-                "loja":         i.get("unidadeNome"),
-                "cidade":       i.get("unidadeCidade"),
-                "regiao":       i.get("regiaoCode"),
-                "produto":      i.get("nomeProduto"),
-                "saldo":        i.get("saldoAtual"),
-                "coberturaDias": i.get("coberturaDias"),
-                "leadTime":     i.get("leadTimeDias"),
-                "criticidade":  "CRITICAL STOCKOUT" if int(i.get("estoqueCriticality") or 3) == 1 else "WARNING",
-            } for i in items]
-        }, ensure_ascii=False, indent=2)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+    args = {}
+    if regiao: args["regiao_code"] = regiao
+    if categoria: args["categoria"] = categoria
+    return node_call("get_lojas_em_risco", args)
 
 # ─── TOOL 2: cobertura de SKU numa loja ──────────────────────────
 @mcp.tool()
 def get_cobertura_estoque(unidade_id: str, sku: str = "") -> str:
     """
     Returns stock coverage in days for a store with seasonal adjustment.
-    unidade_id: store ID (e.g. u178) OR store name/city (e.g. 'Porto Alegre', 'Loja Recife').
-    sku: optional SKU filter.
+    unidade_id: store ID or name/city (e.g. 'Porto Alegre', 'Loja Recife').
     Example: get_cobertura_estoque(unidade_id='Porto Alegre')
     """
-    try:
-        # Resolve name → ID
-        resolved_id = unidade_id
-        if unidade_id and (not unidade_id.startswith("u") or not unidade_id[1:].isdigit()):
-            search = unidade_id.lower().replace("loja ", "").strip()
-            all_units = odata("Unidades", {"$select": "ID,nome,cidade", "$top": "100"}).get("value", [])
-            found = next((u for u in all_units
-                if search in (u.get("nome") or "").lower()
-                or search in (u.get("cidade") or "").lower()), None)
-            if found:
-                resolved_id = found["ID"]
-
-        data  = odata("Estoque_Unidade", {
-            "$select": "unidade_ID,unidadeNome,unidadeCidade,regiaoCode,sku,nomeProduto,saldoAtual,coberturaDias,leadTimeDias,estoqueCriticality",
-            "$top": "200",
-        })
-        items = [i for i in data.get("value", []) if i.get("unidade_ID") == resolved_id]
-        if sku:
-            items = [i for i in items if i.get("sku") == sku]
-        if not items:
-            return json.dumps({"erro": f"No items found for {unidade_id}"})
-        u = items[0]
-        return json.dumps({
-            "loja":    u.get("unidadeNome"),
-            "cidade":  u.get("unidadeCidade"),
-            "regiao":  u.get("regiaoCode"),
-            "mes_referencia": MES_REF,
-            "itens": [{
-                "sku":          i.get("sku"),
-                "produto":      i.get("nomeProduto"),
-                "saldo":        i.get("saldoAtual"),
-                "coberturaDias": i.get("coberturaDias"),
-                "leadTime":     i.get("leadTimeDias"),
-                "status":       "CRITICAL STOCKOUT" if int(i.get("estoqueCriticality") or 3) == 1 else "WARNING" if int(i.get("estoqueCriticality") or 3) == 2 else "OK",
-            } for i in items]
-        }, ensure_ascii=False, indent=2)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+    args = {"unidade_ID": unidade_id}
+    if sku: args["sku"] = sku
+    return node_call("get_cobertura_estoque", args)
 
 # ─── TOOL 3: pedidos pendentes ────────────────────────────────────
 @mcp.tool()
 def get_pedidos_pendentes(unidade_id: str = "", status: str = "PENDENTE") -> str:
     """
     List replenishment orders. Accepts store name/city OR store ID.
-    unidade_id: store name (e.g. 'Porto Alegre', 'Loja Recife') or ID (e.g. 'u147'). Leave empty for all stores.
+    unidade_id: store name (e.g. 'Porto Alegre') or ID (e.g. 'u147'). Leave empty for all stores.
     status: PENDENTE (default), APROVADO, RECUSADO, RECEBIDO.
     Example: get_pedidos_pendentes(unidade_id='Porto Alegre')
-    Example: get_pedidos_pendentes() — lists all pending orders network-wide.
     """
-    try:
-        unids_list = odata("Unidades", {"$select": "ID,nome,cidade", "$top": "100"}).get("value", [])
-        unids = {u["ID"]: u for u in unids_list}
-
-        # Resolve name → ID
-        resolved_id = unidade_id
-        if unidade_id and (not unidade_id.startswith("u") or not unidade_id[1:].isdigit()):
-            search = unidade_id.lower().replace("loja ", "").strip()
-            found = next((u for u in unids_list
-                if search in (u.get("nome") or "").lower()
-                or search in (u.get("cidade") or "").lower()), None)
-            if found:
-                resolved_id = found["ID"]
-
-        data  = odata("Pedidos_Reposicao", {"$top": "200"})
-        items = [i for i in data.get("value", []) if i.get("status_code") == status]
-        if resolved_id:
-            items = [i for i in items if i.get("unidade_ID") == resolved_id]
-
-        return json.dumps({
-            "total": len(items),
-            "status": status,
-            "pedidos": [{
-                "id":          i.get("ID"),
-                "loja":        unids.get(i.get("unidade_ID"), {}).get("nome", i.get("unidade_ID")),
-                "cidade":      unids.get(i.get("unidade_ID"), {}).get("cidade"),
-                "produto":     i.get("nomeProduto"),
-                "sku":         i.get("sku"),
-                "qtdSugerida": i.get("qtdSugerida"),
-                "fornecedor":  i.get("fornecedorSugerido"),
-                "prazo":       i.get("prazoDesejado"),
-                "justificativa": i.get("justificativa"),
-            } for i in items]
-        }, ensure_ascii=False, indent=2)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+    args = {"status_code": status}
+    if unidade_id: args["unidade_ID"] = unidade_id
+    return node_call("get_pedidos_pendentes", args)
 
 # ─── TOOL 4: recomendações da IA ─────────────────────────────────
 @mcp.tool()
@@ -268,39 +203,10 @@ def get_recomendacoes(unidade_id: str = "", prioridade: str = "") -> str:
     unidade_id: store name/city or ID (optional). prioridade: ALTA, MEDIA, BAIXA (optional).
     Example: get_recomendacoes(unidade_id='Porto Alegre')
     """
-    try:
-        unids_list = odata("Unidades", {"$select": "ID,nome,cidade", "$top": "100"}).get("value", [])
-        unids = {u["ID"]: u for u in unids_list}
-
-        # Resolve name → ID
-        resolved_id = unidade_id
-        if unidade_id and (not unidade_id.startswith("u") or not unidade_id[1:].isdigit()):
-            search = unidade_id.lower().replace("loja ", "").strip()
-            found = next((u for u in unids_list
-                if search in (u.get("nome") or "").lower()
-                or search in (u.get("cidade") or "").lower()), None)
-            if found:
-                resolved_id = found["ID"]
-
-        data  = odata("Recomendacoes", {"$top": "100"})
-        items = [i for i in data.get("value", []) if i.get("status_code") == "NOVA"]
-        if resolved_id:
-            items = [i for i in items if i.get("unidade_ID") == resolved_id]
-        if prioridade:
-            items = [i for i in items if i.get("prioridade_code") == prioridade.upper()]
-
-        return json.dumps({
-            "total": len(items),
-            "recomendacoes": [{
-                "loja":      unids.get(i.get("unidade_ID"), {}).get("nome", i.get("unidade_ID")),
-                "tipo":      i.get("tipo_code"),
-                "prioridade": i.get("prioridade_code"),
-                "titulo":    i.get("titulo"),
-                "descricao": i.get("descricao"),
-            } for i in items]
-        }, ensure_ascii=False, indent=2)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+    args = {}
+    if unidade_id: args["unidade_ID"] = unidade_id
+    if prioridade: args["prioridade"] = prioridade
+    return node_call("get_recomendacoes", args)
 
 # ─── TOOL 5: score de saúde ───────────────────────────────────────
 @mcp.tool()
@@ -309,37 +215,11 @@ def get_score_rede(regiao: str = "", somente_criticas: bool = False) -> str:
     Returns the health score of all stores in the franchise network.
     regiao: NE, S, SE, CO, N (optional). somente_criticas: True for critical stores only.
     Example: get_score_rede() — full network overview.
-    Example: get_score_rede(somente_criticas=True) — only critical stores.
     """
-    try:
-        data  = odata("Saude_Dashboard", {"$top": "100"})
-        all_  = data.get("value", [])
-        items = list(all_)
-        if regiao:
-            items = [i for i in items if i.get("regiao_code") == regiao]
-        if somente_criticas:
-            items = [i for i in items if int(i.get("scoreCriticality") or 3) == 1]
-        items.sort(key=lambda i: float(i.get("scoreSaude") or 100))
-
-        return json.dumps({
-            "network_summary": {
-                "total":    len(all_),
-                "critical": sum(1 for i in all_ if int(i.get("scoreCriticality") or 3) == 1),
-                "warning":  sum(1 for i in all_ if int(i.get("scoreCriticality") or 3) == 2),
-                "healthy":  sum(1 for i in all_ if int(i.get("scoreCriticality") or 3) == 3),
-                "avgScore": round(sum(float(i.get("scoreSaude") or 0) for i in all_) / len(all_), 1) if all_ else 0,
-            },
-            "stores": [{
-                "store":   i.get("nome"),
-                "city":    i.get("cidade"),
-                "region":  i.get("regiao_code"),
-                "cluster": i.get("cluster_code"),
-                "score":   i.get("scoreSaude"),
-                "status":  "CRITICAL" if int(i.get("scoreCriticality") or 3) == 1 else "WARNING" if int(i.get("scoreCriticality") or 3) == 2 else "HEALTHY",
-            } for i in items[:20]]
-        }, ensure_ascii=False, indent=2)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+    args = {}
+    if regiao: args["regiao_code"] = regiao
+    if somente_criticas: args["criticidade"] = 1
+    return node_call("get_score_rede", args)
 
 # ─── TOOL 6: aprovar pedido de reposição ─────────────────────────
 @mcp.tool()
@@ -348,26 +228,12 @@ def aprovar_pedido(pedido_id: str, qtd_aprovada: int = 0, observacao: str = "") 
     Approve a single replenishment order by its ID. Status changes from PENDING to APPROVED.
     pedido_id: order UUID. Use get_pedidos_pendentes() to get the ID.
     qtd_aprovada: approved quantity (0 = use agent-suggested quantity).
-    observacao: optional approval note.
-    Example: aprovar_pedido(pedido_id='...', observacao='Urgent delivery approved')
+    Example: aprovar_pedido(pedido_id='...')
     """
-    try:
-        body = {}
-        if qtd_aprovada:
-            body["qtdAprovada"] = qtd_aprovada
-        if observacao:
-            body["observacao"] = observacao
-        result = odata_post(
-            f"Pedidos_Reposicao(ID={pedido_id})/FranqueadoraService.aprovar",
-            body
-        )
-        return json.dumps({
-            "sucesso": True,
-            "status": result.get("value", {}).get("status", "APROVADO"),
-            "mensagem": result.get("value", {}).get("mensagem", "Pedido aprovado com sucesso."),
-        }, ensure_ascii=False)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+    args = {"pedido_id": pedido_id}
+    if qtd_aprovada: args["qtd_aprovada"] = qtd_aprovada
+    if observacao: args["observacao"] = observacao
+    return node_call("confirm_single_order", args)
 
 # ─── TOOL 7: recusar pedido de reposição ─────────────────────────
 @mcp.tool()
@@ -375,69 +241,28 @@ def recusar_pedido(pedido_id: str, motivo: str = "") -> str:
     """
     Reject a single replenishment order by its ID. Status changes from PENDING to REJECTED.
     pedido_id: order UUID. Use get_pedidos_pendentes() to get the ID.
-    motivo: reason for rejection (recommended for audit trail).
-    Example: recusar_pedido(pedido_id='...', motivo='Stock already replenished via another route')
+    Example: recusar_pedido(pedido_id='...', motivo='Stock already replenished')
     """
-    try:
-        body = {}
-        if motivo:
-            body["motivo"] = motivo
-        result = odata_post(
-            f"Pedidos_Reposicao(ID={pedido_id})/FranqueadoraService.recusar",
-            body
-        )
-        return json.dumps({
-            "sucesso": True,
-            "status": result.get("value", {}).get("status", "RECUSADO"),
-            "mensagem": result.get("value", {}).get("mensagem", "Pedido recusado."),
-        }, ensure_ascii=False)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+    args = {"pedido_id": pedido_id}
+    if motivo: args["motivo"] = motivo
+    return node_call("reject_order", args)
 
 # ─── TOOL 8: aprovar todos os pedidos de uma vez ──────────────────
 @mcp.tool()
 def aprovar_pedidos(unidade: str = "", observacao: str = "") -> str:
     """
     Approve ALL pending replenishment orders at once, or all for a specific store.
-    unidade: store name or city (e.g. 'Porto Alegre', 'Loja Recife') or ID (e.g. 'u147'). Leave empty to approve all.
-    observacao: optional approval note.
+    unidade: store name or city (e.g. 'Porto Alegre') or ID (e.g. 'u147'). Leave empty to approve all.
     Example: aprovar_pedidos() — approves all pending orders network-wide.
     Example: aprovar_pedidos(unidade='Porto Alegre') — approves all pending for that store.
     """
-    try:
-        params: dict = {"$filter": "status_code eq 'PENDENTE'", "$top": "200"}
-        pedidos = odata("Pedidos_Reposicao", params).get("value", [])
+    args = {}
+    if unidade: args["unidade_ID"] = unidade
+    if observacao: args["observacao"] = observacao
+    return node_call("process_replenishment_orders", args)
 
-        # Resolve store name → ID if needed
-        if unidade:
-            resolved_id = unidade
-            if not unidade.startswith("u") or not unidade[1:].isdigit():
-                search = unidade.lower().replace("loja ", "").strip()
-                all_units = odata("Unidades", {"$select": "ID,nome,cidade", "$top": "100"}).get("value", [])
-                found = next((u for u in all_units
-                    if search in (u.get("nome") or "").lower()
-                    or search in (u.get("cidade") or "").lower()), None)
-                if found:
-                    resolved_id = found["ID"]
-            pedidos = [p for p in pedidos if p.get("unidade_ID") == resolved_id]
-
-        if not pedidos:
-            return json.dumps({"aprovados": 0, "mensagem": f"No pending orders{'for ' + unidade if unidade else ' in the network'}."})
-
-        aprovados = 0
-        for p in pedidos:
-            body = {"qtdAprovada": p.get("qtdSugerida", 0)}
-            if observacao:
-                body["observacao"] = observacao
-            odata_post(f"Pedidos_Reposicao(ID={p['ID']})/FranqueadoraService.aprovar", body)
-            aprovados += 1
-
-        return json.dumps({
-            "aprovados": aprovados,
-            "mensagem": f"{aprovados} order(s) approved{(' for ' + unidade) if unidade else ' across the network'}."
-        }, ensure_ascii=False)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+# ─── (kept for compatibility) ─────────────────────────────────────
+# Note: aprovar_pedidos and acionar_reposicao below replaced by node_call above
 
 # ─── TOOL 9: acionar agente de reposição ─────────────────────────
 @mcp.tool()
@@ -445,42 +270,11 @@ def acionar_reposicao(unidade: str = "") -> str:
     """
     Trigger the AI Replenishment Agent for a store or all stores in stockout.
     unidade: store name, city, or ID. Leave empty to trigger all stores currently in stockout.
-    The agent uses gpt-4o to calculate quantities and creates PENDING orders for approval.
     Example: acionar_reposicao() — triggers all stores in stockout.
-    Example: acionar_reposicao(unidade='Porto Alegre') — triggers only that store.
     """
-    try:
-        # Resolve store name → ID
-        resolved_id = unidade
-        if unidade and (not unidade.startswith("u") or not unidade[1:].isdigit()):
-            search = unidade.lower().replace("loja ", "").strip()
-            all_units = odata("Unidades", {"$select": "ID,nome,cidade", "$top": "100"}).get("value", [])
-            found = next((u for u in all_units
-                if search in (u.get("nome") or "").lower()
-                or search in (u.get("cidade") or "").lower()), None)
-            if found:
-                resolved_id = found["ID"]
-
-        if resolved_id:
-            result = odata_post("gerarReposicao", {"unidade_ID": resolved_id})
-            val = result.get("value", {})
-            return json.dumps({
-                "unidade": unidade or resolved_id,
-                "pedidos_gerados": val.get("pedidos", 0),
-                "modo": val.get("modo", ""),
-                "mensagem": f"{val.get('pedidos', 0)} order(s) created for {unidade or resolved_id}. Awaiting approval."
-            }, ensure_ascii=False)
-        else:
-            result = odata_post("gerarReposicaoTodas", {})
-            val = result.get("value", {})
-            return json.dumps({
-                "pedidos_gerados": val.get("pedidos", 0),
-                "unidades": val.get("unidades", 0),
-                "modo": val.get("modo", ""),
-                "mensagem": f"{val.get('pedidos', 0)} order(s) created across {val.get('unidades', 0)} store(s). Awaiting approval."
-            }, ensure_ascii=False)
-    except Exception as e:
-        return json.dumps({"erro": str(e)})
+    args = {}
+    if unidade: args["unidade_ID"] = unidade
+    return node_call("acionar_reposicao", args)
 
 # ─── Entrypoint HTTP para Cloud Foundry ──────────────────────────
 if __name__ == "__main__":
