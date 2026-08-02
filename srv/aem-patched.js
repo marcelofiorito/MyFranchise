@@ -23,8 +23,6 @@ if (!AdvancedEventMesh) {
     async init() {
       const LOG = cds.log('messaging')
       const TIMEOUT_MS = 180000
-      // Credenciais basic auth: lidas do user-provided service (basic_user/basic_pass),
-      // com fallback para env vars (AEM_BASIC_USER/AEM_BASIC_PASS)
       const BASIC_USER = this.options.credentials?.basic_user
         || process.env.AEM_BASIC_USER
         || 'solace-cloud-client'
@@ -32,14 +30,13 @@ if (!AdvancedEventMesh) {
         || process.env.AEM_BASIC_PASS
 
       // Intercepta createSession para trocar OAuth por Basic Auth.
-      // O plugin busca um token IAS (necessário para _validateBroker e SEMP),
-      // mas o broker SMF WebSocket só aceita Basic Auth neste plano Developer 100.
+      // Developer 100 só aceita Basic Auth no SMF WebSocket.
       if (!BASIC_PASS) {
-        LOG.warn('[AEM] basic_pass not found in credentials or env — using OAuth (may fail on Developer 100)')
+        LOG.warn('[AEM] basic_pass não encontrado — usando OAuth (pode falhar no Developer 100)')
       } else {
         const origCreate = solace.SolclientFactory.createSession.bind(solace.SolclientFactory)
         solace.SolclientFactory.createSession = (opts) => {
-          solace.SolclientFactory.createSession = origCreate  // restaura imediatamente
+          solace.SolclientFactory.createSession = origCreate
           LOG.info('[AEM] createSession patched: OAuth → Basic Auth')
           return origCreate({
             ...opts,
@@ -71,60 +68,21 @@ if (!AdvancedEventMesh) {
       })
 
       const t0 = Date.now()
-      // super.init() é não-bloqueante — servidor HTTP sobe normalmente.
-      // Race condition: cds.once('listening') no plugin é registrado DENTRO de super.init(),
-      // mas o evento 'listening' já disparou antes disso. Chamamos startListening() manualmente.
+      // Roda super.init() em background — servidor HTTP sobe imediatamente.
+      // Consumer (receive) não é ativado: no plano Developer 100, o consumer
+      // via SMF/Basic Auth retorna subcode 114 (CLIENT_BIND_MISSING_SUBSCRIPTION).
+      // O consumer futuro será SAP BPA + Integration Suite via iFlow.
+      // Os handlers autônomos (messaging.on) operam localmente no mesmo processo.
       super.init()
         .then(() => {
           clearTimeout(timeoutHandle)
           LOG.info(`[AEM] Connected in ${((Date.now()-t0)/1000).toFixed(1)}s`)
-          _flush('✅ AEM ready (Basic Auth)')
-          // Consumer nunca subiu via cds.once('listening') — aciona diretamente.
-          // Solace SDK exige QueueType enum, não string — converte antes de chamar.
-          // Não usa startListening() do plugin — cria consumer diretamente (race condition + QueueType bug)
-          try {
-            const QUEUE = this.options?.queue?.name || 'myfranchise-srv/f3901205'
-            const consumer = this.session.createMessageConsumer({
-              queueDescriptor: { name: QUEUE, type: solace.QueueType.QUEUE },
-              acknowledgeMode: solace.MessageConsumerAcknowledgeMode.CLIENT,
-              reconnectAttempts: 0
-            })
-            consumer.on(solace.MessageConsumerEventName.UP, () => {
-              LOG.info('[AEM] ✅ Consumer connected — escutando fila: ' + QUEUE)
-            })
-            consumer.on(solace.MessageConsumerEventName.CONNECT_FAILED_ERROR, ev => {
-              LOG.warn('[AEM] Consumer CONNECT_FAILED:', ev?.infoStr, 'subcode:', ev?.subcode)
-            })
-            consumer.on(solace.MessageConsumerEventName.MESSAGE, async (solaceMsg) => {
-              const event = solaceMsg.getDestination().getName()
-              LOG.info('[AEM] Received:', event)
-              let payload
-              if (solaceMsg.getType() === solace.MessageType.TEXT) {
-                payload = solaceMsg.getSdtContainer().getValue()
-              } else {
-                payload = solaceMsg.getBinaryAttachment()
-              }
-              const raw = payload?.toString ? payload.toString() : String(payload)
-              try {
-                const parsed = JSON.parse(raw)
-                const data = parsed.data !== undefined ? parsed.data : parsed
-                const headers = parsed.data !== undefined ? { ...parsed, data: undefined } : {}
-                await this.tx({ user: cds.User.privileged }, tx => tx.emit({ event, data, headers }))
-                solaceMsg.acknowledge()
-              } catch (e) {
-                LOG.error('[AEM] Erro ao processar mensagem:', e.message)
-                solaceMsg.acknowledge()
-              }
-            })
-            consumer.connect()
-          } catch (e) {
-            LOG.warn('[AEM] Erro ao criar consumer:', e.message)
-          }
+          _flush('✅ AEM ready (Basic Auth) — publish ativo, consumer via BPA/IS')
         })
         .catch(err => {
           clearTimeout(timeoutHandle)
-          LOG.warn(`[AEM] init failed: ${err.message} — falling back to file-based`)
-          _flush('AEM failed — events lost (file-based fallback active)')
+          LOG.warn(`[AEM] init failed: ${err.message}`)
+          _flush('AEM failed — eventos processados localmente')
         })
 
       timeoutPromise.catch(() => _flush('AEM timeout — forcing ready'))
