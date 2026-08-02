@@ -41,37 +41,45 @@ CF_HOST       = os.environ.get("CF_HOST", "joule-myfranchise-mcp.cfapps.us10.han
 # ─── Relay para Node.js MCP (acesso direto ao HANA, mais rápido) ──
 _node_req_id = 0
 def node_call(tool_name: str, arguments: dict) -> str:
-    """Chama o Node.js MCP diretamente — evita HTTP OData intermediário."""
+    """Chama o Node.js MCP — initialize + tools/call na mesma sessão HTTP."""
     global _node_req_id
     try:
-        # initialize
+        session = requests.Session()
+        headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
+
+        # initialize — obtém mcp-session-id se existir
         _node_req_id += 1
-        requests.post(NODE_MCP_URL, json={
+        init_resp = session.post(NODE_MCP_URL, json={
             "jsonrpc": "2.0", "method": "initialize",
             "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "python-relay", "version": "1.0"}},
             "id": _node_req_id
-        }, headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}, timeout=5)
+        }, headers=headers, timeout=8)
+
+        # Captura session id se o servidor retornar
+        session_id = init_resp.headers.get("mcp-session-id")
+        if session_id:
+            headers["mcp-session-id"] = session_id
 
         # tools/call
         _node_req_id += 1
-        resp = requests.post(NODE_MCP_URL, json={
+        resp = session.post(NODE_MCP_URL, json={
             "jsonrpc": "2.0", "method": "tools/call",
             "params": {"name": tool_name, "arguments": arguments},
             "id": _node_req_id
-        }, headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}, timeout=25)
+        }, headers=headers, timeout=25)
 
-        # Parse SSE: pode vir como "data: {...}\n\n" ou JSON direto
         text = resp.text.strip()
 
-        # Tenta JSON direto primeiro
+        # JSON direto
         try:
             data = json.loads(text)
             content = data.get("result", {}).get("content", [{}])
-            return content[0].get("text", "{}") if content else "{}"
+            if content:
+                return content[0].get("text", "{}")
         except Exception:
             pass
 
-        # Processa SSE linha a linha
+        # SSE linha a linha
         for line in text.splitlines():
             line = line.strip()
             if line.startswith("data:"):
@@ -85,7 +93,7 @@ def node_call(tool_name: str, arguments: dict) -> str:
                     except Exception:
                         continue
 
-        return json.dumps({"erro": f"No data from Node.js for tool {tool_name}: {text[:200]}"})
+        return json.dumps({"erro": f"No data from Node.js: {text[:200]}"})
     except Exception as e:
         return json.dumps({"erro": str(e)})
 
