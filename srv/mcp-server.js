@@ -129,10 +129,16 @@ function buildServer() {
         if (resolvedId) where.unidade_ID = resolvedId;
         const pedidos = await db.run(SELECT.from('myfranchise.Pedidos_Reposicao').where(where));
         return ok({ total: pedidos.length, status: status_code, pedidos: pedidos.map(p => ({
-          id: p.ID, loja: um[p.unidade_ID]?.nome || p.unidade_ID, cidade: um[p.unidade_ID]?.cidade,
-          sku: p.sku, produto: p.nomeProduto, qtdSugerida: p.qtdSugerida,
-          fornecedor: p.fornecedorSugerido, prazoDesejado: p.prazoDesejado,
-          status: p.status_code, justificativa: p.justificativa,
+          produto: p.nomeProduto,
+          loja: um[p.unidade_ID]?.nome || p.unidade_ID,
+          cidade: um[p.unidade_ID]?.cidade,
+          sku: p.sku,
+          qtdSugerida: p.qtdSugerida,
+          fornecedor: p.fornecedorSugerido,
+          prazoDesejado: p.prazoDesejado,
+          status: p.status_code,
+          justificativa: p.justificativa,
+          order_id: p.ID,
         }))});
       } catch (e) { LOG.error('get_pedidos_pendentes', e); return err(e.message); }
     }
