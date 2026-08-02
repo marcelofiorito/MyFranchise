@@ -295,9 +295,10 @@ function buildServer() {
         const obs = observacao || 'Approved via Joule'
         let aprovados = 0
         for (const p of pedidos) {
+          const qtd = p.qtdSugerida || p.QTDSUGERIDA || 0
           await UPDATE('myfranchise.Pedidos_Reposicao').set({
             status_code: 'APROVADO',
-            qtdAprovada: p.qtdSugerida,
+            qtdAprovada: qtd,
             aprovador: 'joule',
             dataDecisao: new Date().toISOString()
           }).where({ ID: p.ID })
@@ -322,10 +323,14 @@ function buildServer() {
     async ({ pedido_id, qtd_aprovada, observacao }) => {
       try {
         await cds.connect.to('db');
-        const pedido = await SELECT.one.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id });
+        const rows = await SELECT.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id });
+        const pedido = rows[0];
         if (!pedido) return err(`Order not found: ${pedido_id}`);
-        if (pedido.status_code !== 'PENDENTE') return err(`Order already has status: ${pedido.status_code}`);
-        const qtd = qtd_aprovada || pedido.qtdSugerida;
+        // HANA pode retornar STATUS_CODE ou status_code dependendo do contexto
+        const statusVal = pedido.status_code || pedido.STATUS_CODE;
+        const qtdVal    = pedido.qtdSugerida || pedido.QTDSUGERIDA || 0;
+        if (statusVal !== 'PENDENTE') return err(`Order already has status: ${statusVal}`);
+        const qtd = qtd_aprovada || qtdVal;
         await UPDATE('myfranchise.Pedidos_Reposicao').set({
           status_code: 'APROVADO', qtdAprovada: qtd,
           aprovador: 'joule', dataDecisao: new Date().toISOString()
@@ -344,9 +349,11 @@ function buildServer() {
     async ({ pedido_id, motivo }) => {
       try {
         await cds.connect.to('db');
-        const pedido = await SELECT.one.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id });
+        const rows = await SELECT.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id });
+        const pedido = rows[0];
         if (!pedido) return err(`Order not found: ${pedido_id}`);
-        if (pedido.status_code !== 'PENDENTE') return err(`Order already has status: ${pedido.status_code}`);
+        const statusVal = pedido.status_code || pedido.STATUS_CODE;
+        if (statusVal !== 'PENDENTE') return err(`Order already has status: ${statusVal}`);
         await UPDATE('myfranchise.Pedidos_Reposicao').set({
           status_code: 'RECUSADO',
           aprovador: 'joule', dataDecisao: new Date().toISOString()
