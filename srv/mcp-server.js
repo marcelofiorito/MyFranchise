@@ -369,7 +369,9 @@ app.get('/health', (_req, res) => res.json({
 
 app.all('/mcp', async (req, res) => {
   const server    = buildServer();
-  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => `rmf-${Date.now()}` });
+  // sessionIdGenerator: undefined = modo stateless (sem sessão persistente)
+  // Necessário para clientes como Joule Studio que não enviam mcp-session-id
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   try {
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
