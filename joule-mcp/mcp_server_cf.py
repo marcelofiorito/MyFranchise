@@ -43,9 +43,9 @@ _node_req_id = 0
 def node_call(tool_name: str, arguments: dict) -> str:
     """Chama o Node.js MCP diretamente — evita HTTP OData intermediário."""
     global _node_req_id
-    _node_req_id += 1
     try:
         # initialize
+        _node_req_id += 1
         requests.post(NODE_MCP_URL, json={
             "jsonrpc": "2.0", "method": "initialize",
             "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "python-relay", "version": "1.0"}},
@@ -60,15 +60,34 @@ def node_call(tool_name: str, arguments: dict) -> str:
             "id": _node_req_id
         }, headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}, timeout=25)
 
-        # Parse SSE response
-        for line in resp.text.splitlines():
-            if line.startswith("data: "):
-                data = json.loads(line[6:])
-                content = data.get("result", {}).get("content", [{}])
-                return content[0].get("text", "{}") if content else "{}"
-        return "{}"
+        # Parse SSE: pode vir como "data: {...}\n\n" ou JSON direto
+        text = resp.text.strip()
+
+        # Tenta JSON direto primeiro
+        try:
+            data = json.loads(text)
+            content = data.get("result", {}).get("content", [{}])
+            return content[0].get("text", "{}") if content else "{}"
+        except Exception:
+            pass
+
+        # Processa SSE linha a linha
+        for line in text.splitlines():
+            line = line.strip()
+            if line.startswith("data:"):
+                payload = line[5:].strip()
+                if payload and payload != "[DONE]":
+                    try:
+                        data = json.loads(payload)
+                        content = data.get("result", {}).get("content", [{}])
+                        if content:
+                            return content[0].get("text", "{}")
+                    except Exception:
+                        continue
+
+        return json.dumps({"erro": f"No data from Node.js for tool {tool_name}: {text[:200]}"})
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return json.dumps({"erro": str(e)})
 
 # ─── Token cache ──────────────────────────────────────────────────
 _token_cache: dict = {}
