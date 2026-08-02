@@ -66,7 +66,7 @@ function buildServer() {
           const reg = u.regiaocode || u.regiao_code;
           const cat = r.categoria;
           const fator    = fm[`${cat}|${reg}`] || 1.0;
-          const demanda  = Number(r.giromediodial || r.giroMedioDiario || 0) * fator;
+          const demanda  = Number(r.giromediodiario || r.giroMedioDiario || 0) * fator;
           const saldo    = Number(r.saldoatual || r.saldoAtual || 0);
           const lead     = Number(r.leadtimedias || r.leadTimeDias || 0);
           const cobertura = demanda > 0 ? Math.round((saldo / demanda) * 10) / 10 : 999;
@@ -112,7 +112,7 @@ function buildServer() {
         const itens = rows.map(r => {
           const reg = unidade.regiaocode || unidade.regiao_code;
           const fator   = fm[`${r.categoria}|${reg}`] || 1.0;
-          const demanda = Number(r.giromediodial||r.giroMedioDiario||0) * fator;
+          const demanda = Number(r.giromediodiario||r.giroMedioDiario||0) * fator;
           const saldo   = Number(r.saldoatual||r.saldoAtual||0);
           const lead    = Number(r.leadtimedias||r.leadTimeDias||0);
           const cob     = demanda > 0 ? Math.round((saldo / demanda) * 10) / 10 : 999;
