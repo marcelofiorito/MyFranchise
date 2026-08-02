@@ -19,6 +19,23 @@ const MES_REF = parseInt(process.env.MES_REFERENCIA || '7', 10);
 const ok  = (data) => ({ content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
 const err = (msg)  => ({ isError: true, content: [{ type: 'text', text: JSON.stringify({ error: msg }) }] });
 
+// HANA retorna nomes de coluna em UPPERCASE quando acessado sem modelo CDS
+// norm() normaliza para lowercase; normAll() processa arrays
+const norm    = (row) => {
+  if (!row || typeof row !== 'object') return row;
+  const out = {};
+  for (const [k, v] of Object.entries(row)) out[k.toLowerCase()] = v;
+  return out;
+};
+const normAll = (rows) => Array.isArray(rows) ? rows.map(norm) : (rows ? [norm(rows)] : []);
+
+// Wrapper: executa query e normaliza resultado
+const dbq = async (query) => {
+  const db = await cds.connect.to('db');
+  const res = await db.run(query);
+  return Array.isArray(res) ? normAll(res) : (res ? norm(res) : res);
+};
+
 // ── Factory: cria McpServer por request (evita "already connected") ──
 function buildServer() {
   const server = new McpServer({ name: 'runmyfranchise-mcp', version: '1.0.0' });
@@ -32,30 +49,33 @@ function buildServer() {
     },
     async ({ regiao_code, categoria, criticidade_max }) => {
       try {
-        const db = await cds.connect.to('db');
         let q = SELECT.from('myfranchise.Estoque_Unidade')
           .columns('unidade_ID','sku','nomeProduto','categoria','saldoAtual','giroMedioDiario','leadTimeDias');
         if (categoria) q = q.where({ categoria });
-        const rows  = await db.run(q);
-        const sazo  = await db.run(SELECT.from('myfranchise.Sazonalidade_Regional').where({ mes: MES_REF }));
-        const unids = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade','regiao_code'));
+        const rows  = await dbq(q);
+        const sazo  = await dbq(SELECT.from('myfranchise.Sazonalidade_Regional').where({ mes: MES_REF }));
+        const unids = await dbq(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade','regiao_code'));
         const fm = {}, um = {};
-        sazo.forEach(s  => { fm[`${s.categoria}|${s.regiao_code}`] = Number(s.fatorDemanda); });
-        unids.forEach(u => { um[u.ID] = u; });
+        sazo.forEach(s  => { fm[`${s.categoria}|${s.regiao_code}`] = Number(s.fatordamanda || s.fatordemanda || 1); });
+        unids.forEach(u => { um[u.id || u.ID] = u; });
 
         const resultado = [];
         for (const r of rows) {
-          const u = um[r.unidade_ID] || {};
-          if (regiao_code && u.regiao_code !== regiao_code) continue;
-          const fator    = fm[`${r.categoria}|${u.regiao_code}`] || 1.0;
-          const demanda  = Number(r.giroMedioDiario) * fator;
-          const cobertura = demanda > 0 ? Math.round((Number(r.saldoAtual) / demanda) * 10) / 10 : 999;
-          const crit = cobertura < r.leadTimeDias ? 1 : cobertura < r.leadTimeDias * 1.5 ? 2 : 3;
+          const u = um[r.unidade_id || r.unidade_ID] || {};
+          if (regiao_code && u.regiaocode !== regiao_code && u.regiao_code !== regiao_code) continue;
+          const reg = u.regiaocode || u.regiao_code;
+          const cat = r.categoria;
+          const fator    = fm[`${cat}|${reg}`] || 1.0;
+          const demanda  = Number(r.giromediodial || r.giroMedioDiario || 0) * fator;
+          const saldo    = Number(r.saldoatual || r.saldoAtual || 0);
+          const lead     = Number(r.leadtimedias || r.leadTimeDias || 0);
+          const cobertura = demanda > 0 ? Math.round((saldo / demanda) * 10) / 10 : 999;
+          const crit = cobertura < lead ? 1 : cobertura < lead * 1.5 ? 2 : 3;
           if (crit <= criticidade_max) resultado.push({
-            loja: u.nome || r.unidade_ID, cidade: u.cidade, regiao: u.regiao_code,
-            sku: r.sku, produto: r.nomeProduto, saldo: r.saldoAtual,
-            coberturaDias: cobertura, leadTime: r.leadTimeDias, fatorSazonal: fator,
-            criticidade: crit === 1 ? 'RUPTURA IMINENTE' : 'ATENÇÃO',
+            loja: u.nome, cidade: u.cidade, regiao: reg,
+            sku: r.sku, produto: r.nomeproduto || r.nomeProduto,
+            saldo, coberturaDias: cobertura, leadTime: lead, fatorSazonal: fator,
+            criticidade: crit === 1 ? 'CRITICAL STOCKOUT' : 'WARNING',
           });
         }
         resultado.sort((a, b) => a.coberturaDias - b.coberturaDias);
@@ -72,32 +92,35 @@ function buildServer() {
     },
     async ({ unidade_ID, sku }) => {
       try {
-        const db = await cds.connect.to('db');
         // Resolve nome/cidade → ID
         let resolvedId = unidade_ID;
         if (unidade_ID && !unidade_ID.match(/^u\d+$/i)) {
-          const unids = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
+          const unids = await dbq(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
           const search = unidade_ID.toLowerCase().replace('loja ', '').trim();
           const found = unids.find(u => u.nome?.toLowerCase().includes(search) || u.cidade?.toLowerCase().includes(search));
-          if (found) resolvedId = found.ID;
+          if (found) resolvedId = found.id || found.ID;
         }
         let q = SELECT.from('myfranchise.Estoque_Unidade').where({ unidade_ID: resolvedId });
         if (sku) q = q.where({ unidade_ID: resolvedId, sku });
-        const rows = await db.run(q);
+        const rows = await dbq(q);
         if (!rows.length) return err(`No items found for ${unidade_ID}`);
-        const unidade = await db.run(SELECT.one.from('myfranchise.Unidades').where({ ID: resolvedId }));
-        const sazo   = await db.run(SELECT.from('myfranchise.Sazonalidade_Regional').where({ mes: MES_REF }));
+        const unidades = await dbq(SELECT.from('myfranchise.Unidades').where({ ID: resolvedId }));
+        const unidade = unidades[0] || {};
+        const sazo   = await dbq(SELECT.from('myfranchise.Sazonalidade_Regional').where({ mes: MES_REF }));
         const fm = {};
-        sazo.forEach(s => { fm[`${s.categoria}|${s.regiao_code}`] = Number(s.fatorDemanda); });
+        sazo.forEach(s => { fm[`${s.categoria}|${s.regiaocode||s.regiao_code}`] = Number(s.fatordamanda||s.fatordemanda||1); });
         const itens = rows.map(r => {
-          const fator   = fm[`${r.categoria}|${unidade?.regiao_code}`] || 1.0;
-          const demanda = Number(r.giroMedioDiario) * fator;
-          const cob     = demanda > 0 ? Math.round((Number(r.saldoAtual) / demanda) * 10) / 10 : 999;
-          return { sku: r.sku, produto: r.nomeProduto, saldo: r.saldoAtual, fatorSazonal: fator,
-                   coberturaDias: cob, leadTime: r.leadTimeDias,
-                   status: cob < r.leadTimeDias ? 'CRITICAL STOCKOUT' : cob < r.leadTimeDias * 1.5 ? 'WARNING' : 'OK' };
+          const reg = unidade.regiaocode || unidade.regiao_code;
+          const fator   = fm[`${r.categoria}|${reg}`] || 1.0;
+          const demanda = Number(r.giromediodial||r.giroMedioDiario||0) * fator;
+          const saldo   = Number(r.saldoatual||r.saldoAtual||0);
+          const lead    = Number(r.leadtimedias||r.leadTimeDias||0);
+          const cob     = demanda > 0 ? Math.round((saldo / demanda) * 10) / 10 : 999;
+          return { sku: r.sku, produto: r.nomeproduto||r.nomeProduto, saldo, fatorSazonal: fator,
+                   coberturaDias: cob, leadTime: lead,
+                   status: cob < lead ? 'CRITICAL STOCKOUT' : cob < lead * 1.5 ? 'WARNING' : 'OK' };
         });
-        return ok({ loja: unidade?.nome, cidade: unidade?.cidade, regiao: unidade?.regiao_code, mes_referencia: MES_REF, itens });
+        return ok({ loja: unidade.nome, cidade: unidade.cidade, regiao: unidade.regiaocode||unidade.regiao_code, mes_referencia: MES_REF, itens });
       } catch (e) { LOG.error('get_cobertura_estoque', e); return err(e.message); }
     }
   );
@@ -111,9 +134,8 @@ function buildServer() {
     },
     async ({ unidade_ID, sku, status_code }) => {
       try {
-        const db = await cds.connect.to('db');
-        const unids = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
-        const um = {}; unids.forEach(u => { um[u.ID] = u; });
+        const unids = await dbq(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
+        const um = {}; unids.forEach(u => { um[u.id||u.ID] = u; });
 
         // Resolve nome/cidade → ID
         let resolvedId = unidade_ID;
@@ -123,21 +145,21 @@ function buildServer() {
             u.nome?.toLowerCase().includes(search) ||
             u.cidade?.toLowerCase().includes(search)
           );
-          if (found) resolvedId = found.ID;
+          if (found) resolvedId = found.id || found.ID;
         }
 
         const where = { status_code };
         if (resolvedId) where.unidade_ID = resolvedId;
         if (sku) where.sku = sku;
-        const pedidos = await db.run(SELECT.from('myfranchise.Pedidos_Reposicao').where(where));
+        const pedidos = await dbq(SELECT.from('myfranchise.Pedidos_Reposicao').where(where));
         return ok({ total: pedidos.length, status: status_code, pedidos: pedidos.map(p => ({
-          produto: p.nomeProduto,
-          loja: um[p.unidade_ID]?.nome || p.unidade_ID,
-          cidade: um[p.unidade_ID]?.cidade,
+          produto: p.nomeproduto || p.nomeProduto,
+          loja: um[p.unidade_id || p.unidade_ID]?.nome || p.unidade_id || p.unidade_ID,
+          cidade: um[p.unidade_id || p.unidade_ID]?.cidade,
           sku: p.sku,
-          qtdSugerida: p.qtdSugerida,
-          fornecedor: p.fornecedorSugerido,
-          prazoDesejado: p.prazoDesejado,
+          qtdSugerida: p.qtdsugerida || p.qtdSugerida,
+          fornecedor: p.fornecedorsugerido || p.fornecedorSugerido,
+          prazoDesejado: p.prazodesejado || p.prazoDesejado,
           status: p.status_code,
           justificativa: p.justificativa,
         }))});
@@ -154,24 +176,23 @@ function buildServer() {
     },
     async ({ unidade_ID, status_code, prioridade }) => {
       try {
-        const db = await cds.connect.to('db');
-        const unids = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
-        const um = {}; unids.forEach(u => { um[u.ID] = u; });
-        // Resolve nome → ID
+        const unids = await dbq(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
+        const um = {}; unids.forEach(u => { um[u.id||u.ID] = u; });
         let resolvedId = unidade_ID;
         if (unidade_ID && !unidade_ID.match(/^u\d+$/i)) {
           const search = unidade_ID.toLowerCase().replace('loja ', '').trim();
           const found = unids.find(u => u.nome?.toLowerCase().includes(search) || u.cidade?.toLowerCase().includes(search));
-          if (found) resolvedId = found.ID;
+          if (found) resolvedId = found.id || found.ID;
         }
         const where = { status_code };
         if (resolvedId) where.unidade_ID = resolvedId;
         if (prioridade) where.prioridade_code = prioridade;
-        const recs = await db.run(SELECT.from('myfranchise.Recomendacoes').where(where).orderBy('prioridade_code'));
+        const recs = await dbq(SELECT.from('myfranchise.Recomendacoes').where(where).orderBy('prioridade_code'));
         return ok({ total: recs.length, recomendacoes: recs.map(r => ({
-          id: r.ID, loja: um[r.unidade_ID]?.nome || r.unidade_ID, cidade: um[r.unidade_ID]?.cidade,
+          loja: um[r.unidade_id||r.unidade_ID]?.nome || r.unidade_id || r.unidade_ID,
+          cidade: um[r.unidade_id||r.unidade_ID]?.cidade,
           tipo: r.tipo_code, prioridade: r.prioridade_code, titulo: r.titulo,
-          descricao: r.descricao, status: r.status_code, geradaEm: r.dataGeracao,
+          descricao: r.descricao, status: r.status_code, geradaEm: r.datageracao || r.dataGeracao,
         }))});
       } catch (e) { LOG.error('get_recomendacoes', e); return err(e.message); }
     }
@@ -187,25 +208,28 @@ function buildServer() {
     },
     async ({ regiao_code, cluster_code, criticidade, top }) => {
       try {
-        const db   = await cds.connect.to('db');
-        const rows = await db.run(SELECT.from('myfranchise.Saude_Dashboard'));
+        const rows = await dbq(SELECT.from('myfranchise.Saude_Dashboard'));
         let f = rows;
-        if (regiao_code)  f = f.filter(r => r.regiao_code   === regiao_code);
-        if (cluster_code) f = f.filter(r => r.cluster_code  === cluster_code);
-        if (criticidade)  f = f.filter(r => r.scoreCriticality === criticidade);
-        f.sort((a, b) => a.scoreSaude - b.scoreSaude);
+        if (regiao_code)  f = f.filter(r => (r.regiao_code||r.regiaocode)   === regiao_code);
+        if (cluster_code) f = f.filter(r => (r.cluster_code||r.clustercode) === cluster_code);
+        const crit = (r) => Number(r.scorecriticality || r.scoreCriticality || 3);
+        if (criticidade)  f = f.filter(r => crit(r) === criticidade);
+        f.sort((a, b) => Number(a.scoresaude||a.scoreSaude||0) - Number(b.scoresaude||b.scoreSaude||0));
         const resumo = {
-          total: f.length,
-          critical:  rows.filter(r => r.scoreCriticality === 1).length,
-          warning:   rows.filter(r => r.scoreCriticality === 2).length,
-          healthy:   rows.filter(r => r.scoreCriticality === 3).length,
-          avgScore: rows.length ? Math.round(rows.reduce((s,r) => s + Number(r.scoreSaude||0), 0) / rows.length * 10) / 10 : 0,
+          total: rows.length,
+          critical: rows.filter(r => crit(r) === 1).length,
+          warning:  rows.filter(r => crit(r) === 2).length,
+          healthy:  rows.filter(r => crit(r) === 3).length,
+          avgScore: rows.length ? Math.round(rows.reduce((s,r) => s + Number(r.scoresaude||r.scoreSaude||0), 0) / rows.length * 10) / 10 : 0,
         };
         return ok({ network_summary: resumo, stores: f.slice(0, top).map(r => ({
-          store: r.nome, city: r.cidade, region: r.regiao_code, cluster: r.cluster_code,
-          score: r.scoreSaude, compliance: r.compliancePct, performance: r.performancePct,
-          highAlerts: r.qtdAlertasAlta,
-          status: r.scoreCriticality === 1 ? 'CRITICAL' : r.scoreCriticality === 2 ? 'WARNING' : 'HEALTHY',
+          store: r.nome, city: r.cidade,
+          region: r.regiao_code||r.regiaocode, cluster: r.cluster_code||r.clustercode,
+          score: r.scoresaude||r.scoreSaude,
+          compliance: r.compliancepct||r.compliancePct,
+          performance: r.performancepct||r.performancePct,
+          highAlerts: r.qtdalertasalta||r.qtdAlertasAlta,
+          status: crit(r) === 1 ? 'CRITICAL' : crit(r) === 2 ? 'WARNING' : 'HEALTHY',
         }))});
       } catch (e) { LOG.error('get_score_rede', e); return err(e.message); }
     }
@@ -267,25 +291,19 @@ function buildServer() {
     },
     async ({ unidade_ID, observacao }) => {
       try {
-        await cds.connect.to('db');
-
-        // Resolve nome/cidade → ID
         let resolvedId = unidade_ID;
         if (unidade_ID && !unidade_ID.match(/^u\d+$/i)) {
-          const unids = await SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade');
+          const unids = await dbq(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
           const search = unidade_ID.toLowerCase().replace('loja ', '').trim();
-          const found = unids.find(u =>
-            u.nome?.toLowerCase().includes(search) ||
-            u.cidade?.toLowerCase().includes(search)
-          );
-          if (found) resolvedId = found.ID;
+          const found = unids.find(u => u.nome?.toLowerCase().includes(search) || u.cidade?.toLowerCase().includes(search));
+          if (found) resolvedId = found.id || found.ID;
         }
 
         const where = resolvedId
           ? { status_code: 'PENDENTE', unidade_ID: resolvedId }
           : { status_code: 'PENDENTE' }
 
-        const pedidos = await SELECT.from('myfranchise.Pedidos_Reposicao').where(where)
+        const pedidos = await dbq(SELECT.from('myfranchise.Pedidos_Reposicao').where(where))
         if (!pedidos.length) {
           return ok({ aprovados: 0, mensagem: resolvedId
             ? `No pending orders for store ${unidade_ID}.`
@@ -322,13 +340,12 @@ function buildServer() {
     },
     async ({ pedido_id, qtd_aprovada, observacao }) => {
       try {
-        await cds.connect.to('db');
-        const rows = await SELECT.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id });
+        const rows = await dbq(SELECT.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id }));
         const pedido = rows[0];
         if (!pedido) return err(`Order not found: ${pedido_id}`);
-        // HANA pode retornar STATUS_CODE ou status_code dependendo do contexto
-        const statusVal = pedido.status_code || pedido.STATUS_CODE;
-        const qtdVal    = pedido.qtdSugerida || pedido.QTDSUGERIDA || 0;
+        LOG.info('aprovar_pedido keys:', Object.keys(pedido).join(','));
+        const statusVal = pedido.status_code;
+        const qtdVal    = Number(pedido.qtdsugerida || 0);
         if (statusVal !== 'PENDENTE') return err(`Order already has status: ${statusVal}`);
         const qtd = qtd_aprovada || qtdVal;
         await UPDATE('myfranchise.Pedidos_Reposicao').set({
@@ -348,11 +365,10 @@ function buildServer() {
     },
     async ({ pedido_id, motivo }) => {
       try {
-        await cds.connect.to('db');
-        const rows = await SELECT.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id });
+        const rows = await dbq(SELECT.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id }));
         const pedido = rows[0];
         if (!pedido) return err(`Order not found: ${pedido_id}`);
-        const statusVal = pedido.status_code || pedido.STATUS_CODE;
+        const statusVal = pedido.status_code;
         if (statusVal !== 'PENDENTE') return err(`Order already has status: ${statusVal}`);
         await UPDATE('myfranchise.Pedidos_Reposicao').set({
           status_code: 'RECUSADO',
