@@ -24,10 +24,10 @@ function buildServer() {
   const server = new McpServer({ name: 'runmyfranchise-mcp', version: '1.0.0' });
 
   server.tool('get_lojas_em_risco',
-    'Lista lojas com risco de ruptura de estoque, considerando sazonalidade regional (ex: Havaianas em julho no Nordeste têm demanda 1,8x maior que no Sul).',
+    'List stores at risk of stockout, considering regional seasonality (e.g. Havaianas in July in the Northeast have 1.8x higher demand than in the South). Use when asked about stockout risk, at-risk stores, or coverage days.',
     {
-      regiao_code:     z.enum(['N','NE','CO','SE','S']).optional(),
-      categoria:       z.string().optional(),
+      regiao_code:     z.enum(['N','NE','CO','SE','S']).optional().describe('Region filter'),
+      categoria:       z.string().optional().describe('Product category filter'),
       criticidade_max: z.number().int().min(1).max(2).default(2),
     },
     async ({ regiao_code, categoria, criticidade_max }) => {
@@ -65,19 +65,27 @@ function buildServer() {
   );
 
   server.tool('get_cobertura_estoque',
-    'Retorna cobertura de estoque em dias de um SKU numa loja, com sazonalidade regional.',
+    'Returns stock coverage in days for a store, with regional seasonality adjustment. Use when asked about stock coverage, inventory levels, or days of supply for a specific store.',
     {
-      unidade_ID: z.string(),
-      sku:        z.string().optional(),
+      unidade_ID: z.string().describe('Store ID (e.g. u147) OR store name/city (e.g. "Porto Alegre"). Will be resolved automatically.'),
+      sku:        z.string().optional().describe('Optional SKU filter'),
     },
     async ({ unidade_ID, sku }) => {
       try {
         const db = await cds.connect.to('db');
-        let q = SELECT.from('myfranchise.Estoque_Unidade').where({ unidade_ID });
-        if (sku) q = q.where({ unidade_ID, sku });
+        // Resolve nome/cidade → ID
+        let resolvedId = unidade_ID;
+        if (unidade_ID && !unidade_ID.match(/^u\d+$/i)) {
+          const unids = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
+          const search = unidade_ID.toLowerCase().replace('loja ', '').trim();
+          const found = unids.find(u => u.nome?.toLowerCase().includes(search) || u.cidade?.toLowerCase().includes(search));
+          if (found) resolvedId = found.ID;
+        }
+        let q = SELECT.from('myfranchise.Estoque_Unidade').where({ unidade_ID: resolvedId });
+        if (sku) q = q.where({ unidade_ID: resolvedId, sku });
         const rows = await db.run(q);
-        if (!rows.length) return err(`Nenhum item encontrado para ${unidade_ID}`);
-        const unidade = await db.run(SELECT.one.from('myfranchise.Unidades').where({ ID: unidade_ID }));
+        if (!rows.length) return err(`No items found for ${unidade_ID}`);
+        const unidade = await db.run(SELECT.one.from('myfranchise.Unidades').where({ ID: resolvedId }));
         const sazo   = await db.run(SELECT.from('myfranchise.Sazonalidade_Regional').where({ mes: MES_REF }));
         const fm = {};
         sazo.forEach(s => { fm[`${s.categoria}|${s.regiao_code}`] = Number(s.fatorDemanda); });
@@ -87,7 +95,7 @@ function buildServer() {
           const cob     = demanda > 0 ? Math.round((Number(r.saldoAtual) / demanda) * 10) / 10 : 999;
           return { sku: r.sku, produto: r.nomeProduto, saldo: r.saldoAtual, fatorSazonal: fator,
                    coberturaDias: cob, leadTime: r.leadTimeDias,
-                   status: cob < r.leadTimeDias ? 'RUPTURA IMINENTE' : cob < r.leadTimeDias * 1.5 ? 'ATENÇÃO' : 'OK' };
+                   status: cob < r.leadTimeDias ? 'CRITICAL STOCKOUT' : cob < r.leadTimeDias * 1.5 ? 'WARNING' : 'OK' };
         });
         return ok({ loja: unidade?.nome, cidade: unidade?.cidade, regiao: unidade?.regiao_code, mes_referencia: MES_REF, itens });
       } catch (e) { LOG.error('get_cobertura_estoque', e); return err(e.message); }
@@ -95,19 +103,31 @@ function buildServer() {
   );
 
   server.tool('get_pedidos_pendentes',
-    'Lista pedidos de reposição aguardando aprovação.',
+    'List replenishment orders (reposição) for a store. Can filter by store name (e.g. "Loja Porto Alegre", "Porto Alegre"), store ID (e.g. "u147"), or status. Use this when asked about pending, approved, or rejected replenishment orders.',
     {
-      unidade_ID:  z.string().optional(),
-      status_code: z.enum(['PENDENTE','APROVADO','RECUSADO','ENVIADO','RECEBIDO']).default('PENDENTE'),
+      unidade_ID:  z.string().optional().describe('Store ID (e.g. u147) OR store name/city (e.g. "Porto Alegre", "Loja Porto Alegre"). Will be resolved automatically.'),
+      status_code: z.enum(['PENDENTE','APROVADO','RECUSADO','ENVIADO','RECEBIDO']).default('PENDENTE').describe('Order status filter. Default: PENDENTE (awaiting approval).'),
     },
     async ({ unidade_ID, status_code }) => {
       try {
         const db = await cds.connect.to('db');
-        const where = { status_code };
-        if (unidade_ID) where.unidade_ID = unidade_ID;
-        const pedidos = await db.run(SELECT.from('myfranchise.Pedidos_Reposicao').where(where));
-        const unids   = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
+        const unids = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
         const um = {}; unids.forEach(u => { um[u.ID] = u; });
+
+        // Resolve nome/cidade → ID
+        let resolvedId = unidade_ID;
+        if (unidade_ID && !unidade_ID.match(/^u\d+$/i)) {
+          const search = unidade_ID.toLowerCase().replace('loja ', '').trim();
+          const found = unids.find(u =>
+            u.nome?.toLowerCase().includes(search) ||
+            u.cidade?.toLowerCase().includes(search)
+          );
+          if (found) resolvedId = found.ID;
+        }
+
+        const where = { status_code };
+        if (resolvedId) where.unidade_ID = resolvedId;
+        const pedidos = await db.run(SELECT.from('myfranchise.Pedidos_Reposicao').where(where));
         return ok({ total: pedidos.length, status: status_code, pedidos: pedidos.map(p => ({
           id: p.ID, loja: um[p.unidade_ID]?.nome || p.unidade_ID, cidade: um[p.unidade_ID]?.cidade,
           sku: p.sku, produto: p.nomeProduto, qtdSugerida: p.qtdSugerida,
@@ -119,21 +139,28 @@ function buildServer() {
   );
 
   server.tool('get_recomendacoes',
-    'Retorna recomendações geradas pelo gpt-4o para uma loja, com descrição completa.',
+    'Returns AI recommendations (generated by gpt-4o) for a store. Use when asked about AI recommendations, suggested actions, or improvement tips for a store.',
     {
-      unidade_ID:  z.string().optional(),
+      unidade_ID:  z.string().optional().describe('Store ID or name/city. Will be resolved automatically.'),
       status_code: z.enum(['NOVA','ACEITA','DESCARTADA']).default('NOVA'),
       prioridade:  z.enum(['ALTA','MEDIA','BAIXA']).optional(),
     },
     async ({ unidade_ID, status_code, prioridade }) => {
       try {
         const db = await cds.connect.to('db');
-        const where = { status_code };
-        if (unidade_ID) where.unidade_ID = unidade_ID;
-        if (prioridade) where.prioridade_code = prioridade;
-        const recs  = await db.run(SELECT.from('myfranchise.Recomendacoes').where(where).orderBy('prioridade_code'));
         const unids = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
         const um = {}; unids.forEach(u => { um[u.ID] = u; });
+        // Resolve nome → ID
+        let resolvedId = unidade_ID;
+        if (unidade_ID && !unidade_ID.match(/^u\d+$/i)) {
+          const search = unidade_ID.toLowerCase().replace('loja ', '').trim();
+          const found = unids.find(u => u.nome?.toLowerCase().includes(search) || u.cidade?.toLowerCase().includes(search));
+          if (found) resolvedId = found.ID;
+        }
+        const where = { status_code };
+        if (resolvedId) where.unidade_ID = resolvedId;
+        if (prioridade) where.prioridade_code = prioridade;
+        const recs = await db.run(SELECT.from('myfranchise.Recomendacoes').where(where).orderBy('prioridade_code'));
         return ok({ total: recs.length, recomendacoes: recs.map(r => ({
           id: r.ID, loja: um[r.unidade_ID]?.nome || r.unidade_ID, cidade: um[r.unidade_ID]?.cidade,
           tipo: r.tipo_code, prioridade: r.prioridade_code, titulo: r.titulo,
@@ -144,11 +171,11 @@ function buildServer() {
   );
 
   server.tool('get_score_rede',
-    'Retorna o score de saúde das lojas com filtros por região, cluster ou criticidade.',
+    'Returns the health score of stores in the franchise network. Use when asked about store health, network overview, critical stores, or scores by region/cluster.',
     {
       regiao_code:  z.enum(['N','NE','CO','SE','S']).optional(),
       cluster_code: z.string().optional(),
-      criticidade:  z.number().int().min(1).max(3).optional(),
+      criticidade:  z.number().int().min(1).max(3).optional().describe('1=critical, 2=warning, 3=healthy'),
       top:          z.number().int().min(1).max(50).default(10),
     },
     async ({ regiao_code, cluster_code, criticidade, top }) => {
@@ -162,26 +189,26 @@ function buildServer() {
         f.sort((a, b) => a.scoreSaude - b.scoreSaude);
         const resumo = {
           total: f.length,
-          criticas:  rows.filter(r => r.scoreCriticality === 1).length,
-          atencao:   rows.filter(r => r.scoreCriticality === 2).length,
-          saudaveis: rows.filter(r => r.scoreCriticality === 3).length,
-          scoreMedia: rows.length ? Math.round(rows.reduce((s,r) => s + Number(r.scoreSaude||0), 0) / rows.length * 10) / 10 : 0,
+          critical:  rows.filter(r => r.scoreCriticality === 1).length,
+          warning:   rows.filter(r => r.scoreCriticality === 2).length,
+          healthy:   rows.filter(r => r.scoreCriticality === 3).length,
+          avgScore: rows.length ? Math.round(rows.reduce((s,r) => s + Number(r.scoreSaude||0), 0) / rows.length * 10) / 10 : 0,
         };
-        return ok({ resumo_rede: resumo, lojas: f.slice(0, top).map(r => ({
-          loja: r.nome, cidade: r.cidade, regiao: r.regiao_code, cluster: r.cluster_code,
+        return ok({ network_summary: resumo, stores: f.slice(0, top).map(r => ({
+          store: r.nome, city: r.cidade, region: r.regiao_code, cluster: r.cluster_code,
           score: r.scoreSaude, compliance: r.compliancePct, performance: r.performancePct,
-          alertasAlta: r.qtdAlertasAlta,
-          criticidade: r.scoreCriticality === 1 ? 'CRÍTICO' : r.scoreCriticality === 2 ? 'ATENÇÃO' : 'SAUDÁVEL',
+          highAlerts: r.qtdAlertasAlta,
+          status: r.scoreCriticality === 1 ? 'CRITICAL' : r.scoreCriticality === 2 ? 'WARNING' : 'HEALTHY',
         }))});
       } catch (e) { LOG.error('get_score_rede', e); return err(e.message); }
     }
   );
 
   server.tool('acionar_reposicao',
-    'Aciona o Agente de Reposição para uma ou mais unidades: detecta ruptura, calcula quantidade com sazonalidade e cria pedidos PENDENTE para aprovação humana. Aceita uma unidade (unidade_ID) ou uma lista (unidades). Se nenhum dos dois for informado, aciona todas as unidades em ruptura automaticamente.',
+    'Trigger the AI Replenishment Agent for one or more stores. Detects stockouts, calculates quantities with seasonal adjustment, and creates PENDING orders for human approval. If no store is specified, automatically triggers all stores currently in stockout.',
     {
-      unidade_ID: z.string().optional().describe('ID de uma única unidade (ex: u147). Use quando o usuário menciona uma loja específica.'),
-      unidades: z.array(z.string()).optional().describe('Lista de IDs de unidades (ex: ["u147","u134"]). Use quando o usuário menciona múltiplas lojas.')
+      unidade_ID: z.string().optional().describe('Store ID or name/city (e.g. "Porto Alegre"). Use for a single store.'),
+      unidades: z.array(z.string()).optional().describe('List of store IDs or names for multiple stores.')
     },
     async ({ unidade_ID, unidades }) => {
       try {
@@ -226,28 +253,40 @@ function buildServer() {
   );
 
   server.tool('aprovar_pedidos',
-    'Aprova pedidos de reposição pendentes. Pode aprovar todos os pedidos PENDENTE de uma vez, ou apenas os de uma unidade específica. Usa a quantidade sugerida pelo agente como quantidade aprovada.',
+    'Approve pending replenishment orders. Can approve all pending orders in the network, or only for a specific store (by name or ID). Uses the agent-suggested quantity as approved quantity.',
     {
-      unidade_ID: z.string().optional().describe('ID de uma unidade específica (ex: u147). Se omitido, aprova todos os pedidos PENDENTE da rede.'),
-      observacao: z.string().optional().describe('Observação para registrar na aprovação.')
+      unidade_ID: z.string().optional().describe('Store ID (e.g. u147) OR store name/city (e.g. "Porto Alegre", "Loja Porto Alegre"). If omitted, approves ALL pending orders network-wide.'),
+      observacao: z.string().optional().describe('Optional approval note.')
     },
     async ({ unidade_ID, observacao }) => {
       try {
         await cds.connect.to('db');
         const { Pedidos_Reposicao } = cds.db.entities('myfranchise');
 
-        const filter = unidade_ID
-          ? { status_code: 'PENDENTE', unidade_ID }
+        // Resolve nome/cidade → ID
+        let resolvedId = unidade_ID;
+        if (unidade_ID && !unidade_ID.match(/^u\d+$/i)) {
+          const unids = await SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade');
+          const search = unidade_ID.toLowerCase().replace('loja ', '').trim();
+          const found = unids.find(u =>
+            u.nome?.toLowerCase().includes(search) ||
+            u.cidade?.toLowerCase().includes(search)
+          );
+          if (found) resolvedId = found.ID;
+        }
+
+        const filter = resolvedId
+          ? { status_code: 'PENDENTE', unidade_ID: resolvedId }
           : { status_code: 'PENDENTE' }
 
         const pedidos = await SELECT.from(Pedidos_Reposicao).where(filter)
         if (!pedidos.length) {
-          return ok({ aprovados: 0, mensagem: unidade_ID
-            ? `Nenhum pedido PENDENTE para a unidade ${unidade_ID}.`
-            : 'Nenhum pedido PENDENTE na rede no momento.' })
+          return ok({ aprovados: 0, mensagem: resolvedId
+            ? `No pending orders for store ${unidade_ID}.`
+            : 'No pending orders in the network at the moment.' })
         }
 
-        const obs = observacao || 'Aprovado via Joule'
+        const obs = observacao || 'Approved via Joule'
         let aprovados = 0
         for (const p of pedidos) {
           await UPDATE(Pedidos_Reposicao).set({
@@ -261,7 +300,7 @@ function buildServer() {
 
         return ok({
           aprovados,
-          mensagem: `${aprovados} pedido(s) aprovado(s)${unidade_ID ? ' para ' + unidade_ID : ' na rede'}. ${obs}`
+          mensagem: `${aprovados} order(s) approved${resolvedId ? ' for ' + (unidade_ID || resolvedId) : ' across the network'}. ${obs}`
         })
       } catch (e) { LOG.error('aprovar_pedidos', e); return err(e.message); }
     }
