@@ -85,11 +85,21 @@ if (!AdvancedEventMesh) {
             this.options.consumer.queueDescriptor.type = solace.QueueType.QUEUE
           }
           if (typeof this.startListening === 'function') {
-            // O startListening() retorna imediatamente se _listenToAll=false e subscribedTopics vazio.
-            // Força _listenToAll para garantir que o consumer sobe mesmo sem topics registrados via CDS.
             if (this._listenToAll && !this._listenToAll.value && !this.subscribedTopics?.size) {
               LOG.info('[AEM] Forçando _listenToAll=true para consumer subir')
               this._listenToAll.value = true
+            }
+            // Intercepta CONNECT_FAILED_ERROR para logar o motivo real
+            const origCreateConsumer = this.session.createMessageConsumer.bind(this.session)
+            this.session.createMessageConsumer = (opts) => {
+              const mc = origCreateConsumer(opts)
+              mc.on(solace.MessageConsumerEventName.CONNECT_FAILED_ERROR, (ev) => {
+                LOG.warn('[AEM] Consumer CONNECT_FAILED detail:', ev?.infoStr || JSON.stringify(ev))
+              })
+              mc.on(solace.MessageConsumerEventName.DOWN_ERROR, (ev) => {
+                LOG.warn('[AEM] Consumer DOWN_ERROR:', ev?.infoStr || JSON.stringify(ev))
+              })
+              return mc
             }
             this.startListening()
               .then(() => LOG.info('[AEM] ✅ Consumer connected — escutando fila'))
