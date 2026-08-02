@@ -80,15 +80,23 @@ if (!AdvancedEventMesh) {
           const vpn    = creds?.vpn
           const queue  = this.options?.queue?.name || 'myfranchise-srv/f3901205'
 
-          if (!smfUri || !vpn || !CONSUMER_PASS) {
-            LOG.warn('[AEM] Parâmetros insuficientes para consumer — eventos processados localmente')
+          if (!smfUri || !vpn) {
+            LOG.warn('[AEM] Parâmetros insuficientes para consumer session')
             return
           }
 
+          // Tenta OAuth primeiro (obrigatório para bind de fila no AEM gerenciado),
+          // com fallback para Basic Auth (consumer_user dedicado)
+          const consumerSessionProps = this.token
+            ? { url: smfUri, vpnName: vpn, accessToken: this.token,
+                authenticationScheme: solace.AuthenticationScheme.OAUTH2 }
+            : { url: smfUri, vpnName: vpn, userName: CONSUMER_USER, password: CONSUMER_PASS }
+
+          LOG.info('[AEM] Consumer session auth:', this.token ? 'OAuth2' : 'Basic Auth')
+
           try {
             const consumerSession = solace.SolclientFactory.createSession({
-              url: smfUri, vpnName: vpn,
-              userName: CONSUMER_USER, password: CONSUMER_PASS,
+              ...consumerSessionProps,
               connectTimeoutInMsecs: 10000, reconnectRetries: 3,
               reconnectRetryWaitInMsecs: 3000
             })
