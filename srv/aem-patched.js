@@ -78,21 +78,18 @@ if (!AdvancedEventMesh) {
           const creds = this.options.credentials
           const smfUri = creds?.endpoints?.['advanced-event-mesh']?.smf_uri
           const vpn    = creds?.vpn
-          const queue  = this.options?.queue?.name || 'myfranchise-srv/f3901205'
+          const queue  = this.options.credentials?.consumer_queue
+            || this.options?.queue?.name
+            || 'myfranchise-consumer'
 
           if (!smfUri || !vpn) {
             LOG.warn('[AEM] Parâmetros insuficientes para consumer session')
             return
           }
 
-          // Tenta OAuth primeiro (obrigatório para bind de fila no AEM gerenciado),
-          // com fallback para Basic Auth (consumer_user dedicado)
-          const consumerSessionProps = this.token
-            ? { url: smfUri, vpnName: vpn, accessToken: this.token,
-                authenticationScheme: solace.AuthenticationScheme.OAUTH2 }
-            : { url: smfUri, vpnName: vpn, userName: CONSUMER_USER, password: CONSUMER_PASS }
-
-          LOG.info('[AEM] Consumer session auth:', this.token ? 'OAuth2' : 'Basic Auth')
+          // Usa sempre Basic Auth para consumer — OAuth2 não funciona no SMF WebSocket do Developer 100
+          const consumerSessionProps = { url: smfUri, vpnName: vpn, userName: CONSUMER_USER, password: CONSUMER_PASS }
+          LOG.info('[AEM] Consumer session auth: Basic Auth, fila:', queue)
 
           try {
             const consumerSession = solace.SolclientFactory.createSession({
