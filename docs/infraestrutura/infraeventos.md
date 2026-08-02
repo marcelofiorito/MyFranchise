@@ -1,7 +1,7 @@
 # RunMyFranchise — Infraestrutura de Eventos
 
-**Status:** Em configuração — modo autônomo com SAP Advanced Event Mesh  
-**Data:** Agosto 2026  
+**Status:** Em configuração final — SAP Advanced Event Mesh (novo tenant dedicado)
+**Data:** Agosto 2026
 **Objetivo:** Tornar os agentes de IA completamente autônomos via eventos em tempo real
 
 ---
@@ -13,6 +13,7 @@ Modificação no HANA (Estoque, Pedidos, Desvios)
     │
     ▼ [CAP emite evento via @cap-js/advanced-event-mesh]
 SAP Advanced Event Mesh — MyFranchiseBroker (VPN: myfranchise)
+Tenant dedicado: subaccount Presales Build Platform
     │
     ├──► CAP consome evento → Agente de Reposição verifica cobertura
     │         └── Se ruptura → cria Pedido PENDENTE automaticamente
@@ -35,23 +36,33 @@ SAP Advanced Event Mesh — MyFranchiseBroker (VPN: myfranchise)
 
 ## 2. Recursos Criados
 
-### 2.1 SAP Advanced Event Mesh — MyFranchiseBroker
+### 2.1 SAP Advanced Event Mesh — MyFranchiseBroker (NOVO — tenant dedicado)
 
 | Campo | Valor |
 |---|---|
 | **Nome** | MyFranchiseBroker |
-| **Service ID** | `6tqai7d78ui` |
-| **Host** | `mr-connection-wkfjn3mjitx.messaging.solace.cloud` |
+| **Service ID** | `bflbp3sasmb` |
+| **Host (SMF)** | `wss://mr-connection-yfqw57w6xwk.messaging.solace.cloud:443` |
+| **Host (SEMP/HTTPS)** | `https://mr-connection-yfqw57w6xwk.messaging.solace.cloud:943` |
 | **VPN** | `myfranchise` |
 | **Datacenter** | `eks-us-east-1a` (AWS US East) |
-| **Tipo** | Developer (Broker 100) |
-| **Admin Username** | `myfranchise-admin` |
-| **SEMP Config URI** | `https://mr-connection-wkfjn3mjitx.messaging.solace.cloud:943/SEMP/v2/config` |
-| **WebSocket (SMF)** | `wss://mr-connection-wkfjn3mjitx.messaging.solace.cloud:443` |
+| **Tipo** | Developer — Broker 100 |
+| **Tenant Solace** | `qy37d5a9chh` (dedicado à subaccount Presales Build Platform) |
+| **SEMP Config URI** | `https://mr-connection-yfqw57w6xwk.messaging.solace.cloud:943/SEMP/v2/config` |
 
 > ⚠️ Senhas armazenadas apenas no CF como user-provided service — nunca no código.
 
-### 2.2 SAP Cloud Identity Services (IAS) — OAuth Client
+### 2.2 Subscription AEM na subaccount Presales Build Platform
+
+| Campo | Valor |
+|---|---|
+| **Subaccount** | `0a3bf8c0-f8f0-438e-8326-50322e696406` (Presales Build Platform) |
+| **App** | `integration-suite-advanced-event-mesh` |
+| **Plano subscription** | `default` (console web — Cluster Manager) |
+| **Plano service** | `broker-100` (quota: 1 de 2 brokers disponíveis) |
+| **URL Cluster Manager** | `https://us10.console.pubsub.em.services.cloud.sap` |
+
+### 2.3 SAP Cloud Identity Services (IAS) — OAuth Client
 
 | Campo | Valor |
 |---|---|
@@ -64,28 +75,33 @@ SAP Advanced Event Mesh — MyFranchiseBroker (VPN: myfranchise)
 
 > Client secret armazenado apenas como CF service key (`aem-ias-key`).
 
-### 2.3 CF User-Provided Services
+### 2.4 CF Services — subaccount sa-build-platform-org / DEV
 
-| Nome | Subaccount | Uso |
+| Nome CF | Tipo | Uso |
 |---|---|---|
-| `advanced-event-mesh` | `sa-build-platform-org / DEV` | Binding do CAP ao broker Solace |
-| `myfranchise-aem` | `sa-build-platform-org / DEV` | Credenciais AEM (backup) |
-| `myfranchise-eventmesh` | `sa-build-platform-org / DEV` | Credenciais Event Mesh clássico |
+| `advanced-event-mesh` | user-provided | Credenciais IAS+Solace para o plugin CAP |
+| `myfranchise-aem-managed` | managed (aem-validation-service-plan) | Validação do broker (obrigatório pelo plugin) |
+| `aem-ias-oauth` | managed (identity/application) | OAuth client IAS |
 
 ---
 
 ## 3. Configuração OAuth no Broker (SEMP API)
 
-### 3.1 O que foi configurado via SEMP
-
-Executado no broker `AMER-USEast-Broker-00` (para teste) e no `MyFranchiseBroker`:
+Executado no `MyFranchiseBroker` via SEMP:
 
 ```bash
-BROKER_HOST="mr-connection-wkfjn3mjitx.messaging.solace.cloud:943"
+BROKER_HOST="mr-connection-yfqw57w6xwk.messaging.solace.cloud:943"
 VPN="myfranchise"
 IAS_URL="https://a5adbsfjs.accounts.cloud.sap"
+IAS_CLIENT_ID="d39fea30-40d9-4bc7-94c5-02fca4bec365"
 
-# OAuth Profile criado
+# PASSO 1: Habilitar OAuth no VPN ✅
+curl -X PATCH "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}" \
+  -u "${MGMT_USER}:${MGMT_PASS}" \
+  -H "Content-Type: application/json" \
+  -d '{"authenticationOauthEnabled": true}'
+
+# PASSO 2: Criar OAuth Profile IAS ✅
 curl -X POST "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}/authenticationOauthProfiles" \
   -u "${MGMT_USER}:${MGMT_PASS}" \
   -H "Content-Type: application/json" \
@@ -101,31 +117,18 @@ curl -X POST "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}/authenticatio
     \"enabled\": true
   }"
 
-# Profile definido como default
+# PASSO 3: Definir como default ✅
 curl -X PATCH "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}" \
   -u "${MGMT_USER}:${MGMT_PASS}" \
   -H "Content-Type: application/json" \
   -d '{"authenticationOauthDefaultProfileName": "ias_runmyfranchise"}'
 
-# Client username criado para o CAP app
+# PASSO 4: Criar client username para CAP ✅
 curl -X POST "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}/clientUsernames" \
   -u "${MGMT_USER}:${MGMT_PASS}" \
   -H "Content-Type: application/json" \
   -d '{"clientUsername": "d39fea30-40d9-4bc7-94c5-02fca4bec365", "enabled": true}'
 ```
-
-### 3.2 Pendente — Habilitar OAuth no VPN
-
-O comando abaixo requer um usuário com permissão de admin de cluster (não o vpn-admin):
-
-```bash
-curl -X PATCH "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}" \
-  -u "${CLUSTER_ADMIN_USER}:${CLUSTER_ADMIN_PASS}" \
-  -H "Content-Type: application/json" \
-  -d '{"authenticationOauthEnabled": true}'
-```
-
-**Alternativa:** Habilitar via Cluster Manager UI → Open Broker Manager → VPN → Authentication → Enable OAuth.
 
 ---
 
@@ -136,7 +139,8 @@ curl -X PATCH "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}" \
 ```json
 {
   "dependencies": {
-    "@cap-js/advanced-event-mesh": "^1.0.0"
+    "@cap-js/advanced-event-mesh": "^1.0.0",
+    "@sap/xb-msg-amqp-v100": "^0.9.58"
   }
 }
 ```
@@ -159,9 +163,7 @@ curl -X PATCH "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}" \
 }
 ```
 
-> Em produção, o CAP encontra automaticamente o serviço `advanced-event-mesh` pelo nome do CF binding.
-
-### 4.3 User-provided service — formato esperado pelo plugin
+### 4.3 User-provided service `advanced-event-mesh` — formato
 
 ```json
 {
@@ -172,33 +174,40 @@ curl -X PATCH "https://${BROKER_HOST}/SEMP/v2/config/msgVpns/${VPN}" \
   },
   "endpoints": {
     "advanced-event-mesh": {
-      "uri": "wss://mr-connection-wkfjn3mjitx.messaging.solace.cloud:443",
-      "smf_uri": "wss://mr-connection-wkfjn3mjitx.messaging.solace.cloud:443"
+      "uri": "https://mr-connection-yfqw57w6xwk.messaging.solace.cloud:943",
+      "smf_uri": "wss://mr-connection-yfqw57w6xwk.messaging.solace.cloud:443"
     }
   },
   "vpn": "myfranchise"
 }
 ```
 
-### 4.4 mta.yaml — binding
+### 4.4 Como o plugin funciona (fluxo interno)
+
+O plugin `@cap-js/advanced-event-mesh` requer **dois bindings** simultaneamente:
+
+1. **`advanced-event-mesh`** (user-provided) → credenciais IAS + Solace SMF para conexão de mensagens
+2. **`aem-validation-service-plan`** (managed) → credenciais handshake para validar o broker via API SAP
+
+O plugin usa o binding `aem-validation-service-plan` para chamar `em-pubsub-broker.mesh.cf.us10.hana.ondemand.com/handshake` e confirmar que o broker é gerenciado pela SAP. Sem esse binding, a inicialização falha.
+
+### 4.5 mta.yaml — bindings do myfranchise-srv
 
 ```yaml
 - name: myfranchise-srv
   requires:
-    - name: advanced-event-mesh   # user-provided service
-```
-
-```yaml
-resources:
-  - name: advanced-event-mesh
-    type: org.cloudfoundry.user-provided-service
+    - name: myfranchise-db
+    - name: myfranchise-uaa
+    - name: myfranchise-aicore
+    - name: myfranchise-aem-managed    # aem-validation-service-plan (validação)
+    - name: advanced-event-mesh        # user-provided (credenciais IAS+Solace)
 ```
 
 ---
 
 ## 5. Código de Eventos (srv/events/messaging.js)
 
-### 5.1 Tópicos e handlers
+### 5.1 Tópicos e handlers autônomos
 
 ```javascript
 const TOPIC_ESTOQUE = 'myfranchise/runmyfranchise/v1/Estoque/Changed';
@@ -208,7 +217,6 @@ const TOPIC_DESVIO  = 'myfranchise/runmyfranchise/v1/Desvio/Detectado';
 // Handler autônomo — dispara agente se ruptura detectada
 messaging.on(TOPIC_ESTOQUE, async (msg) => {
   if (msg.data.status_code === 'RUPTURA' || msg.data.status_code === 'ATENCAO') {
-    // Verifica se já existe PENDENTE antes de criar
     const existing = await SELECT.one.from(Pedidos_Reposicao)
       .where({ unidade_ID: msg.data.unidade_ID, sku: msg.data.sku, status_code: 'PENDENTE' });
     if (!existing) {
@@ -229,34 +237,37 @@ messaging.on(TOPIC_ESTOQUE, async (msg) => {
 
 ---
 
-## 6. Status e Próximos Passos
+## 6. Limpeza — Tenant Antigo (SAP Presales BR USA)
 
-| Item | Status | Próximo passo |
+Recursos que podem ser deletados do tenant antigo (`gkd3k1qalf1`):
+
+| Recurso | ID | Ação |
 |---|---|---|
-| MyFranchiseBroker provisionado | ✅ | — |
-| OAuth Profile `ias_runmyfranchise` criado | ✅ | — |
-| Client username CAP criado | ✅ | — |
-| `authenticationOauthEnabled: true` no VPN | ✅ | Habilitado via Broker Manager UI |
-| User-provided service com credenciais IAS+Solace | ✅ | `advanced-event-mesh` atualizado |
-| Deploy CAP com `kind: advanced-event-mesh` | ❌ BLOQUEIO | Plugin exige instância gerenciada no mesmo espaço CF — não aceita user-provided service cross-subaccount |
-| Instância gerenciada AEM no espaço DEV | ⏳ | Provisionar `aem-validation-service` na subaccount `sa-build-platform-org` ou usar Service Manager para expor cross-subaccount |
-| Teste end-to-end: venda → ruptura → pedido automático | ⏳ | Após instância gerenciada disponível |
-| Integration Suite iFlow consumindo tópico | ⏳ | Fase 2 |
-| SBPA aprovação automática via evento | ⏳ | Fase 3 |
-
-### Detalhe do Bloqueio
-
-O plugin `@cap-js/advanced-event-mesh` v1.0.0 valida o VCAP_SERVICES buscando especificamente um binding com `label: "advanced-event-mesh"` e `plan: "aem-validation-service"` — uma instância **gerenciada** pelo SAP Service Manager. Um `user-provided service` não tem esses campos e é rejeitado com:
-
-```
-Error: Missing credentials for SAP Integration Suite, advanced event mesh with plan "aem-validation-service"
-```
-
-**Solução:** Provisionar o `aem-validation-service` diretamente na subaccount `sa-build-platform-org` (verificar entitlements) ou usar o SAP Service Manager para expor a instância da subaccount Presales BR USA como serviço gerenciado no espaço DEV.
+| MyFranchiseBroker (antigo) | `6tqai7d78ui` | ✅ Já deletado |
+| `myfranchise-aem-key` em `aem-validation-instance` | — | Pode deletar |
+| `aem-ias-oauth` (se não usado por outro projeto) | — | Pode deletar após validação |
 
 ---
 
-## 7. Referências
+## 7. Status e Próximos Passos
+
+| Item | Status | Observação |
+|---|---|---|
+| Tenant AEM dedicado provisionado | ✅ | Subaccount Presales Build Platform |
+| MyFranchiseBroker criado | ✅ | id: `bflbp3sasmb`, VPN: `myfranchise` |
+| OAuth habilitado no VPN | ✅ | Via SEMP |
+| OAuth Profile `ias_runmyfranchise` criado | ✅ | IAS como resource server |
+| Client username CAP criado | ✅ | `d39fea30-40d9-4bc7-94c5-02fca4bec365` |
+| User-provided service com `uri: https://` | ✅ | Corrigido de `wss://` para `https://` no `uri` |
+| Deploy CAP com `kind: advanced-event-mesh` | ⏳ | Restage em andamento |
+| Teste end-to-end: venda → ruptura → pedido automático | ⏳ | Após deploy bem-sucedido |
+| Limpeza recursos tenant antigo | ⏳ | Após validação |
+| Integration Suite iFlow consumindo tópico | ⏳ | Fase 2 |
+| SBPA aprovação automática via evento | ⏳ | Fase 3 |
+
+---
+
+## 8. Referências
 
 - [CAP Advanced Event Mesh Plugin](https://cap.cloud.sap/docs/guides/events/is-aem)
 - [Solace SEMP v2 API](https://docs.solace.com/API-Developer-Online-Ref-Documentation/swagger-ui/software-broker/config/index.html)
