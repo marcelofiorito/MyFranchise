@@ -85,55 +85,10 @@ module.exports = async (srv) => {
     }
   });
 
-  // Pedido/StatusChanged (APROVADO) → atualiza estoque automaticamente
+  // Pedido/StatusChanged → log (recebimento é acionado manualmente via simularRecebimento)
   messaging.on(TOPIC_PEDIDO, async (msg) => {
-    const { ID, unidade_ID, sku, status_code, qtdAprovada } = msg.data;
+    const { ID, unidade_ID, sku, status_code } = msg.data;
     LOG.info(`[AUTO] Pedido ${ID} (${unidade_ID}/${sku}) → ${status_code}`);
-
-    if (status_code !== 'APROVADO') return;
-
-    LOG.info(`[AUTO] Pedido APROVADO — atualizando estoque de ${unidade_ID}/${sku}`);
-    try {
-      const { Pedidos_Reposicao, Estoque_Unidade } = srv.entities;
-
-      // Pega qtd aprovada do evento ou do banco
-      let qtd = qtdAprovada;
-      if (!qtd) {
-        const pedido = await SELECT.one.from(Pedidos_Reposicao).where({ ID });
-        qtd = pedido?.qtdAprovada || pedido?.qtdSugerida || 0;
-      }
-      if (!qtd) {
-        LOG.warn(`[AUTO] Pedido ${ID} sem quantidade aprovada — ignorado`);
-        return;
-      }
-
-      const item = await SELECT.one.from(Estoque_Unidade).where({ unidade_ID, sku });
-      if (!item) {
-        LOG.warn(`[AUTO] Estoque não encontrado: ${unidade_ID}/${sku}`);
-        return;
-      }
-
-      const novoSaldo = (item.saldoAtual || 0) + qtd;
-      const min = item.estoqueMinimo || 0;
-      const novoStatus = novoSaldo >= min ? 'OK'
-        : novoSaldo >= min * 0.5 ? 'ATENCAO' : 'RUPTURA';
-
-      await UPDATE(Estoque_Unidade)
-        .set({ saldoAtual: novoSaldo, status_code: novoStatus })
-        .where({ ID: item.ID });
-
-      await UPDATE(Pedidos_Reposicao)
-        .set({ status_code: 'RECEBIDO', dataDecisao: new Date().toISOString() })
-        .where({ ID });
-
-      LOG.info(`[AUTO] ✅ Estoque ${unidade_ID}/${sku}: ${item.saldoAtual} → ${novoSaldo} (${item.status_code} → ${novoStatus})`);
-
-      // Emite confirmação — o handler vai logar a resolução se OK
-      await srv.emitEstoqueChanged({ ...item, saldoAtual: novoSaldo, status_code: novoStatus }).catch(() => {});
-      await srv.emitPedidoStatusChanged({ ID, unidade_ID, sku, status_code: 'RECEBIDO' }).catch(() => {});
-    } catch (e) {
-      LOG.error(`[AUTO] Erro ao atualizar estoque após aprovação:`, e.message);
-    }
   });
 
   // Desvio/Detectado → recalcula score
