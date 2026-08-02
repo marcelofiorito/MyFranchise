@@ -1,16 +1,10 @@
 'use strict';
-/**
- * srv/aem-patched.js
- *
- * Subclasse do @cap-js/advanced-event-mesh que torna o init() não-bloqueante.
- * O servidor HTTP sobe imediatamente; o AEM conecta em background.
- * Os emits ficam em fila local até o AEM estar pronto.
- */
 const cds = require('@sap/cds')
 
-let AdvancedEventMesh
+let AdvancedEventMesh, solace
 try {
   AdvancedEventMesh = require('@cap-js/advanced-event-mesh')
+  solace = require('solclientjs')
 } catch (e) {
   cds.log('messaging').warn('AEM plugin not found:', e.message)
 }
@@ -27,7 +21,19 @@ if (!AdvancedEventMesh) {
     }
 
     async init() {
-      const TIMEOUT_MS = 90000 // 90s timeout
+      const TIMEOUT_MS = 90000
+
+      // Inicializa o SolclientFactory imediatamente — não espera super.init()
+      // para que os emits não falhem com "SolclientFactory not initialized"
+      try {
+        solace.SolclientFactory.init(new solace.SolclientFactoryProperties({
+          logLevel: 5,
+          profile: solace.SolclientFactoryProfiles.version10
+        }))
+        cds.log('messaging').info('[AEM] SolclientFactory pre-initialized')
+      } catch(e) {
+        // Já inicializado — ok
+      }
 
       let timeoutHandle
       const timeoutPromise = new Promise((_, reject) => {
@@ -37,7 +43,7 @@ if (!AdvancedEventMesh) {
       })
 
       const _flush = (label) => {
-        if (this._aemReady) return // já foi feito
+        if (this._aemReady) return
         this._aemReady = true
         const pending = this._pendingEmits.splice(0)
         cds.log('messaging').info(`[AEM] ${label} — flushing ${pending.length} pending emits`)
@@ -57,16 +63,12 @@ if (!AdvancedEventMesh) {
         .catch(e => {
           clearTimeout(timeoutHandle)
           cds.log('messaging').warn(`[AEM] super.init() FAILED: ${e.message}`)
-          cds.log('messaging').warn(`[AEM] Stack: ${e.stack?.split('\n')[1]}`)
           _flush('AEM init failed — forcing ready')
         })
 
-      // Race com timeout — se o init demorar mais que 90s, força ready
-      timeoutPromise.catch(e => {
-        _flush(`AEM timeout — forcing ready`)
+      timeoutPromise.catch(() => {
+        _flush('AEM timeout — forcing ready')
       })
-
-      // Retorna imediatamente
     }
 
     async emit(topic, data) {
@@ -74,9 +76,9 @@ if (!AdvancedEventMesh) {
         cds.log('messaging').info(`[AEM] Emitting to broker: ${topic}`)
         return super.emit(topic, data)
       }
-      // AEM ainda não está pronto — guarda na fila local
       cds.log('messaging').info(`[AEM] Queuing emit (not ready yet): ${topic} — queue size: ${this._pendingEmits.length + 1}`)
       this._pendingEmits.push({ topic, data })
     }
   }
 }
+

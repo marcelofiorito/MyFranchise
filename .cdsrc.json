@@ -18,7 +18,10 @@
       "[production]": {
         "kind": "advanced-event-mesh",
         "impl": "./srv/aem-patched.js",
-        "vcap": { "name": "advanced-event-mesh" }
+        "vcap": { "name": "advanced-event-mesh" },
+        "session": {
+          "authenticationScheme": "AuthenticationScheme_oauth2"
+        }
       },
       "[development]": {
         "kind": "file-based-messaging"
