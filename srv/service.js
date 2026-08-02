@@ -196,6 +196,16 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
           await this.emitEstoqueChanged(item).catch(() => {});
       }
 
+      // Recalcula score das unidades afetadas — dashboard piora em tempo real
+      const { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade } = this.entities;
+      const unidadesAfetadas = [...new Set(vendas.map(v => {
+        const item = itemsDb.find(i => i.ID === v.ID);
+        return item?.unidade_ID;
+      }).filter(Boolean))];
+      for (const uid of unidadesAfetadas) {
+        await this._recalcularSaude(uid, { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade }).catch(() => {});
+      }
+
       const rupturas = vendas.filter(v => v.status_code === 'RUPTURA').length;
       const atencao  = vendas.filter(v => v.status_code === 'ATENCAO').length;
       return {
@@ -234,6 +244,14 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
           await this.emitPedidoStatusChanged({ ...p, status_code: 'RECEBIDO' }).catch(() => {});
         }
       }
+
+      // Recalcula score das unidades afetadas — dashboard melhora em tempo real
+      const { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade } = this.entities;
+      const unidadesAfetadas = [...new Set(pedidos.map(p => p.unidade_ID))];
+      for (const uid of unidadesAfetadas) {
+        await this._recalcularSaude(uid, { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade }).catch(() => {});
+      }
+
       return { pedidos: pedidos.length, mensagem: `${pedidos.length} pedidos RECEBIDOS e estoque reposto.` };
     });
 
@@ -376,7 +394,7 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
     const kpi = kpis[0];
 
     // Benchmark do cluster
-    const { Benchmark_Cluster } = this.entities;
+    const { Benchmark_Cluster, Estoque_Unidade } = this.entities;
     const benchmarks = await SELECT.from(Benchmark_Cluster)
       .where({ cluster_code: unidade.cluster_code })
       .orderBy('periodo desc')
@@ -404,8 +422,16 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
 
     const compliancePct = Math.max(0, 100 - (desviosAbertos.length * 12));
 
+    // Estoque: penaliza por rupturas e atenções na unidade
+    const itensEstoque = await SELECT.from(Estoque_Unidade).where({ unidade_ID: unidadeId });
+    const totalItens   = itensEstoque.length || 1;
+    const rupturas     = itensEstoque.filter(i => i.status_code === 'RUPTURA').length;
+    const atencoes     = itensEstoque.filter(i => i.status_code === 'ATENCAO').length;
+    const estoquePct   = Math.max(0, 100 - (rupturas * 25) - (atencoes * 10));
+
+    // Fórmula: performance 35% + compliance 35% + contrato 15% + estoque 15%
     const scoreSaude = parseFloat(
-      ((performancePct * 0.40) + (compliancePct * 0.40) + (scoreContrato * 0.20)).toFixed(2)
+      ((performancePct * 0.35) + (compliancePct * 0.35) + (scoreContrato * 0.15) + (estoquePct * 0.15)).toFixed(2)
     );
 
     const qtdAlertasAlta  = desviosAbertos.filter(d => d.severidade_code === 'ALTA').length;
