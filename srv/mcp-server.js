@@ -261,7 +261,6 @@ function buildServer() {
     async ({ unidade_ID, observacao }) => {
       try {
         await cds.connect.to('db');
-        const { Pedidos_Reposicao } = cds.db.entities('myfranchise');
 
         // Resolve nome/cidade → ID
         let resolvedId = unidade_ID;
@@ -275,11 +274,11 @@ function buildServer() {
           if (found) resolvedId = found.ID;
         }
 
-        const filter = resolvedId
+        const where = resolvedId
           ? { status_code: 'PENDENTE', unidade_ID: resolvedId }
           : { status_code: 'PENDENTE' }
 
-        const pedidos = await SELECT.from(Pedidos_Reposicao).where(filter)
+        const pedidos = await SELECT.from('myfranchise.Pedidos_Reposicao').where(where)
         if (!pedidos.length) {
           return ok({ aprovados: 0, mensagem: resolvedId
             ? `No pending orders for store ${unidade_ID}.`
@@ -289,7 +288,7 @@ function buildServer() {
         const obs = observacao || 'Approved via Joule'
         let aprovados = 0
         for (const p of pedidos) {
-          await UPDATE(Pedidos_Reposicao).set({
+          await UPDATE('myfranchise.Pedidos_Reposicao').set({
             status_code: 'APROVADO',
             qtdAprovada: p.qtdSugerida,
             aprovador: 'joule',
@@ -316,12 +315,11 @@ function buildServer() {
     async ({ pedido_id, qtd_aprovada, observacao }) => {
       try {
         await cds.connect.to('db');
-        const { Pedidos_Reposicao } = cds.db.entities('myfranchise');
-        const pedido = await SELECT.one.from(Pedidos_Reposicao).where({ ID: pedido_id });
+        const pedido = await SELECT.one.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id });
         if (!pedido) return err(`Order not found: ${pedido_id}`);
         if (pedido.status_code !== 'PENDENTE') return err(`Order already has status: ${pedido.status_code}`);
         const qtd = qtd_aprovada || pedido.qtdSugerida;
-        await UPDATE(Pedidos_Reposicao).set({
+        await UPDATE('myfranchise.Pedidos_Reposicao').set({
           status_code: 'APROVADO', qtdAprovada: qtd,
           aprovador: 'joule', dataDecisao: new Date().toISOString()
         }).where({ ID: pedido_id });
@@ -339,11 +337,10 @@ function buildServer() {
     async ({ pedido_id, motivo }) => {
       try {
         await cds.connect.to('db');
-        const { Pedidos_Reposicao } = cds.db.entities('myfranchise');
-        const pedido = await SELECT.one.from(Pedidos_Reposicao).where({ ID: pedido_id });
+        const pedido = await SELECT.one.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id });
         if (!pedido) return err(`Order not found: ${pedido_id}`);
         if (pedido.status_code !== 'PENDENTE') return err(`Order already has status: ${pedido.status_code}`);
-        await UPDATE(Pedidos_Reposicao).set({
+        await UPDATE('myfranchise.Pedidos_Reposicao').set({
           status_code: 'RECUSADO',
           aprovador: 'joule', dataDecisao: new Date().toISOString()
         }).where({ ID: pedido_id });
