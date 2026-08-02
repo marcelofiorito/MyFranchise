@@ -23,7 +23,7 @@ modules:
       - name: myfranchise-db
       - name: myfranchise-uaa
       - name: myfranchise-aicore
-      - name: advanced-event-mesh
+      - name: myfranchise-aem-managed
     provides:
       - name: srv-api
         properties:
@@ -280,7 +280,14 @@ resources:
                 HTML5.ForwardAuthToken: true
                 HTML5.DynamicDestination: true
 
-  # ------------- Advanced Event Mesh (Solace — cross-subaccount) ------
+  # ------------- AEM managed (Event Mesh — aem-validation-service) -----
+  - name: myfranchise-aem-managed
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: aem-validation-service
+      service-plan: aem-validation-service-plan
+
+  # ------------- Advanced Event Mesh user-provided (backup) -------------
   - name: advanced-event-mesh
     type: org.cloudfoundry.user-provided-service
 
