@@ -306,6 +306,52 @@ function buildServer() {
     }
   );
 
+  server.tool('aprovar_pedido',
+    'Approve a single replenishment order by its ID. Use get_pedidos_pendentes() first to get the order ID. Use aprovar_pedidos (plural) to approve all at once.',
+    {
+      pedido_id:    z.string().describe('Order UUID from get_pedidos_pendentes()'),
+      qtd_aprovada: z.number().int().optional().describe('Approved quantity (0 or omit = use suggested quantity)'),
+      observacao:   z.string().optional().describe('Optional approval note')
+    },
+    async ({ pedido_id, qtd_aprovada, observacao }) => {
+      try {
+        await cds.connect.to('db');
+        const { Pedidos_Reposicao } = cds.db.entities('myfranchise');
+        const pedido = await SELECT.one.from(Pedidos_Reposicao).where({ ID: pedido_id });
+        if (!pedido) return err(`Order not found: ${pedido_id}`);
+        if (pedido.status_code !== 'PENDENTE') return err(`Order already has status: ${pedido.status_code}`);
+        const qtd = qtd_aprovada || pedido.qtdSugerida;
+        await UPDATE(Pedidos_Reposicao).set({
+          status_code: 'APROVADO', qtdAprovada: qtd,
+          aprovador: 'joule', dataDecisao: new Date().toISOString()
+        }).where({ ID: pedido_id });
+        return ok({ sucesso: true, status: 'APROVADO', mensagem: observacao || `Approved — qty: ${qtd}` });
+      } catch (e) { LOG.error('aprovar_pedido', e); return err(e.message); }
+    }
+  );
+
+  server.tool('recusar_pedido',
+    'Reject a single replenishment order by its ID. Use get_pedidos_pendentes() first to get the order ID.',
+    {
+      pedido_id: z.string().describe('Order UUID from get_pedidos_pendentes()'),
+      motivo:    z.string().optional().describe('Reason for rejection')
+    },
+    async ({ pedido_id, motivo }) => {
+      try {
+        await cds.connect.to('db');
+        const { Pedidos_Reposicao } = cds.db.entities('myfranchise');
+        const pedido = await SELECT.one.from(Pedidos_Reposicao).where({ ID: pedido_id });
+        if (!pedido) return err(`Order not found: ${pedido_id}`);
+        if (pedido.status_code !== 'PENDENTE') return err(`Order already has status: ${pedido.status_code}`);
+        await UPDATE(Pedidos_Reposicao).set({
+          status_code: 'RECUSADO',
+          aprovador: 'joule', dataDecisao: new Date().toISOString()
+        }).where({ ID: pedido_id });
+        return ok({ sucesso: true, status: 'RECUSADO', mensagem: motivo || 'Order rejected via Joule' });
+      } catch (e) { LOG.error('recusar_pedido', e); return err(e.message); }
+    }
+  );
+
   return server;
 }
 
@@ -316,7 +362,8 @@ app.use(express.json());
 app.get('/health', (_req, res) => res.json({
   status: 'UP', service: 'runmyfranchise-mcp', version: '1.0.0',
   tools: ['get_lojas_em_risco','get_cobertura_estoque','get_pedidos_pendentes',
-          'get_recomendacoes','get_score_rede','acionar_reposicao'],
+          'get_recomendacoes','get_score_rede','acionar_reposicao',
+          'aprovar_pedidos','aprovar_pedido','recusar_pedido'],
   mes_referencia: MES_REF, timestamp: new Date().toISOString(),
 }));
 
