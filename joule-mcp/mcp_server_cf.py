@@ -499,7 +499,7 @@ if __name__ == "__main__":
             if request.url.path == "/health":
                 return JSONResponse({
                     "status": "UP", "service": "joule-myfranchise-mcp", "version": "1.0.0",
-                    "tools": ["get_lojas_em_risco","get_cobertura_estoque","get_pedidos_pendentes","get_recomendacoes","get_score_rede","aprovar_pedido","recusar_pedido"],
+                    "tools": ["get_lojas_em_risco","get_cobertura_estoque","get_pedidos_pendentes","get_recomendacoes","get_score_rede","aprovar_pedido","recusar_pedido","aprovar_pedidos","acionar_reposicao"],
                     "mes_referencia": MES_REF,
                 })
             return await call_next(request)
