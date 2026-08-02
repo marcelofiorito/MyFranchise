@@ -131,12 +131,15 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
     this.on('resetarDemo', async () => {
       const { Pedidos_Reposicao, Estoque_Unidade } = this.entities;
 
-      // 1. Volta todos os pedidos para PENDENTE
+      // 1. Remove pedidos criados pelo agente autônomo (serão recriados pelo loop)
+      await DELETE.from(Pedidos_Reposicao).where({ origem_code: 'AGENTE' });
+
+      // 2. Volta pedidos manuais (origem MANUAL/null) para PENDENTE
       await UPDATE(Pedidos_Reposicao)
         .set({ status_code: 'PENDENTE', qtdAprovada: null, aprovador: null, dataDecisao: null })
         .where(`status_code != 'PENDENTE'`);
 
-      // 2. Reverte saldos de estoque para os valores originais do seed
+      // 3. Reverte saldos de estoque para os valores originais do seed
       const seed = [
         { ID: 'es001', saldoAtual: 45,  status_code: 'ATENCAO' },
         { ID: 'es002', saldoAtual: 30,  status_code: 'RUPTURA' },
@@ -158,10 +161,18 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
           .where({ ID: item.ID });
       }
 
+      // 4. Emite eventos de ruptura para o broker — agente autônomo cria os pedidos
+      const rupturas = seed.filter(i => i.status_code === 'RUPTURA' || i.status_code === 'ATENCAO');
+      const itemsDb = await SELECT.from(Estoque_Unidade).where({ ID: { in: rupturas.map(r => r.ID) } });
+      for (const item of itemsDb) {
+        if (this.emitEstoqueChanged)
+          await this.emitEstoqueChanged(item).catch(() => {});
+      }
+
       const [{ CNT }] = await cds.run(
         `SELECT COUNT(*) CNT FROM MYFRANCHISE_PEDIDOS_REPOSICAO WHERE STATUS_CODE='PENDENTE'`
       );
-      return { pedidos: Number(CNT), mensagem: `Demo resetada — ${CNT} pedidos PENDENTE, estoque revertido ao estado inicial.` };
+      return { pedidos: Number(CNT), mensagem: `Demo resetada — estoque revertido, agente autônomo acionado para rupturas.` };
     });
 
     this.on('simularRecebimento', async () => {
