@@ -49,16 +49,34 @@ sap.ui.define([
     },
 
     onResetarDemo: function() {
-      MessageBox.confirm("Volta TODOS os pedidos para PENDENTE. Continuar?", {
-        title: "Resetar Demo",
+      MessageBox.confirm("Resets ALL stocks to healthy (OK) and removes all orders. Agents will be idle until 'Simulate Sales' is pressed. Continue?", {
+        title: "Reset Demo",
         onClose: (a) => {
           if (a !== MessageBox.Action.OK) return;
           const ctx = this._oModel().bindContext("/resetarDemo(...)");
           ctx.execute().then(() => {
             const r = ctx.getBoundContext().getObject();
-            const msg = r.mensagem || "Demo resetada!";
+            const msg = r.mensagem || "Demo reset!";
             MessageToast.show(msg);
             this._log("sap-icon://reset", msg);
+            this.onRefresh();
+          }).catch(e => MessageBox.error("Erro: " + (e.message || String(e))));
+        }
+      });
+    },
+
+    onSimularVendas: function() {
+      MessageBox.confirm("Simulates a sales rush that causes stockouts in 5 stores. The Replenishment Agent will be triggered automatically via AEM. Continue?", {
+        title: "Simulate Sales Rush",
+        onClose: (a) => {
+          if (a !== MessageBox.Action.OK) return;
+          MessageToast.show("Simulating sales... agents will be triggered via AEM broker");
+          const ctx = this._oModel().bindContext("/simularVendas(...)");
+          ctx.execute().then(() => {
+            const r = ctx.getBoundContext().getObject();
+            const msg = r.mensagem || "Sales simulated!";
+            MessageToast.show(msg);
+            this._log("sap-icon://sales-order", msg);
             this.onRefresh();
           }).catch(e => MessageBox.error("Erro: " + (e.message || String(e))));
         }

@@ -225,6 +225,48 @@ function buildServer() {
     }
   );
 
+  server.tool('aprovar_pedidos',
+    'Aprova pedidos de reposição pendentes. Pode aprovar todos os pedidos PENDENTE de uma vez, ou apenas os de uma unidade específica. Usa a quantidade sugerida pelo agente como quantidade aprovada.',
+    {
+      unidade_ID: z.string().optional().describe('ID de uma unidade específica (ex: u147). Se omitido, aprova todos os pedidos PENDENTE da rede.'),
+      observacao: z.string().optional().describe('Observação para registrar na aprovação.')
+    },
+    async ({ unidade_ID, observacao }) => {
+      try {
+        await cds.connect.to('db');
+        const { Pedidos_Reposicao } = cds.db.entities('myfranchise');
+
+        const filter = unidade_ID
+          ? { status_code: 'PENDENTE', unidade_ID }
+          : { status_code: 'PENDENTE' }
+
+        const pedidos = await SELECT.from(Pedidos_Reposicao).where(filter)
+        if (!pedidos.length) {
+          return ok({ aprovados: 0, mensagem: unidade_ID
+            ? `Nenhum pedido PENDENTE para a unidade ${unidade_ID}.`
+            : 'Nenhum pedido PENDENTE na rede no momento.' })
+        }
+
+        const obs = observacao || 'Aprovado via Joule'
+        let aprovados = 0
+        for (const p of pedidos) {
+          await UPDATE(Pedidos_Reposicao).set({
+            status_code: 'APROVADO',
+            qtdAprovada: p.qtdSugerida,
+            aprovador: 'joule',
+            dataDecisao: new Date().toISOString()
+          }).where({ ID: p.ID })
+          aprovados++
+        }
+
+        return ok({
+          aprovados,
+          mensagem: `${aprovados} pedido(s) aprovado(s)${unidade_ID ? ' para ' + unidade_ID : ' na rede'}. ${obs}`
+        })
+      } catch (e) { LOG.error('aprovar_pedidos', e); return err(e.message); }
+    }
+  );
+
   return server;
 }
 

@@ -131,48 +131,70 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
     this.on('resetarDemo', async () => {
       const { Pedidos_Reposicao, Estoque_Unidade } = this.entities;
 
-      // 1. Remove pedidos criados pelo agente autônomo (serão recriados pelo loop)
-      await DELETE.from(Pedidos_Reposicao).where({ origem_code: 'AGENTE' });
+      // 1. Remove todos os pedidos (agente recriará automaticamente)
+      await DELETE.from(Pedidos_Reposicao);
 
-      // 2. Volta pedidos manuais (origem MANUAL/null) para PENDENTE
-      await UPDATE(Pedidos_Reposicao)
-        .set({ status_code: 'PENDENTE', qtdAprovada: null, aprovador: null, dataDecisao: null })
-        .where(`status_code != 'PENDENTE'`);
-
-      // 3. Reverte saldos de estoque para os valores originais do seed
-      const seed = [
-        { ID: 'es001', saldoAtual: 45,  status_code: 'ATENCAO' },
-        { ID: 'es002', saldoAtual: 30,  status_code: 'RUPTURA' },
-        { ID: 'es003', saldoAtual: 20,  status_code: 'RUPTURA' },
-        { ID: 'es004', saldoAtual: 55,  status_code: 'ATENCAO' },
-        { ID: 'es005', saldoAtual: 80,  status_code: 'OK'      },
-        { ID: 'es006', saldoAtual: 70,  status_code: 'OK'      },
-        { ID: 'es007', saldoAtual: 38,  status_code: 'ATENCAO' },
-        { ID: 'es008', saldoAtual: 25,  status_code: 'RUPTURA' },
-        { ID: 'es009', saldoAtual: 18,  status_code: 'RUPTURA' },
-        { ID: 'es010', saldoAtual: 22,  status_code: 'RUPTURA' },
-        { ID: 'es011', saldoAtual: 60,  status_code: 'OK'      },
-        { ID: 'es012', saldoAtual: 90,  status_code: 'OK'      },
-        { ID: 'es013', saldoAtual: 50,  status_code: 'OK'      },
+      // 2. Seed inicial: TODOS os estoques em situação saudável (OK)
+      // Cenário de demo começa perfeito — simularVendas vai causar rupturas
+      const seedOK = [
+        { ID: 'es001', saldoAtual: 180, status_code: 'OK' },
+        { ID: 'es002', saldoAtual: 200, status_code: 'OK' },
+        { ID: 'es003', saldoAtual: 160, status_code: 'OK' },
+        { ID: 'es004', saldoAtual: 175, status_code: 'OK' },
+        { ID: 'es005', saldoAtual: 190, status_code: 'OK' },
+        { ID: 'es006', saldoAtual: 210, status_code: 'OK' },
+        { ID: 'es007', saldoAtual: 185, status_code: 'OK' },
+        { ID: 'es008', saldoAtual: 170, status_code: 'OK' },
+        { ID: 'es009', saldoAtual: 165, status_code: 'OK' },
+        { ID: 'es010', saldoAtual: 195, status_code: 'OK' },
+        { ID: 'es011', saldoAtual: 220, status_code: 'OK' },
+        { ID: 'es012', saldoAtual: 200, status_code: 'OK' },
+        { ID: 'es013', saldoAtual: 180, status_code: 'OK' },
       ];
-      for (const item of seed) {
+      for (const item of seedOK) {
         await UPDATE(Estoque_Unidade)
           .set({ saldoAtual: item.saldoAtual, status_code: item.status_code })
           .where({ ID: item.ID });
       }
 
-      // 4. Emite eventos de ruptura para o broker — agente autônomo cria os pedidos
-      const rupturas = seed.filter(i => i.status_code === 'RUPTURA' || i.status_code === 'ATENCAO');
-      const itemsDb = await SELECT.from(Estoque_Unidade).where({ ID: { in: rupturas.map(r => r.ID) } });
+      return { pedidos: 0, mensagem: `Demo resetada — todos os estoques saudáveis (OK). Use "Simular Vendas" para acionar o cenário.` };
+    });
+
+    this.on('simularVendas', async () => {
+      const { Estoque_Unidade } = this.entities;
+
+      // Simula uma enxurrada de vendas — reduz estoques abaixo do mínimo em algumas unidades
+      // Cada item tem estoqueMinimo definido no seed (~60). Baixamos para causar RUPTURA/ATENCAO.
+      const vendas = [
+        { ID: 'es001', saldoAtual: 45,  status_code: 'ATENCAO' }, // u178 - Loja Recife
+        { ID: 'es002', saldoAtual: 18,  status_code: 'RUPTURA' }, // u156 - Loja Salvador
+        { ID: 'es003', saldoAtual: 12,  status_code: 'RUPTURA' }, // u189 - Loja Natal
+        { ID: 'es004', saldoAtual: 52,  status_code: 'ATENCAO' }, // u289 - Loja Fortaleza
+        { ID: 'es007', saldoAtual: 35,  status_code: 'ATENCAO' }, // u178 - SKU-101
+        { ID: 'es008', saldoAtual: 20,  status_code: 'RUPTURA' }, // u156 - Bota Inverno
+        { ID: 'es009', saldoAtual: 15,  status_code: 'RUPTURA' }, // u147 - Porto Alegre
+        { ID: 'es010', saldoAtual: 18,  status_code: 'RUPTURA' }, // u134 - Floripa
+      ];
+
+      for (const item of vendas) {
+        await UPDATE(Estoque_Unidade)
+          .set({ saldoAtual: item.saldoAtual, status_code: item.status_code })
+          .where({ ID: item.ID });
+      }
+
+      // Emite eventos para o broker — agentes criam pedidos automaticamente
+      const itemsDb = await SELECT.from(Estoque_Unidade).where({ ID: { in: vendas.map(v => v.ID) } });
       for (const item of itemsDb) {
         if (this.emitEstoqueChanged)
           await this.emitEstoqueChanged(item).catch(() => {});
       }
 
-      const [{ CNT }] = await cds.run(
-        `SELECT COUNT(*) CNT FROM MYFRANCHISE_PEDIDOS_REPOSICAO WHERE STATUS_CODE='PENDENTE'`
-      );
-      return { pedidos: Number(CNT), mensagem: `Demo resetada — estoque revertido, agente autônomo acionado para rupturas.` };
+      const rupturas = vendas.filter(v => v.status_code === 'RUPTURA').length;
+      const atencao  = vendas.filter(v => v.status_code === 'ATENCAO').length;
+      return {
+        rupturas: rupturas + atencao,
+        mensagem: `${rupturas} rupturas e ${atencao} alertas simulados — Agente de Reposição acionado via AEM.`
+      };
     });
 
     this.on('simularRecebimento', async () => {

@@ -35,36 +35,54 @@
           </Panel>
 
           <!-- Ações da demo -->
-          <Panel headerText="Ações da Demo" expandable="false">
+          <Panel headerText="Demo Actions" expandable="false">
             <content>
               <VBox class="sapUiSmallMargin">
 
-                <Title text="Pedidos de Reposição" class="sapUiSmallMarginBottom" level="H4"/>
+                <Title text="Step 1 — Reset" class="sapUiSmallMarginBottom" level="H4"/>
                 <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
                   <Button
-                    text="🔄 Resetar Demo (volta todos a PENDENTE)"
+                    text="Reset Demo (all stocks healthy)"
                     type="Emphasized"
                     icon="sap-icon://reset"
                     press=".onResetarDemo"
                     class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+                </HBox>
+
+                <Title text="Step 2 — Simulate Sales Rush" class="sapUiSmallMarginBottom sapUiMediumMarginTop" level="H4"/>
+                <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
                   <Button
-                    text="📦 Simular Recebimento (repõe estoque)"
-                    type="Accept"
-                    icon="sap-icon://shipping-status"
-                    press=".onSimularRecebimento"
+                    text="Simulate Sales Rush (triggers AEM → Agent)"
+                    type="Critical"
+                    icon="sap-icon://sales-order"
+                    press=".onSimularVendas"
                     class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+                </HBox>
+
+                <Title text="Step 3 — Approve (via Joule or here)" class="sapUiSmallMarginBottom sapUiMediumMarginTop" level="H4"/>
+                <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
                   <Button
-                    text="🤖 Gerar Novos Pedidos com IA"
+                    text="Generate Replenishment Orders (AI)"
                     type="Default"
                     icon="sap-icon://ai"
                     press=".onGerarReposicaoTodas"
                     class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
                 </HBox>
 
-                <Title text="Recomendações da IA" class="sapUiSmallMarginBottom sapUiMediumMarginTop" level="H4"/>
+                <Title text="Step 4 — Simulate Receipt" class="sapUiSmallMarginBottom sapUiMediumMarginTop" level="H4"/>
+                <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+                  <Button
+                    text="Simulate Goods Receipt (restock + AEM)"
+                    type="Accept"
+                    icon="sap-icon://shipping-status"
+                    press=".onSimularRecebimento"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+                </HBox>
+
+                <Title text="AI Recommendations" class="sapUiSmallMarginBottom sapUiMediumMarginTop" level="H4"/>
                 <HBox wrap="Wrap">
                   <Button
-                    text="🤖 Gerar Recomendações (todas as lojas)"
+                    text="Generate AI Recommendations (all stores)"
                     type="Default"
                     icon="sap-icon://ai"
                     press=".onGerarRecomendacoesTodas"

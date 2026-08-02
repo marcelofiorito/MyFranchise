@@ -122,6 +122,12 @@ service FranqueadoraService {
     mensagem : String;
   };
 
+  // Simula uma enxurrada de vendas que leva os estoques a ruptura
+  action simularVendas() returns {
+    rupturas : Integer;
+    mensagem : String;
+  };
+
   // Simulação de recebimento — marca pedidos APROVADO como RECEBIDO e repõe o estoque
   action simularRecebimento() returns {
     pedidos  : Integer;
