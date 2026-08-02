@@ -13,6 +13,13 @@
       "[production]": {
         "vcap": { "label": "aicore" }
       }
+    },
+    "messaging": {
+      "kind": "file-based-messaging",
+      "[production]": {
+        "kind": "file-based-messaging"
+      },
+      "format": "cloudevents"
     }
   },
   "log": {

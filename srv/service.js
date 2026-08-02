@@ -2,6 +2,7 @@
 const cds = require('@sap/cds');
 const recommendations = require('./ai/recommendations-job');
 const reposicao = require('./ai/reposicao-agent');
+const setupMessaging = require('./events/messaging');
 
 module.exports = class FranqueadoraService extends cds.ApplicationService {
 
@@ -18,8 +19,12 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
     // CAP 10: after-handler recebe (results, req) — req.data contém os dados inseridos
     this.after('CREATE', VendaPraticada, async (results, req) => {
       const data = req.data;
-      await this._detectarDesvios(data, { ItensCatalogo, RegrasCompliance, Desvios });
+      const desvio = await this._detectarDesvios(data, { ItensCatalogo, RegrasCompliance, Desvios });
       await this._recalcularSaude(data.unidade_ID, { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade });
+      // Emite evento se desvio foi detectado
+      if (desvio && this.emitDesvioDetectado) {
+        await this.emitDesvioDetectado(desvio).catch(() => {});
+      }
     });
 
     // Recalcula score quando KPI é atualizado
@@ -175,11 +180,19 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
             await UPDATE(Estoque_Unidade)
               .set({ saldoAtual: novoSaldo, status_code: novoStatus })
               .where({ ID: item.ID });
+            // Emite evento de estoque alterado
+            if (this.emitEstoqueChanged) {
+              await this.emitEstoqueChanged({ ...item, saldoAtual: novoSaldo, status_code: novoStatus }).catch(() => {});
+            }
           }
         }
         await UPDATE(Pedidos_Reposicao)
           .set({ status_code: 'RECEBIDO', dataDecisao: new Date().toISOString() })
           .where({ ID: p.ID });
+        // Emite evento de pedido com status alterado
+        if (this.emitPedidoStatusChanged) {
+          await this.emitPedidoStatusChanged({ ...p, status_code: 'RECEBIDO' }).catch(() => {});
+        }
       }
       return { pedidos: pedidos.length, mensagem: `${pedidos.length} pedidos RECEBIDOS e estoque reposto.` };
     });
@@ -198,6 +211,8 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
         aprovador   : req.user?.id ?? 'gestor',
         dataDecisao : new Date().toISOString()
       }).where({ ID: pedido_ID });
+      if (this.emitPedidoStatusChanged)
+        await this.emitPedidoStatusChanged({ ...pedido, status_code: 'APROVADO' }).catch(() => {});
       return { status: 'APROVADO', mensagem: observacao ?? `Aprovado — qtd: ${qtdAprovada ?? pedido.qtdSugerida}` };
     });
 
@@ -213,8 +228,13 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
         dataDecisao  : new Date().toISOString(),
         justificativa: `[RECUSADO] ${motivo ?? ''}\n\n${pedido.justificativa ?? ''}`
       }).where({ ID: pedido_ID });
+      if (this.emitPedidoStatusChanged)
+        await this.emitPedidoStatusChanged({ ...pedido, status_code: 'RECUSADO' }).catch(() => {});
       return { status: 'RECUSADO', mensagem: motivo ?? 'Recusado pelo gestor' };
     });
+
+    // Inicia o módulo de eventos (Event Mesh) — modo autônomo
+    await setupMessaging(this);
 
     return super.init();
   }
