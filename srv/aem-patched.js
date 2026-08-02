@@ -68,16 +68,79 @@ if (!AdvancedEventMesh) {
       })
 
       const t0 = Date.now()
-      // Roda super.init() em background — servidor HTTP sobe imediatamente.
-      // Consumer (receive) não é ativado: no plano Developer 100, o consumer
-      // via SMF/Basic Auth retorna subcode 114 (CLIENT_BIND_MISSING_SUBSCRIPTION).
-      // O consumer futuro será SAP BPA + Integration Suite via iFlow.
-      // Os handlers autônomos (messaging.on) operam localmente no mesmo processo.
       super.init()
         .then(() => {
           clearTimeout(timeoutHandle)
           LOG.info(`[AEM] Connected in ${((Date.now()-t0)/1000).toFixed(1)}s`)
-          _flush('✅ AEM ready (Basic Auth) — publish ativo, consumer via BPA/IS')
+          _flush('✅ AEM ready (Basic Auth) — publish ativo')
+
+          // Sessão separada para consume — mesmos params mínimos do teste standalone
+          // (a sessão do plugin tem propriedades extras que causam subcode 114 no bind)
+          const creds = this.options.credentials
+          const smfUri = creds?.endpoints?.['advanced-event-mesh']?.smf_uri
+          const vpn    = creds?.vpn
+          const queue  = this.options?.queue?.name || 'myfranchise-srv/f3901205'
+
+          if (!smfUri || !vpn || !BASIC_PASS) {
+            LOG.warn('[AEM] Parâmetros insuficientes para consumer — eventos processados localmente')
+            return
+          }
+
+          try {
+            const consumerSession = solace.SolclientFactory.createSession({
+              url: smfUri, vpnName: vpn,
+              userName: BASIC_USER, password: BASIC_PASS,
+              connectTimeoutInMsecs: 10000, reconnectRetries: 3,
+              reconnectRetryWaitInMsecs: 3000
+            })
+
+            consumerSession.on(solace.SessionEventCode.UP_NOTICE, () => {
+              LOG.info('[AEM] Consumer session UP — conectando à fila: ' + queue)
+              const consumer = consumerSession.createMessageConsumer({
+                queueDescriptor: { name: queue, type: solace.QueueType.QUEUE },
+                acknowledgeMode: solace.MessageConsumerAcknowledgeMode.CLIENT,
+                reconnectAttempts: 3
+              })
+              consumer.on(solace.MessageConsumerEventName.UP, () => {
+                LOG.info('[AEM] ✅ Consumer conectado — escutando fila: ' + queue)
+              })
+              consumer.on(solace.MessageConsumerEventName.CONNECT_FAILED_ERROR, ev => {
+                LOG.warn('[AEM] Consumer CONNECT_FAILED subcode:', ev?.subcode, ev?.infoStr)
+              })
+              consumer.on(solace.MessageConsumerEventName.DOWN_ERROR, ev => {
+                LOG.warn('[AEM] Consumer DOWN_ERROR — tentando reconectar...', ev?.infoStr)
+              })
+              consumer.on(solace.MessageConsumerEventName.MESSAGE, async (solaceMsg) => {
+                const event = solaceMsg.getDestination().getName()
+                LOG.info('[AEM] Received:', event)
+                try {
+                  const raw = solaceMsg.getBinaryAttachment()?.toString?.() || ''
+                  const parsed = JSON.parse(raw)
+                  const data    = parsed.data !== undefined ? parsed.data : parsed
+                  const headers = parsed.data !== undefined
+                    ? Object.fromEntries(Object.entries(parsed).filter(([k]) => k !== 'data'))
+                    : {}
+                  await this.tx({ user: cds.User.privileged }, tx => tx.emit({ event, data, headers }))
+                  solaceMsg.acknowledge()
+                } catch (e) {
+                  LOG.error('[AEM] Erro ao processar mensagem:', e.message)
+                  solaceMsg.acknowledge()
+                }
+              })
+              consumer.connect()
+            })
+
+            consumerSession.on(solace.SessionEventCode.CONNECT_FAILED_ERROR, ev => {
+              LOG.warn('[AEM] Consumer session FAILED:', ev?.infoStr)
+            })
+            consumerSession.on(solace.SessionEventCode.DISCONNECTED, () => {
+              LOG.warn('[AEM] Consumer session desconectada')
+            })
+
+            consumerSession.connect()
+          } catch (e) {
+            LOG.warn('[AEM] Erro ao criar consumer session:', e.message)
+          }
         })
         .catch(err => {
           clearTimeout(timeoutHandle)
