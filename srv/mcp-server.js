@@ -103,12 +103,13 @@ function buildServer() {
   );
 
   server.tool('get_pedidos_pendentes',
-    'List replenishment orders (reposição) for a store. Can filter by store name (e.g. "Loja Porto Alegre", "Porto Alegre"), store ID (e.g. "u147"), or status. Use this when asked about pending, approved, or rejected replenishment orders.',
+    'List replenishment orders (reposição) for a store. Can filter by store name (e.g. "Loja Porto Alegre", "Porto Alegre"), store ID (e.g. "u147"), SKU (e.g. "SKU-200"), or status. Use this when asked about pending, approved, or rejected replenishment orders, or when verifying if a specific SKU has an order.',
     {
       unidade_ID:  z.string().optional().describe('Store ID (e.g. u147) OR store name/city (e.g. "Porto Alegre", "Loja Porto Alegre"). Will be resolved automatically.'),
+      sku:         z.string().optional().describe('SKU code to filter by (e.g. "SKU-200"). Use when the user mentions a specific product code.'),
       status_code: z.enum(['PENDENTE','APROVADO','RECUSADO','ENVIADO','RECEBIDO']).default('PENDENTE').describe('Order status filter. Default: PENDENTE (awaiting approval).'),
     },
-    async ({ unidade_ID, status_code }) => {
+    async ({ unidade_ID, sku, status_code }) => {
       try {
         const db = await cds.connect.to('db');
         const unids = await db.run(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
@@ -127,6 +128,7 @@ function buildServer() {
 
         const where = { status_code };
         if (resolvedId) where.unidade_ID = resolvedId;
+        if (sku) where.sku = sku;
         const pedidos = await db.run(SELECT.from('myfranchise.Pedidos_Reposicao').where(where));
         return ok({ total: pedidos.length, status: status_code, pedidos: pedidos.map(p => ({
           produto: p.nomeProduto,
@@ -138,7 +140,6 @@ function buildServer() {
           prazoDesejado: p.prazoDesejado,
           status: p.status_code,
           justificativa: p.justificativa,
-          order_id: p.ID,
         }))});
       } catch (e) { LOG.error('get_pedidos_pendentes', e); return err(e.message); }
     }
