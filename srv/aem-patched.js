@@ -81,29 +81,44 @@ if (!AdvancedEventMesh) {
           _flush('✅ AEM ready (Basic Auth)')
           // Consumer nunca subiu via cds.once('listening') — aciona diretamente.
           // Solace SDK exige QueueType enum, não string — converte antes de chamar.
-          if (this.options?.consumer?.queueDescriptor?.type === 'Queue') {
-            this.options.consumer.queueDescriptor.type = solace.QueueType.QUEUE
-          }
-          if (typeof this.startListening === 'function') {
-            if (this._listenToAll && !this._listenToAll.value && !this.subscribedTopics?.size) {
-              LOG.info('[AEM] Forçando _listenToAll=true para consumer subir')
-              this._listenToAll.value = true
-            }
-            // Intercepta CONNECT_FAILED_ERROR para logar o motivo real
-            const origCreateConsumer = this.session.createMessageConsumer.bind(this.session)
-            this.session.createMessageConsumer = (opts) => {
-              const mc = origCreateConsumer(opts)
-              mc.on(solace.MessageConsumerEventName.CONNECT_FAILED_ERROR, (ev) => {
-                LOG.warn('[AEM] Consumer CONNECT_FAILED detail:', ev?.infoStr || JSON.stringify(ev))
-              })
-              mc.on(solace.MessageConsumerEventName.DOWN_ERROR, (ev) => {
-                LOG.warn('[AEM] Consumer DOWN_ERROR:', ev?.infoStr || JSON.stringify(ev))
-              })
-              return mc
-            }
-            this.startListening()
-              .then(() => LOG.info('[AEM] ✅ Consumer connected — escutando fila'))
-              .catch(e => LOG.warn('[AEM] startListening failed:', e.message))
+          // Não usa startListening() do plugin — cria consumer diretamente (race condition + QueueType bug)
+          try {
+            const QUEUE = this.options?.queue?.name || 'myfranchise-srv/f3901205'
+            const consumer = this.session.createMessageConsumer({
+              queueDescriptor: { name: QUEUE, type: solace.QueueType.QUEUE },
+              acknowledgeMode: solace.MessageConsumerAcknowledgeMode.CLIENT,
+              reconnectAttempts: 0
+            })
+            consumer.on(solace.MessageConsumerEventName.UP, () => {
+              LOG.info('[AEM] ✅ Consumer connected — escutando fila: ' + QUEUE)
+            })
+            consumer.on(solace.MessageConsumerEventName.CONNECT_FAILED_ERROR, ev => {
+              LOG.warn('[AEM] Consumer CONNECT_FAILED:', ev?.infoStr, 'subcode:', ev?.subcode)
+            })
+            consumer.on(solace.MessageConsumerEventName.MESSAGE, async (solaceMsg) => {
+              const event = solaceMsg.getDestination().getName()
+              LOG.info('[AEM] Received:', event)
+              let payload
+              if (solaceMsg.getType() === solace.MessageType.TEXT) {
+                payload = solaceMsg.getSdtContainer().getValue()
+              } else {
+                payload = solaceMsg.getBinaryAttachment()
+              }
+              const raw = payload?.toString ? payload.toString() : String(payload)
+              try {
+                const parsed = JSON.parse(raw)
+                const data = parsed.data !== undefined ? parsed.data : parsed
+                const headers = parsed.data !== undefined ? { ...parsed, data: undefined } : {}
+                await this.tx({ user: cds.User.privileged }, tx => tx.emit({ event, data, headers }))
+                solaceMsg.acknowledge()
+              } catch (e) {
+                LOG.error('[AEM] Erro ao processar mensagem:', e.message)
+                solaceMsg.acknowledge()
+              }
+            })
+            consumer.connect()
+          } catch (e) {
+            LOG.warn('[AEM] Erro ao criar consumer:', e.message)
           }
         })
         .catch(err => {
