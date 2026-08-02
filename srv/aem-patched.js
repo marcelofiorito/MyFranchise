@@ -51,11 +51,13 @@ if (!AdvancedEventMesh) {
       super.init()
         .then(() => {
           clearTimeout(timeoutHandle)
+          cds.log('messaging').info('[AEM] super.init() completed successfully')
           _flush('✅ AEM connected')
         })
         .catch(e => {
           clearTimeout(timeoutHandle)
-          cds.log('messaging').warn(`[AEM] init failed: ${e.message}`)
+          cds.log('messaging').warn(`[AEM] super.init() FAILED: ${e.message}`)
+          cds.log('messaging').warn(`[AEM] Stack: ${e.stack?.split('\n')[1]}`)
           _flush('AEM init failed — forcing ready')
         })
 
