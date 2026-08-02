@@ -37,7 +37,10 @@
   },
   "log": {
     "levels": {
-      "cds": "warn"
+      "cds": "warn",
+      "messaging": "info",
+      "ai-reposicao": "info",
+      "ai-recommendations": "info"
     }
   }
 }
