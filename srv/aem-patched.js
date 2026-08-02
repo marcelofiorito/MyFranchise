@@ -23,11 +23,10 @@ if (!AdvancedEventMesh) {
     async init() {
       const LOG = cds.log('messaging')
       const TIMEOUT_MS = 180000
-      const BASIC_USER = this.options.credentials?.basic_user
-        || process.env.AEM_BASIC_USER
-        || 'solace-cloud-client'
-      const BASIC_PASS = this.options.credentials?.basic_pass
-        || process.env.AEM_BASIC_PASS
+      const BASIC_USER    = this.options.credentials?.basic_user    || process.env.AEM_BASIC_USER    || 'solace-cloud-client'
+      const BASIC_PASS    = this.options.credentials?.basic_pass    || process.env.AEM_BASIC_PASS
+      const CONSUMER_USER = this.options.credentials?.consumer_user || process.env.AEM_CONSUMER_USER || BASIC_USER
+      const CONSUMER_PASS = this.options.credentials?.consumer_pass || process.env.AEM_CONSUMER_PASS || BASIC_PASS
 
       // Intercepta createSession para trocar OAuth por Basic Auth.
       // Developer 100 só aceita Basic Auth no SMF WebSocket.
@@ -81,7 +80,7 @@ if (!AdvancedEventMesh) {
           const vpn    = creds?.vpn
           const queue  = this.options?.queue?.name || 'myfranchise-srv/f3901205'
 
-          if (!smfUri || !vpn || !BASIC_PASS) {
+          if (!smfUri || !vpn || !CONSUMER_PASS) {
             LOG.warn('[AEM] Parâmetros insuficientes para consumer — eventos processados localmente')
             return
           }
@@ -89,7 +88,7 @@ if (!AdvancedEventMesh) {
           try {
             const consumerSession = solace.SolclientFactory.createSession({
               url: smfUri, vpnName: vpn,
-              userName: BASIC_USER, password: BASIC_PASS,
+              userName: CONSUMER_USER, password: CONSUMER_PASS,
               connectTimeoutInMsecs: 10000, reconnectRetries: 3,
               reconnectRetryWaitInMsecs: 3000
             })
