@@ -15,8 +15,12 @@
       }
     },
     "messaging": {
-      "kind": "file-based-messaging",
       "[production]": {
+        "kind": "advanced-event-mesh",
+        "impl": "./srv/aem-patched.js",
+        "vcap": { "name": "advanced-event-mesh" }
+      },
+      "[development]": {
         "kind": "file-based-messaging"
       },
       "format": "cloudevents"
