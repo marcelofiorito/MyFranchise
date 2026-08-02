@@ -121,9 +121,8 @@ if (!AdvancedEventMesh) {
                   const raw = solaceMsg.getBinaryAttachment()?.toString?.() || ''
                   const parsed = JSON.parse(raw)
                   const data = parsed.data !== undefined ? parsed.data : parsed
-                  // Despacha para os handlers messaging.on(topic) — "this" é o próprio serviço AEM
-                  const srv = this
-                  await srv.tx({ user: cds.User.privileged }, tx => tx.emit(event, data))
+                  // Usa handle() em vez de emit() para não republicar no broker
+                  await this.handle({ event, data, inbound: true })
                   solaceMsg.acknowledge()
                 } catch (e) {
                   LOG.error('[AEM] Erro ao processar mensagem:', e.message)
