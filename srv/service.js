@@ -157,7 +157,14 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
           .where({ ID: item.ID });
       }
 
-      return { pedidos: 0, mensagem: `Demo resetada — todos os estoques saudáveis (OK). Use "Simular Vendas" para acionar o cenário.` };
+      // 3. Recalcula score de saúde para todas as unidades ativas
+      const { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade } = this.entities;
+      const unidades = await SELECT.from(Unidades).where({ status_code: 'ATIVA' });
+      for (const u of unidades) {
+        await this._recalcularSaude(u.ID, { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade }).catch(() => {});
+      }
+
+      return { pedidos: 0, mensagem: `Demo resetada — todos os estoques saudáveis (OK), scores recalculados. Use "Simulate Sales Rush" para acionar o cenário.` };
     });
 
     this.on('simularVendas', async () => {
