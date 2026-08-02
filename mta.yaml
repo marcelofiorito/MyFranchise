@@ -19,9 +19,6 @@ modules:
   - name: myfranchise-srv
     type: nodejs
     path: gen/srv
-    parameters:
-      health-check-type: process
-      health-check-timeout: 180
     requires:
       - name: myfranchise-db
       - name: myfranchise-uaa

@@ -233,8 +233,8 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       return { status: 'RECUSADO', mensagem: motivo ?? 'Recusado pelo gestor' };
     });
 
-    // Inicia o módulo de eventos (Event Mesh) — modo autônomo
-    await setupMessaging(this);
+    // Inicia o módulo de eventos de forma não-bloqueante para não atrasar o startup
+    setupMessaging(this).catch(e => cds.log('messaging').warn('Event Mesh init deferred:', e.message));
 
     return super.init();
   }

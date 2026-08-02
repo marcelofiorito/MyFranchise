@@ -15,11 +15,8 @@
       }
     },
     "messaging": {
+      "kind": "file-based-messaging",
       "[production]": {
-        "kind": "advanced-event-mesh",
-        "vcap": { "name": "advanced-event-mesh" }
-      },
-      "[development]": {
         "kind": "file-based-messaging"
       },
       "format": "cloudevents"
