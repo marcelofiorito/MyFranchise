@@ -79,7 +79,11 @@ if (!AdvancedEventMesh) {
           clearTimeout(timeoutHandle)
           LOG.info(`[AEM] Connected in ${((Date.now()-t0)/1000).toFixed(1)}s`)
           _flush('✅ AEM ready (Basic Auth)')
-          // Consumer nunca subiu via cds.once('listening') — aciona diretamente
+          // Consumer nunca subiu via cds.once('listening') — aciona diretamente.
+          // Solace SDK exige QueueType enum, não string — converte antes de chamar.
+          if (this.options?.consumer?.queueDescriptor?.type === 'Queue') {
+            this.options.consumer.queueDescriptor.type = solace.QueueType.QUEUE
+          }
           if (typeof this.startListening === 'function') {
             this.startListening()
               .then(() => LOG.info('[AEM] ✅ Consumer connected — escutando fila'))
