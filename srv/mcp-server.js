@@ -178,20 +178,49 @@ function buildServer() {
   );
 
   server.tool('acionar_reposicao',
-    'Aciona o Agente de Reposição: detecta ruptura, calcula quantidade com sazonalidade e cria pedidos PENDENTE para aprovação humana.',
-    { unidade_ID: z.string() },
-    async ({ unidade_ID }) => {
+    'Aciona o Agente de Reposição para uma ou mais unidades: detecta ruptura, calcula quantidade com sazonalidade e cria pedidos PENDENTE para aprovação humana. Aceita uma unidade (unidade_ID) ou uma lista (unidades). Se nenhum dos dois for informado, aciona todas as unidades em ruptura automaticamente.',
+    {
+      unidade_ID: z.string().optional().describe('ID de uma única unidade (ex: u147). Use quando o usuário menciona uma loja específica.'),
+      unidades: z.array(z.string()).optional().describe('Lista de IDs de unidades (ex: ["u147","u134"]). Use quando o usuário menciona múltiplas lojas.')
+    },
+    async ({ unidade_ID, unidades }) => {
       try {
         const { gerarParaUnidade } = require('./ai/reposicao-agent');
         const csn = await cds.load('srv/csn.json');
         cds.model = cds.linked(csn);
         await cds.connect.to('db');
         const srv = await cds.serve('FranqueadoraService').from(csn);
-        const r = await gerarParaUnidade(srv, unidade_ID);
-        return ok({ unidade_ID, pedidosGerados: r.count, modo: r.modo,
-          mensagem: r.count > 0
-            ? `${r.count} pedido(s) criados em status PENDENTE via ${r.modo}. Aguardando aprovação.`
-            : 'Nenhum item em risco detectado.' });
+
+        // Resolve lista de unidades a processar
+        let lista = []
+        if (unidades?.length) {
+          lista = unidades
+        } else if (unidade_ID) {
+          lista = [unidade_ID]
+        } else {
+          // Nenhuma unidade informada — detecta todas em ruptura
+          const { Estoque_Unidade } = srv.entities
+          const em_risco = await SELECT.distinct.from(Estoque_Unidade)
+            .columns('unidade_ID')
+            .where({ status_code: { in: ['RUPTURA', 'ATENCAO'] } })
+          lista = em_risco.map(r => r.unidade_ID)
+          if (!lista.length) return ok({ mensagem: 'Nenhuma unidade em ruptura ou atenção no momento.' })
+        }
+
+        const resultados = []
+        for (const uid of lista) {
+          const r = await gerarParaUnidade(srv, uid)
+          resultados.push({ unidade_ID: uid, pedidosGerados: r.count, modo: r.modo })
+        }
+
+        const totalPedidos = resultados.reduce((s, r) => s + r.count, 0)
+        return ok({
+          unidades: resultados,
+          totalPedidos,
+          mensagem: totalPedidos > 0
+            ? `${totalPedidos} pedido(s) criados em status PENDENTE para ${lista.length} unidade(s). Aguardando aprovação.`
+            : 'Nenhum item em risco detectado nas unidades informadas.'
+        })
       } catch (e) { LOG.error('acionar_reposicao', e); return err(e.message); }
     }
   );
