@@ -368,6 +368,8 @@ app.get('/health', (_req, res) => res.json({
 }));
 
 app.all('/mcp', async (req, res) => {
+  const method = req.body?.method || '?'
+  LOG.info(`MCP ${req.method} — ${method}`)
   const server    = buildServer();
   // sessionIdGenerator: undefined = modo stateless (sem sessão persistente)
   // Necessário para clientes como Joule Studio que não enviam mcp-session-id
