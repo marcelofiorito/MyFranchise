@@ -236,12 +236,23 @@ messaging.on(TOPIC_ESTOQUE, async (msg) => {
 | MyFranchiseBroker provisionado | ✅ | — |
 | OAuth Profile `ias_runmyfranchise` criado | ✅ | — |
 | Client username CAP criado | ✅ | — |
-| `authenticationOauthEnabled: true` no VPN | ⏳ | Habilitar via Broker Manager UI ou com cluster admin |
-| User-provided service com credenciais IAS+Solace | ⏳ | Após OAuth habilitado, atualizar `advanced-event-mesh` |
-| Deploy CAP com `kind: advanced-event-mesh` | ⏳ | Após user-provided service atualizado |
-| Teste end-to-end: venda → ruptura → pedido automático | ⏳ | Após deploy |
+| `authenticationOauthEnabled: true` no VPN | ✅ | Habilitado via Broker Manager UI |
+| User-provided service com credenciais IAS+Solace | ✅ | `advanced-event-mesh` atualizado |
+| Deploy CAP com `kind: advanced-event-mesh` | ❌ BLOQUEIO | Plugin exige instância gerenciada no mesmo espaço CF — não aceita user-provided service cross-subaccount |
+| Instância gerenciada AEM no espaço DEV | ⏳ | Provisionar `aem-validation-service` na subaccount `sa-build-platform-org` ou usar Service Manager para expor cross-subaccount |
+| Teste end-to-end: venda → ruptura → pedido automático | ⏳ | Após instância gerenciada disponível |
 | Integration Suite iFlow consumindo tópico | ⏳ | Fase 2 |
 | SBPA aprovação automática via evento | ⏳ | Fase 3 |
+
+### Detalhe do Bloqueio
+
+O plugin `@cap-js/advanced-event-mesh` v1.0.0 valida o VCAP_SERVICES buscando especificamente um binding com `label: "advanced-event-mesh"` e `plan: "aem-validation-service"` — uma instância **gerenciada** pelo SAP Service Manager. Um `user-provided service` não tem esses campos e é rejeitado com:
+
+```
+Error: Missing credentials for SAP Integration Suite, advanced event mesh with plan "aem-validation-service"
+```
+
+**Solução:** Provisionar o `aem-validation-service` diretamente na subaccount `sa-build-platform-org` (verificar entitlements) ou usar o SAP Service Manager para expor a instância da subaccount Presales BR USA como serviço gerenciado no espaço DEV.
 
 ---
 
