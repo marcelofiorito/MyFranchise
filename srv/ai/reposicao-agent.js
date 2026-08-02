@@ -241,11 +241,11 @@ async function gerarParaUnidade(srv, unidadeId) {
     fornecedorSugerido: String(p.fornecedorSugerido || '').slice(0, 150),
     prazoDesejado: prazo.toISOString().slice(0, 10),
     status_code: 'PENDENTE',
-    origem: 'AGENTE'
+    origem_code: 'AGENTE'
   }));
 
   // substitui pedidos PENDENTES anteriores desta unidade (não mexe nos já aprovados/enviados)
-  await DELETE.from(Pedidos_Reposicao).where({ unidade_ID: unidadeId, status_code: 'PENDENTE', origem: 'AGENTE' });
+  await DELETE.from(Pedidos_Reposicao).where({ unidade_ID: unidadeId, status_code: 'PENDENTE', origem_code: 'AGENTE' });
   await INSERT.into(Pedidos_Reposicao).entries(entries);
   return { count: entries.length, modo };
 }

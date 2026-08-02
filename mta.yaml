@@ -19,6 +19,9 @@ modules:
   - name: myfranchise-srv
     type: nodejs
     path: gen/srv
+    parameters:
+      memory: 1G
+      disk-quota: 1G
     requires:
       - name: myfranchise-db
       - name: myfranchise-uaa
