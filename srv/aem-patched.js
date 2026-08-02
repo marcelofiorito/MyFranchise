@@ -85,6 +85,12 @@ if (!AdvancedEventMesh) {
             this.options.consumer.queueDescriptor.type = solace.QueueType.QUEUE
           }
           if (typeof this.startListening === 'function') {
+            // O startListening() retorna imediatamente se _listenToAll=false e subscribedTopics vazio.
+            // Força _listenToAll para garantir que o consumer sobe mesmo sem topics registrados via CDS.
+            if (this._listenToAll && !this._listenToAll.value && !this.subscribedTopics?.size) {
+              LOG.info('[AEM] Forçando _listenToAll=true para consumer subir')
+              this._listenToAll.value = true
+            }
             this.startListening()
               .then(() => LOG.info('[AEM] ✅ Consumer connected — escutando fila'))
               .catch(e => LOG.warn('[AEM] startListening failed:', e.message))
