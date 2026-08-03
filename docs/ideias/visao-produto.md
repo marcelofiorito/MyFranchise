@@ -36,17 +36,17 @@ Um **motor de simulação** que executa o ciclo completo de negócio de uma rede
    → giro de estoque aumenta
    → saldo cai abaixo do ponto crítico
 
-① bis  SAP RPT analisa o padrão histórico (preditivo)
-   → lê: giro médio × fator sazonal × mês × região × histórico 2024-2026
-   → prediz: "Loja Recife/SKU-100 vai entrar em RUPTURA em ~7 dias"
-   → prediz: "quantidade ótima de reposição = 390 unidades (confiança: 87%)"
-   → age ANTES do saldo chegar a zero
-   ─────────────────────────────────────────────────────────────────
-   PoC validado: sap-rpt-1.5-large aprende com 94 linhas de histórico,
-   zero treinamento. App em produção: myfranchise-rpt.cfapps.us10.hana.ondemand.com
-   Próximo passo: integrar RPT no reposicao-agent.js como pré-etapa
-   antes do gpt-4o gerar a justificativa — substitui a fórmula heurística
-   ─────────────────────────────────────────────────────────────────
+   ↳ ①.1  SAP RPT analisa o padrão histórico (preditivo)
+      → lê: giro médio × fator sazonal × mês × região × histórico 2024-2026
+      → prediz: "Loja Recife/SKU-100 vai entrar em RUPTURA em ~7 dias"
+      → prediz: "quantidade ótima de reposição = 390 unidades (confiança: 87%)"
+      → age ANTES do saldo chegar a zero
+      ─────────────────────────────────────────────────────────────────
+      PoC validado: sap-rpt-1.5-large aprende com 94 linhas de histórico,
+      zero treinamento. App em produção: myfranchise-rpt.cfapps.us10.hana.ondemand.com
+      Próximo passo: integrar RPT no reposicao-agent.js como pré-etapa
+      antes do gpt-4o gerar a justificativa — substitui a fórmula heurística
+      ─────────────────────────────────────────────────────────────────
 
 ② Agente de Reposição detecta/recebe o alerta
    → (sem RPT) calcula cobertura com sazonalidade regional — reativo
@@ -228,7 +228,7 @@ A ideia central é mostrar **os mesmos acontecimentos** através de diferentes "
 - Preparar queries SQL para a perspectiva do DB analyst
 - Gravar vídeos das 3 perspectivas que já existem (Gestor, Joule, Franqueado)
 
-### Fase 1 bis — Integrar SAP RPT no Agente de Reposição
+### Fase 1.1 — Integrar SAP RPT no Agente de Reposição
 - **PoC já validado** (`myfranchise-rpt.cfapps.us10.hana.ondemand.com`): RPT prediz ruptura e quantidade com 94 linhas de histórico, zero treinamento
 - Integrar chamada ao `sap-rpt-1.5-large` dentro do `reposicao-agent.js`
 - RPT substitui a fórmula heurística de quantidade (`giro × lead × fator`)
