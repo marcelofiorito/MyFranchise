@@ -91,14 +91,13 @@
         }
       },
       "card01_saude": {
-        "template": "sap.ovp.cards.v4.kpiHeader",
+        "template": "sap.ovp.cards.v4.table",
         "settings": {
           "title": "Health Score",
           "subTitle": "{{appStoreName}} · vs. cluster average",
           "entitySet": "MinhaSaude",
-          "dataPointAnnotationPath": "com.sap.vocabularies.UI.v1.DataPoint#ScoreSaude",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Current",
-          "addODataSelect": true
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Saude",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Current"
         }
       },
       "card02_acoes": {
