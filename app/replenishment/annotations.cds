@@ -158,12 +158,12 @@ annotate service.Pedidos_Reposicao with @(
   UI.Identification: [
     {
       $Type  : 'UI.DataFieldForAction',
-      Action : 'FranqueadoraService.aprovarPedido',
+      Action : 'FranqueadoraService.Pedidos_Reposicao_aprovar',
       Label  : '{i18n>PedidoRep_aprovar}'
     },
     {
       $Type  : 'UI.DataFieldForAction',
-      Action : 'FranqueadoraService.recusarPedido',
+      Action : 'FranqueadoraService.Pedidos_Reposicao_recusar',
       Label  : '{i18n>PedidoRep_recusar}'
     }
   ]
