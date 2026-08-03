@@ -114,13 +114,14 @@
         }
       },
       "card03_recomendacoes": {
-        "template": "sap.ovp.cards.v4.stack",
+        "template": "sap.ovp.cards.v4.list",
         "settings": {
           "title": "AI Recommendations",
           "subTitle": "{{appStoreName}} · AI assistant",
           "entitySet": "MinhasRecomendacoes",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Recomendacoes",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Novas",
+          "listType": "extended",
           "sortBy": "prioridade_code",
           "sortOrder": "ascending"
         }
