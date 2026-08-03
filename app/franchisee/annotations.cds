@@ -50,7 +50,14 @@ annotate service.MinhaSaude with @(
   UI.DataPoint #ScoreSaude: {
     Value              : scoreSaude,
     Title              : '{i18n>Saude_Unidade_scoreSaude}',
-    Criticality        : scoreCriticality
+    Criticality        : scoreCriticality,
+    MaximumValue       : 100,
+    MinimumValue       : 0
+  },
+
+  UI.KPI #HealthKPI: {
+    DataPoint : ![@UI.DataPoint#ScoreSaude],
+    Detail    : { DefaultPresentationVariant: ![@UI.PresentationVariant] }
   },
 
   UI.LineItem #Saude: [
@@ -111,7 +118,7 @@ annotate service.MinhasRecomendacoes with @(
     Criticality: prioridadeCrit
   },
 
-  // Lista compacta do card OVP (título + tipo + prioridade colorida).
+  // LineItem para stack card OVP — título em destaque + prioridade + descrição curta
   UI.LineItem #Recomendacoes: [
     {
       $Type : 'UI.DataFieldForAnnotation',
@@ -119,8 +126,9 @@ annotate service.MinhasRecomendacoes with @(
       Label : '{i18n>Recomendacoes_prioridade}',
       ![@UI.Importance]: #High
     },
-    { Value: titulo,    Label: '{i18n>Recomendacoes}', ![@UI.Importance]: #High },
-    { Value: tipo_code, Label: '{i18n>Alertas_tipo}' }
+    { Value: titulo,    Label: '{i18n>Recomendacoes}',    ![@UI.Importance]: #High },
+    { Value: tipo_code, Label: '{i18n>Alertas_tipo}',     ![@UI.Importance]: #Medium },
+    { Value: descricao, Label: '{i18n>Recomendacoes_descricao}', ![@UI.Importance]: #Low }
   ],
 
   // LineItem default — usado pelo List Report do app "Recomendações da IA".
