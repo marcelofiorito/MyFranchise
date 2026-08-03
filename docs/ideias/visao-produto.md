@@ -1,5 +1,7 @@
 [← README](../../README.md)
 
+[🇧🇷 Português](visao-produto.md) · [🇬🇧 English](product-vision.md)
+
 # RunMyFranchise — Visão de Produto Pós-Demo
 
 **Status:** Conceito aprovado — documentação de ideias para execução futura  

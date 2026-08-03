@@ -484,6 +484,9 @@ Hoje o botão `Simular Recebimento` (app Admin) substitui ambos os passos para f
 - **IAS Assertion Attributes** — mapear `unidade_ID`/`cluster` via IdP (remover middleware de fallback)
 - **HANA Sequences** — substituir lógica de código de unidade por sequence nativa
 
+> 📄 **Visão completa pós-demo, motor de simulação e roadmap multi-perspectiva:**
+> [docs/ideias/visao-produto.md](docs/ideias/visao-produto.md)
+
 ---
 
 ## Referências

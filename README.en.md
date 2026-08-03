@@ -263,7 +263,7 @@ All project documents, organized by category. Each document contains a back-link
 | Technical | [SAP Retail Portfolio Integration](docs/integração/Integration.en.md) | Fit analysis with S/4HANA, IBP, CAR, and Ariba |
 | Technical | [Joule Setup in Work Zone](docs/integração/joule.md) | Prerequisites and MCP Server configuration in Work Zone |
 | Technical | [MCP Server — Joule](docs/integração/mcp-server.md) | 9 tools, server architecture, deployment, and troubleshooting |
-| Ideas | [Post-Demo Product Vision](docs/ideias/visao-produto.md) | Conceptual roadmap for use as a pre-sales asset after the demo |
+| Ideas | [Post-Demo Product Vision (EN)](docs/ideias/product-vision.md) | Conceptual roadmap — simulation engine, multi-perspective demo, SAP RPT integration |
 | Architecture | [Architecture Diagram (Draw.io)](docs/imagens/arquitetura-runmyfranchise.drawio) | Editable source for the architecture diagram (SAP-styled Draw.io) |
 | Architecture | [SAP Shape Libraries](docs/sap-shape-libraries/) | SAP-branded shape libraries used in the Draw.io diagram |
 
@@ -480,6 +480,9 @@ Today `simularRecebimento` (Admin app) replaces both steps for demo purposes.
 - **SAP Datasphere** — data federation from multiple sources
 - **IAS Assertion Attributes** — map `unidade_ID`/`cluster` via IdP (remove fallback middleware)
 - **HANA Sequences** — replace unit code logic with native sequence
+
+> 📄 **Full post-demo vision, simulation engine, and multi-perspective roadmap:**
+> [docs/ideias/product-vision.md](docs/ideias/product-vision.md)
 
 ---
 
