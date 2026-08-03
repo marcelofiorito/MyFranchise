@@ -36,8 +36,21 @@ Um **motor de simulação** que executa o ciclo completo de negócio de uma rede
    → giro de estoque aumenta
    → saldo cai abaixo do ponto crítico
 
-② Agente de Reposição detecta a ruptura
-   → calcula cobertura com sazonalidade regional
+① bis  SAP RPT analisa o padrão histórico (preditivo)
+   → lê: giro médio × fator sazonal × mês × região × histórico 2024-2026
+   → prediz: "Loja Recife/SKU-100 vai entrar em RUPTURA em ~7 dias"
+   → prediz: "quantidade ótima de reposição = 390 unidades (confiança: 87%)"
+   → age ANTES do saldo chegar a zero
+   ─────────────────────────────────────────────────────────────────
+   PoC validado: sap-rpt-1.5-large aprende com 94 linhas de histórico,
+   zero treinamento. App em produção: myfranchise-rpt.cfapps.us10.hana.ondemand.com
+   Próximo passo: integrar RPT no reposicao-agent.js como pré-etapa
+   antes do gpt-4o gerar a justificativa — substitui a fórmula heurística
+   ─────────────────────────────────────────────────────────────────
+
+② Agente de Reposição detecta/recebe o alerta
+   → (sem RPT) calcula cobertura com sazonalidade regional — reativo
+   → (com RPT) recebe quantidade pré-calculada com confiança — preditivo
    → gera pedidos PENDENTE com justificativa do gpt-4o
 
 ③ Gestor aprova os pedidos
@@ -45,7 +58,7 @@ Um **motor de simulação** que executa o ciclo completo de negócio de uma rede
    → pedidos mudam para APROVADO
 
 ④ Pedido vai ao fornecedor
-   → iFlow no Integration Suite dispara evento
+   → iFlow no Integration Suite dispara evento via AEM
    → S/4HANA cria Purchase Order
    → pedidos mudam para ENVIADO
 
@@ -56,10 +69,20 @@ Um **motor de simulação** que executa o ciclo completo de negócio de uma rede
    → status do item volta de RUPTURA para OK
 
 ⑥ Score de saúde da loja se recupera
-   → compliance + performance recalculados
+   → compliance + performance + estoque recalculados (4 componentes)
    → dashboards SAC atualizam
    → portal do franqueado reflete a melhora
 ```
+
+### O que muda com o RPT:
+
+| | Sem RPT (hoje) | Com RPT (próxima fase) |
+|---|---|---|
+| Quando cria o pedido | Ruptura já aconteceu | ~7 dias antes da ruptura |
+| Quantidade sugerida | Heurística (giro × lead × fator) | Predita pelo modelo (confiança %) |
+| Base de decisão | Regra determinística | Padrão histórico aprendido |
+| Risco de stockout real | Alto (reage depois) | Baixo (antecipa) |
+| Narrativa para o júri | "Sistema detectou ruptura" | "Sistema previu ruptura — loja nunca zerou" |
 
 ### Controles do motor:
 
@@ -205,6 +228,13 @@ A ideia central é mostrar **os mesmos acontecimentos** através de diferentes "
 - Preparar queries SQL para a perspectiva do DB analyst
 - Gravar vídeos das 3 perspectivas que já existem (Gestor, Joule, Franqueado)
 
+### Fase 1 bis — Integrar SAP RPT no Agente de Reposição
+- **PoC já validado** (`myfranchise-rpt.cfapps.us10.hana.ondemand.com`): RPT prediz ruptura e quantidade com 94 linhas de histórico, zero treinamento
+- Integrar chamada ao `sap-rpt-1.5-large` dentro do `reposicao-agent.js`
+- RPT substitui a fórmula heurística de quantidade (`giro × lead × fator`)
+- Resultado esperado: pedidos criados 7 dias antes da ruptura, com quantidade otimizada e score de confiança
+- Esforço estimado: 1-2 dias (API RPT já conhecida, deployment já existe)
+
 ### Fase 2 — SAC como perspectiva de analytics
 - Criar Live Connection HANA Cloud BTP → SAC
 - Construir modelos analíticos no SAC sobre as entidades do HANA
@@ -248,15 +278,16 @@ O vídeo "The Full Picture" mostra todas as perspectivas simultaneamente — é 
 
 O motor seria uma extensão do app Admin atual. A sequência de passos seria implementada como uma CAP action `rodarCicloCompleto(delay_segundos)` que:
 
-1. Reduz `saldoAtual` de itens selecionados abaixo do `estoqueMinimo` → status RUPTURA
-2. Chama `gerarReposicaoTodas()` → Agente gera pedidos PENDENTE
-3. Aguarda `delay` segundos (para o apresentador apontar a perspectiva)
-4. Chama `aprovarTodosPendentes()` → pedidos → APROVADO
-5. Aguarda `delay` segundos
-6. Simula envio ao fornecedor → pedidos → ENVIADO
-7. Aguarda `delay` segundos
-8. Chama `simularRecebimento()` → pedidos → RECEBIDO, estoque reposto
-9. Recalcula scores de saúde
+1. **[RPT]** Chama `sap-rpt-1.5-large` com histórico + dados atuais → recebe predições de risco e quantidade
+2. Reduz `saldoAtual` de itens selecionados abaixo do `estoqueMinimo` → status RUPTURA
+3. Chama `gerarReposicaoTodas()` → Agente usa quantidade do RPT (ou heurística como fallback) → pedidos PENDENTE
+4. Aguarda `delay` segundos (para o apresentador apontar a perspectiva)
+5. Chama `aprovarTodosPendentes()` → pedidos → APROVADO → evento AEM publicado
+6. Aguarda `delay` segundos
+7. Simula envio ao fornecedor → iFlow IS recebe evento → pedidos → ENVIADO
+8. Aguarda `delay` segundos
+9. Chama `simularRecebimento()` → pedidos → RECEBIDO, estoque reposto → evento AEM publicado
+10. Recalcula scores de saúde (4 componentes: performance + compliance + contrato + estoque)
 
 O `delay` configurável permite rodar em modo "apresentação ao vivo" (30s entre etapas) ou "gravação acelerada" (3s entre etapas).
 
