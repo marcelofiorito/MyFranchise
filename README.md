@@ -11,7 +11,7 @@
 
 **Problema:** Franqueadoras enfrentam dificuldade para gerenciar e expandir redes de forma padronizada. Informações ficam descentralizadas, compliance é manual, KPIs chegam com atraso e franqueados operam como ilhas — sem visibilidade da própria performance nem orientação proativa.
 
-**Solução:** Plataforma SAP BTP que conecta franqueadora e franqueados em tempo real: painel da rede, compliance automático, agentes de IA para recomendações e reposição de estoque, e portal do franqueado com dashboard próprio.
+**Solução:** Plataforma SAP BTP que conecta franqueadora e franqueados em tempo real: painel da rede, compliance automático, agentes de IA para recomendações e reposição de estoque, broker de eventos autônomo (AEM) e portal do franqueado com dashboard próprio.
 
 **Persona âncora:** Alexandre Mendes — Diretor de Operações, rede de 280 lojas fashion/lifestyle, quer dobrar a rede sem multiplicar o caos.
 
@@ -73,19 +73,21 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 | Componente | Status |
 |---|---|
 | Backend CAP + HANA Cloud + XSUAA | ✅ Produção |
-| AI Core + GenAI Hub (gpt-4o) | ✅ Produção — confirmado `modo: "GenAI Hub"` |
+| AI Core + GenAI Hub (gpt-4o) | ✅ Produção |
 | Painel da Rede (LR + donut + OP) | ✅ Produção |
 | Governança & Compliance (LR + OP) | ✅ Produção |
 | Onboarding (LR + OP + Draft) | ✅ Produção |
 | Portal do Franqueado (OVP — 5 cards) | ✅ Produção |
 | Recomendações da IA (LR + OP) | ✅ Produção |
-| Estoque & Reposição (LR + OP + aba Pedidos) | ✅ Produção — aba Pedidos de Reposição no Object Page |
-| Agente de Reposição (nível 1-2) | ✅ Produção — pedidos PENDENTE gerados por gpt-4o |
-| Pedidos de Reposição (LR + OP + Aprovar/Recusar) | ✅ Produção — bound actions + app dedicado |
-| Joule (copiloto conversacional) | ✅ Produção — MCP Server + 7 tools (leitura + aprovação via linguagem natural) |
-| KPI tiles dinâmicos (ruptura + pendentes) | ✅ Produção — número ao vivo nos tiles do launchpad |
-| App Admin (reset + simulação demo) | ✅ Produção — resetarDemo + simularRecebimento com 1 clique |
-| Agente nível 3 (aprovação automática via BPA) | ⬜ Pós-demo — hoje aprovação é manual (Joule ou app) |
+| Estoque & Reposição (LR + OP + aba Pedidos) | ✅ Produção |
+| Pedidos de Reposição (LR + OP + Aprovar/Recusar) | ✅ Produção |
+| Joule (MCP Server — 9 tools) | ✅ Produção — aprovar/recusar/acionar via linguagem natural |
+| KPI tiles dinâmicos (ruptura + pendentes) | ✅ Produção |
+| App Admin (fluxo demo 4 etapas) | ✅ Produção — Reset → Simular Vendas → Aprovar → Receber |
+| **SAP Advanced Event Mesh (AEM)** | ✅ Produção — broker pub/sub, loop de eventos autônomo |
+| **Loop de Reposição Autônomo** | ✅ Produção — varredura no startup + agente orientado a eventos |
+| **SAP RPT Predictive App** | ✅ Produção — `myfranchise-rpt.cfapps.us10.hana.ondemand.com` |
+| Agente nível 3 (aprovação automática via BPA) | ⬜ Pós-demo — futuro: SAP BPA + IS iFlow como consumer AEM |
 
 **Backend:** `https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com`
 
@@ -136,17 +138,19 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 ### 8. Admin (controle da demo)
 - **Floorplan:** UI5 customizado (page + botões)
 - **Serviço:** `FranqueadoraService` — role `Franqueadora_Gestor`
-- **Destaque:** Painel de controle para pré-demo. Mostra KPIs ao vivo (pedidos PENDENTE + itens em RUPTURA). Botões:
-  - **Resetar Demo** — volta todos os pedidos para PENDENTE, limpa campos de decisão
-  - **Simular Recebimento** — transiciona APROVADO → RECEBIDO e repõe saldo no estoque
-  - **Gerar Pedidos com IA** — executa o Agente de Reposição para todas as lojas
-  - **Gerar Recomendações** — executa o Agente de Recomendações para todas as lojas
+- **Destaque:** Painel de controle para a demo. Mostra KPIs ao vivo (pedidos PENDENTE + itens em RUPTURA). Fluxo de 4 etapas:
+  - **Etapa 1 — Resetar Demo**: todos os 13 estoques → OK (saldo ~180), todos os pedidos excluídos, health scores recalculados
+  - **Etapa 2 — Simular Rush de Vendas**: reduz 8 SKUs para RUPTURA/ATENCAO → emite eventos AEM → agente cria pedidos PENDENTE automaticamente (~15s)
+  - **Etapa 3 — Aprovar (via Joule ou app)**: aprovar todos os pedidos pendentes
+  - **Etapa 4 — Simular Recebimento**: repõe estoque → emite eventos AEM → handler registra a resolução
   - Log de operações com timestamp (últimas 20 ações)
 
 ### Joule (copiloto conversacional)
-- **MCP Server:** `joule-myfranchise-mcp` (Python FastMCP, CF)
+- **MCP Server Python:** `joule-myfranchise-mcp` (Python FastMCP, CF — ativo no Joule Studio)
   `https://joule-myfranchise-mcp.cfapps.us10.hana.ondemand.com`
-- **7 tools:**
+- **MCP Server Node.js:** `myfranchise-mcp` (Node.js, CF — mesmas 9 tools, HANA direto, mais rápido)
+  `https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com`
+- **9 tools:**
 
 | Tool | Descrição |
 |---|---|
@@ -155,12 +159,38 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 | `get_pedidos_pendentes` | Pedidos de reposição aguardando aprovação |
 | `get_recomendacoes` | Recomendações da IA por loja e prioridade |
 | `get_score_rede` | Scores de saúde na rede |
-| `aprovar_pedido` | Aprovar pedido pendente (PENDENTE → APROVADO) |
-| `recusar_pedido` | Recusar pedido pendente (PENDENTE → RECUSADO) |
+| `aprovar_pedido` | Aprovar pedido individual por ID |
+| `recusar_pedido` | Recusar pedido individual por ID |
+| `aprovar_pedidos` | Aprovar TODOS os pedidos pendentes (rede ou por loja) |
+| `acionar_reposicao` | Acionar Agente de Reposição para uma ou todas as lojas |
 
-- **Fluxo validado:** aprovação de 6 pedidos por linguagem natural end-to-end
+- **Fluxo validado:** aprovação de pedidos por linguagem natural end-to-end
 - **Exemplo:** *"Aprova todos os pedidos de Havaianas pendentes"* → Joule lista, identifica IDs e aprova todos automaticamente
+- **Nomes de lojas:** todos os tools aceitam nome por extenso (ex: "Porto Alegre") — resolvem o ID automaticamente
 - **Auth:** OAuth2 `client_credentials` via XSUAA; busca CSRF token antes de ações POST
+
+---
+
+## SAP Advanced Event Mesh (AEM)
+
+A integração com o **SAP Advanced Event Mesh** (Solace PubSub+) está totalmente funcional em produção.
+
+- **Plugin:** `@cap-js/advanced-event-mesh` com wrapper customizado `PatchedAEM` (`srv/aem-patched.js`)
+- **Correção:** Basic Auth no `createSession` (OAuth não funciona no plano Developer 100)
+- **Consumer:** fila separada `myfranchise-consumer` com owner `solace-cloud-client`
+- **3 tópicos ativos:**
+  - `Estoque/Changed` — emitido ao criar/atualizar itens de estoque
+  - `Pedido/StatusChanged` — emitido ao aprovar/recusar pedidos
+  - `Desvio/Detectado` — emitido ao detectar desvio de compliance
+- **Broker:** `mr-connection-yfqw57w6xwk.messaging.solace.cloud`
+- **Dev:** `file-based-messaging`; **Produção:** `advanced-event-mesh`
+
+### Loop de Eventos Autônomo (`srv/events/messaging.js`)
+
+- **No startup:** varre todos os itens em ruptura → emite eventos → agente cria pedidos automaticamente
+- **`messaging.on(TOPIC_ESTOQUE)`:** RUPTURA/ATENCAO → aciona Agente de Reposição sem intervenção humana
+- **`messaging.on(TOPIC_PEDIDO)`:** registra eventos de aprovação
+- **Consumer futuro:** SAP BPA + Integration Suite via iFlow
 
 ---
 
@@ -186,7 +216,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 ## Fórmula do Health Score
 
 ```
-scoreSaude = (performancePct × 0,40) + (compliancePct × 0,40) + (scoreContrato × 0,20)
+scoreSaude = (performancePct × 0,35) + (compliancePct × 0,35) + (scoreContrato × 0,15) + (estoquePct × 0,15)
 
 performancePct = min(kpi.faturamento / benchmark.faturamentoMedio × 100, 100)
                  default 50 se não há KPI ou benchmark disponível
@@ -198,6 +228,9 @@ scoreContrato:   ATIVO            → 100
                  VENCENDOEM90DIAS →  60
                  VENCENDOEM30DIAS →  30
                  outro / expirado →   0
+
+estoquePct     = max(0, 100 − rupturas × 25 − atencoes × 10)
+                 reflete rupturas imediatamente ao chamar simularVendas
 
 Limiares de criticidade:
   scoreSaude < 45  → 1 CRÍTICO  (vermelho)
@@ -229,7 +262,7 @@ Todos os documentos do projeto, organizados por categoria. Cada documento conté
 | Técnica | [Especificação Técnica](docs/especificação/SPEC.md) | Modelo de dados, serviços OData, handlers CAP e anotações de segurança |
 | Técnica | [Integração SAP Retail Portfolio](docs/integração/Integração.md) | Análise de fit com S/4HANA, IBP, CAR e Ariba |
 | Técnica | [Setup Joule no Work Zone](docs/integração/joule.md) | Pré-requisitos e configuração do MCP Server no Work Zone |
-| Técnica | [MCP Server — Joule](docs/integração/mcp-server.md) | 7 ferramentas, arquitetura do servidor, deploy e troubleshooting |
+| Técnica | [MCP Server — Joule](docs/integração/mcp-server.md) | 9 ferramentas, arquitetura do servidor, deploy e troubleshooting |
 | Ideias | [Visão de Produto Pós-Demo](docs/ideias/visao-produto.md) | Roadmap conceitual para uso como ativo de pré-vendas após a demo |
 | Arquitetura | [Diagrama de Arquitetura (Draw.io)](docs/imagens/arquitetura-runmyfranchise.drawio) | Fonte editável do diagrama de arquitetura (Draw.io com estilo SAP) |
 | Arquitetura | [SAP Shape Libraries](docs/sap-shape-libraries/) | Bibliotecas de shapes SAP utilizadas no diagrama Draw.io |
@@ -244,6 +277,8 @@ Todos os documentos do projeto, organizados por categoria. Cada documento conté
 | Backend | SAP CAP Node.js, OData V4 | `@sap/cds ^10` |
 | Banco de dados | HANA Cloud (prod) / SQLite in-memory (dev) | `@cap-js/hana ^2.8` / `@cap-js/sqlite ^2.1.3` |
 | IA | AI Core + GenAI Hub (gpt-4o) | `@sap-ai-sdk/orchestration ^2.13` |
+| Mensageria | SAP Advanced Event Mesh (Solace) | `@cap-js/advanced-event-mesh ^1.0.0` |
+| Predição | SAP RPT 1.5-large via AI Core | Zero-shot, sem treinamento, in-context learning |
 | UI5 runtime | Versão fixa `1.136.7` | Alinha build e runtime; evita comportamento `Active` no FE V4 |
 | Perfis CAP | `hana-cloud`/`xsuaa` como default; `[development]` ativa sqlite+mocked | Evita apps vazios em CF |
 
@@ -258,10 +293,14 @@ Todos os documentos do projeto, organizados por categoria. Cada documento conté
 @sap-ai-sdk/orchestration  ^2.13.0     # GenAI Hub — gpt-4o
 @sap/xssec                 ^4.13.3     # Autorização XSUAA
 express                    ^4.22.2     # Runtime HTTP
+@cap-js/advanced-event-mesh ^1.0.0    # SAP Advanced Event Mesh (Solace PubSub+)
+streamlit                  1.37.0      # App preditivo RPT
+sap-rpt-1.5-large                      # SAP Relational Pretrained Transformer (AI Core)
 
 SAP HANA Cloud                         # Banco de dados em produção
 SAP Build Work Zone                    # Portal e launchpad (managed approuter)
-SAP AI Core + GenAI Hub               # Agentes de IA (gpt-4o)
+SAP AI Core + GenAI Hub               # Agentes de IA (gpt-4o) + RPT preditivo
+SAP Advanced Event Mesh               # Broker de eventos pub/sub (Solace PubSub+)
 SAP IAS + XSUAA                       # Identidade e autorização
 SAPUI5 1.136.7                        # Runtime Fiori Elements (versão fixada)
 ```
@@ -287,6 +326,9 @@ MyFranchise/
 │   ├── franqueado-service.js   # Impl FranqueadoService
 │   ├── server.js               # Middleware JWT + endpoints /kpi/ruptura e /kpi/pedidos-pendentes
 │   ├── mcp-server.js           # Bridge MCP Server Node.js (CF)
+│   ├── aem-patched.js          # PatchedAEM — correção Basic Auth para plano Developer 100
+│   ├── events/
+│   │   └── messaging.js        # Handlers de eventos autônomos (tópicos AEM)
 │   └── ai/
 │       ├── recommendations-job.js   # Agente de recomendações (gpt-4o + fallback)
 │       └── reposicao-agent.js       # Agente de reposição sazonal (gpt-4o + fallback)
@@ -299,6 +341,12 @@ MyFranchise/
 │   ├── recommendations/  # Recomendações da IA (LR + OP)
 │   ├── franchisee/       # Portal do Franqueado (OVP — 5 cards)
 │   └── admin/            # Admin — Controle da Demo (UI5 customizado)
+├── joule-mcp/
+│   └── mcp_server_cf.py        # Python FastMCP — 9 tools, ativo no Joule Studio
+├── rpt-predicao/               # App preditivo SAP RPT (Streamlit)
+│   ├── app.py                  # App principal — predição RPT em 2 etapas
+│   ├── dados/historico_estoque_franquias.csv  # Dados de treinamento (94 linhas)
+│   └── requirements.txt
 ├── docs/
 │   ├── especificação/SPEC.md               # Especificação técnica
 │   ├── requisitos/PRD.md                   # Product Requirements Document
@@ -311,6 +359,7 @@ MyFranchise/
 │       └── bpmn_pt.png                              # Fluxo da demo BPMN (PT)
 ├── teste/
 │   └── ROTEIRO_DEMO.md   # Roteiro 4 atos, checklist, plano B
+├── manifest-rpt.yml      # Deploy CF para app RPT
 ├── mta.yaml              # Deploy CF (11 módulos, 6 serviços)
 ├── xs-security.json      # XSUAA (roles, scopes, atributos)
 └── README.md
@@ -371,7 +420,7 @@ mbt build
 cf deploy mta_archives/myfranchise_1.0.0.mtar -f
 ```
 
-O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5, `appcontent`, `destinationcontent`. Serviços: HANA (hdi-shared), XSUAA, HTML5 Repo (host + runtime), Destination, AI Core (existing `default_aicore`).
+O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5, `appcontent`, `destinationcontent`. Serviços: HANA (hdi-shared), XSUAA, HTML5 Repo (host + runtime), Destination, AI Core (existing `default_aicore`), Advanced Event Mesh.
 
 **Após cada deploy do appcontent:** remover e re-adicionar os apps no Content Manager do Work Zone para limpar o cache (o site não recarrega automaticamente).
 
@@ -394,14 +443,15 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 - **Atributos JWT do Franqueado:** o IdP (IAS) não envia `unidade_ID`/`cluster` na asserção. `srv/server.js` injeta o default `u147`/`STD` via middleware CAP. Para produção real, mapear via IAS assertion attributes.
 - **Cold start HANA/AI Core:** fazer 1 request de aquecimento antes da demo (HANA e AI Core têm cold start de segundos).
 - **Navegação LR→OP:** requer `contextPath` (não `entitySet`) + `navigation` explícito + `ResponsiveTable` no manifest, e UI5 runtime em **versão fixa** (não `/resources/latest`). A versão `1.136.7` foi validada.
+- **AEM Basic Auth:** o plano Developer 100 do SAP Advanced Event Mesh não suporta OAuth no `createSession`. O wrapper `PatchedAEM` (`srv/aem-patched.js`) força Basic Auth nessa chamada.
 
 ---
 
 ## Roadmap (pós-demo)
 
 ### Inteligência e Automação
-- **Agente de Reposição nível 3** — aprovação automática via SAP Build Process Automation; hoje o gestor aprova manualmente no app Pedidos de Reposição
-- **SAP Build Process Automation** — workflows de aprovação para compliance, reposição e onboarding
+- **SAP RPT Preditivo de Ruptura** — prova de conceito validada em produção (`myfranchise-rpt`). Próximo passo: integrar as predições diretamente no Agente de Reposição para substituir a fórmula heurística de quantidade pelo RPT. O modelo já prediz risco de ruptura E quantidade ótima de reposição a partir de 94 linhas de histórico, zero-shot.
+- **BPA + Integration Suite como consumers AEM** — o broker de eventos está pronto. Próximo passo: configurar gatilho SAP Build Process Automation em `Pedido/StatusChanged(APROVADO)` e iFlow da Integration Suite em `Estoque/Changed` para write-back no ERP.
 - **SAP Analytics Cloud** — dashboards executivos (hoje: Fiori Elements)
 
 ### Integração com Sistemas Retail SAP
@@ -425,4 +475,5 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 - [cap-cert-petrobras (referência para navegação LR→OP)](https://github.com/marcelofiorito/cap-cert-petrobras)
 - [SAP Build Work Zone](https://help.sap.com/docs/build-work-zone-standard-edition)
 - [SAP AI Core + GenAI Hub](https://help.sap.com/docs/sap-ai-core)
+- [SAP Advanced Event Mesh](https://help.sap.com/docs/advanced-event-mesh)
 - [OData Annotation Vocabulary](https://ui5.sap.com/#/topic/030faebe70b34198b17a93b4c6e7b4d7)
