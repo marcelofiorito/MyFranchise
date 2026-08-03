@@ -81,14 +81,13 @@ annotate service.MeusDesvios with @(
   UI.LineItem #Pendentes: [
     { Value: nomeProduto,      Label: '{i18n>Desvios_nomeProduto}', ![@UI.Importance]: #High },
     { Value: tipo_code,        Label: '{i18n>Alertas_tipo}'             },
-    { Value: percentualDesvio, Label: '{i18n>Desvios_percentualDesvio}' },
+    { Value: percentualDesvio, Label: '{i18n>Desvios_percentualDesvio}', ![@UI.Importance]: #High },
     {
       $Type : 'UI.DataFieldForAnnotation',
       Target: '@UI.DataPoint#Severidade',
       Label : '{i18n>Desvios_severidade}',
       ![@UI.Importance]: #High
-    },
-    { Value: dataDeteccao, Label: '{i18n>Desvios_dataDeteccao}' }
+    }
   ],
 
   UI.SelectionVariant #Abertos: {

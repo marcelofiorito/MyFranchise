@@ -83,8 +83,8 @@
       "card00_kpis": {
         "template": "sap.ovp.cards.v4.table",
         "settings": {
-          "title": "Minha Performance",
-          "subTitle": "Loja Porto Alegre · últimos 6 meses",
+          "title": "My Performance",
+          "subTitle": "{{appStoreName}} · last 6 months",
           "entitySet": "MeusKPIs",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Trend",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
@@ -93,8 +93,8 @@
       "card01_saude": {
         "template": "sap.ovp.cards.v4.table",
         "settings": {
-          "title": "Score de Saúde",
-          "subTitle": "Loja Porto Alegre · vs. média do cluster",
+          "title": "Health Score",
+          "subTitle": "{{appStoreName}} · vs. cluster average",
           "entitySet": "MinhaSaude",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Saude",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Current"
@@ -103,8 +103,8 @@
       "card02_acoes": {
         "template": "sap.ovp.cards.v4.list",
         "settings": {
-          "title": "Ações Pendentes",
-          "subTitle": "Loja Porto Alegre · requer atenção",
+          "title": "Pending Actions",
+          "subTitle": "{{appStoreName}} · requires attention",
           "entitySet": "MeusDesvios",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Pendentes",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Abertos",
@@ -116,8 +116,8 @@
       "card03_recomendacoes": {
         "template": "sap.ovp.cards.v4.list",
         "settings": {
-          "title": "Recomendações",
-          "subTitle": "Loja Porto Alegre · assistente AI",
+          "title": "AI Recommendations",
+          "subTitle": "{{appStoreName}} · AI assistant",
           "entitySet": "MinhasRecomendacoes",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Recomendacoes",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Novas",
@@ -129,8 +129,8 @@
       "card04_benchmark": {
         "template": "sap.ovp.cards.v4.table",
         "settings": {
-          "title": "Posição na Rede",
-          "subTitle": "Cluster STD · média anonimizada",
+          "title": "Network Position",
+          "subTitle": "Cluster STD · anonymized average",
           "entitySet": "BenchmarkMeuCluster",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Benchmark",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
