@@ -1,0 +1,32 @@
+{
+  "SYN_SAUDE_DASHBOARD": {
+    "target": {
+      "object": "MYFRANCHISE_SAUDE_UNIDADE",
+      "schema": "2177F43B75D34848AE3EA84FAB461E66"
+    }
+  },
+  "SYN_KPI_UNIDADE": {
+    "target": {
+      "object": "MYFRANCHISE_KPI_UNIDADE",
+      "schema": "2177F43B75D34848AE3EA84FAB461E66"
+    }
+  },
+  "SYN_ESTOQUE_UNIDADE": {
+    "target": {
+      "object": "MYFRANCHISE_ESTOQUE_UNIDADE",
+      "schema": "2177F43B75D34848AE3EA84FAB461E66"
+    }
+  },
+  "SYN_UNIDADES": {
+    "target": {
+      "object": "MYFRANCHISE_UNIDADES",
+      "schema": "2177F43B75D34848AE3EA84FAB461E66"
+    }
+  },
+  "SYN_PEDIDOS_REPOSICAO": {
+    "target": {
+      "object": "MYFRANCHISE_PEDIDOS_REPOSICAO",
+      "schema": "2177F43B75D34848AE3EA84FAB461E66"
+    }
+  }
+}

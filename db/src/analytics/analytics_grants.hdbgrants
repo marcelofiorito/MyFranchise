@@ -1,0 +1,20 @@
+{
+  "SAP_HANA_HDI": {
+    "object_owner": {
+      "schema_privileges": [
+        {
+          "reference": "2177F43B75D34848AE3EA84FAB461E66",
+          "privileges": ["SELECT"]
+        }
+      ]
+    },
+    "application_user": {
+      "schema_privileges": [
+        {
+          "reference": "2177F43B75D34848AE3EA84FAB461E66",
+          "privileges": ["SELECT"]
+        }
+      ]
+    }
+  }
+}
