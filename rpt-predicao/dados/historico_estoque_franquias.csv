@@ -1,0 +1,103 @@
+loja,sku,produto,categoria,regiao,ano,mes,giro_medio_diario,fator_sazonal,saldo_atual,lead_time_dias,cobertura_dias,ruptura,qtd_reposicao
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,1,12.0,0.9,210,14,19.4,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,2,11.8,0.9,195,14,18.4,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,3,12.5,1.0,180,14,14.4,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,4,13.2,1.2,155,14,9.8,ATENCAO,220
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,5,15.0,1.5,130,14,7.2,ATENCAO,280
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,6,16.5,1.6,105,14,5.3,ATENCAO,310
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,7,18.2,1.8,22,14,1.0,RUPTURA,380
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,8,17.5,1.7,18,14,0.9,RUPTURA,360
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,9,15.0,1.4,85,14,4.7,ATENCAO,260
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,10,13.0,1.1,185,14,11.8,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,11,12.0,1.0,200,14,13.9,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2025,12,11.5,0.9,210,14,15.2,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2026,1,12.0,0.9,205,14,19.0,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2026,2,11.8,0.9,190,14,17.9,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2026,3,12.5,1.0,175,14,14.0,NÃO,
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2026,4,13.5,1.2,148,14,9.1,ATENCAO,230
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2026,5,15.2,1.5,120,14,6.6,ATENCAO,290
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2026,6,16.8,1.6,98,14,4.9,ATENCAO,320
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2026,7,18.5,1.8,20,14,0.9,RUPTURA,390
+Loja Recife,SKU-100,Havaianas Top,Sandálias,NE,2026,8,17.8,1.7,,,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,1,10.5,0.9,195,14,18.6,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,2,10.2,0.9,182,14,17.8,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,3,11.0,1.0,168,14,15.3,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,4,12.0,1.2,142,14,9.9,ATENCAO,200
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,5,14.0,1.5,115,14,6.8,ATENCAO,255
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,6,15.5,1.6,88,14,4.7,ATENCAO,285
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,7,17.2,1.8,16,14,0.8,RUPTURA,350
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,8,16.5,1.7,14,14,0.7,RUPTURA,330
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,9,14.0,1.4,75,14,4.5,ATENCAO,240
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,10,12.0,1.1,175,14,12.2,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,11,11.0,1.0,188,14,14.3,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2025,12,10.8,0.9,195,14,15.1,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2026,1,10.8,0.9,192,14,17.8,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2026,2,10.5,0.9,178,14,16.9,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2026,3,11.2,1.0,162,14,14.5,NÃO,
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2026,4,12.5,1.2,135,14,9.0,ATENCAO,215
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2026,5,14.5,1.5,108,14,6.2,ATENCAO,268
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2026,6,16.0,1.6,82,14,4.3,ATENCAO,298
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2026,7,17.5,1.8,18,14,0.9,RUPTURA,365
+Loja Salvador,SKU-100,Havaianas Top,Sandálias,NE,2026,8,16.8,1.7,,,
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2025,5,12.5,1.5,108,14,7.2,ATENCAO,230
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2025,6,14.0,1.6,85,14,5.1,ATENCAO,262
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2025,7,15.8,1.8,19,14,1.1,RUPTURA,325
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2025,8,15.0,1.7,17,14,0.9,RUPTURA,308
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2025,9,12.5,1.4,72,14,4.6,ATENCAO,225
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2025,10,10.5,1.1,165,14,13.0,NÃO,
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2025,11,10.0,1.0,178,14,14.8,NÃO,
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2025,12,9.8,0.9,185,14,15.8,NÃO,
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2026,4,11.8,1.2,138,14,9.7,ATENCAO,210
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2026,5,13.5,1.5,112,14,6.9,ATENCAO,248
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2026,6,15.0,1.6,88,14,4.9,ATENCAO,278
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2026,7,16.8,1.8,20,14,1.0,RUPTURA,348
+Loja Natal,SKU-100,Havaianas Top,Sandálias,NE,2026,8,16.0,1.7,,,
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2025,6,17.0,1.6,92,14,4.8,ATENCAO,305
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2025,7,19.0,1.8,11,14,0.5,RUPTURA,392
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2025,8,18.0,1.7,9,14,0.4,RUPTURA,372
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2025,9,15.5,1.4,65,14,3.8,RUPTURA,315
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2025,10,13.0,1.1,172,14,11.7,NÃO,
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2025,11,12.0,1.0,185,14,12.8,NÃO,
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2026,5,15.8,1.5,118,14,6.2,ATENCAO,285
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2026,6,17.5,1.6,89,14,4.4,ATENCAO,318
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2026,7,19.5,1.8,12,14,0.5,RUPTURA,405
+Loja Fortaleza,SKU-100,Havaianas Top,Sandálias,NE,2026,8,18.5,1.7,,,
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,3,7.0,1.3,165,14,18.2,NÃO,
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,4,8.0,1.5,142,14,13.2,NÃO,
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,5,9.0,1.6,112,14,9.8,ATENCAO,185
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,6,9.8,1.7,78,14,6.4,ATENCAO,205
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,7,10.5,1.7,18,14,1.4,RUPTURA,218
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,8,10.0,1.6,16,14,1.3,RUPTURA,208
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,9,8.5,1.4,88,14,8.2,ATENCAO,178
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,10,7.0,1.2,168,14,20.0,NÃO,
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2025,11,6.0,1.0,188,14,26.1,NÃO,
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2026,4,8.5,1.5,148,14,14.5,NÃO,
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2026,5,9.5,1.6,118,14,10.4,NÃO,
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2026,6,10.0,1.7,82,14,6.8,ATENCAO,210
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2026,7,10.8,1.7,15,14,1.2,RUPTURA,225
+Loja Porto Alegre,SKU-200,Bota Couro Inverno,Calçados,S,2026,8,10.2,1.6,,,
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2025,5,8.5,1.6,108,14,9.9,ATENCAO,178
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2025,6,9.2,1.7,72,14,6.6,ATENCAO,195
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2025,7,9.8,1.7,22,14,2.1,RUPTURA,205
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2025,8,9.5,1.6,20,14,1.8,RUPTURA,198
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2025,9,8.0,1.4,82,14,8.2,ATENCAO,168
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2025,10,6.5,1.2,158,14,20.3,NÃO,
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2026,5,9.0,1.6,115,14,10.6,NÃO,
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2026,6,9.8,1.7,78,14,6.6,ATENCAO,205
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2026,7,10.2,1.7,22,14,1.9,RUPTURA,215
+Loja Floripa,SKU-200,Bota Couro Inverno,Calçados,S,2026,8,9.8,1.6,,,
+Loja Batel,SKU-200,Bota Couro Inverno,Calçados,S,2025,5,5.5,1.6,125,14,22.7,NÃO,
+Loja Batel,SKU-200,Bota Couro Inverno,Calçados,S,2025,6,6.0,1.7,105,14,17.5,NÃO,
+Loja Batel,SKU-200,Bota Couro Inverno,Calçados,S,2025,7,6.5,1.7,88,14,13.5,NÃO,
+Loja Batel,SKU-200,Bota Couro Inverno,Calçados,S,2025,8,6.2,1.6,72,14,11.6,NÃO,
+Loja Batel,SKU-200,Bota Couro Inverno,Calçados,S,2026,5,5.8,1.6,128,14,22.1,NÃO,
+Loja Batel,SKU-200,Bota Couro Inverno,Calçados,S,2026,6,6.2,1.7,108,14,17.4,NÃO,
+Loja Batel,SKU-200,Bota Couro Inverno,Calçados,S,2026,7,6.8,1.7,88,14,12.9,NÃO,
+Loja Batel,SKU-200,Bota Couro Inverno,Calçados,S,2026,8,6.5,1.6,,,
+Loja Savassi,SKU-100,Havaianas Top,Sandálias,SE,2025,5,8.5,0.8,142,14,13.7,NÃO,
+Loja Savassi,SKU-100,Havaianas Top,Sandálias,SE,2025,6,8.0,0.7,128,14,12.9,NÃO,
+Loja Savassi,SKU-100,Havaianas Top,Sandálias,SE,2025,7,7.8,0.7,115,14,12.2,NÃO,
+Loja Savassi,SKU-100,Havaianas Top,Sandálias,SE,2026,5,8.8,0.8,145,14,13.6,NÃO,
+Loja Savassi,SKU-100,Havaianas Top,Sandálias,SE,2026,6,8.2,0.7,130,14,13.2,NÃO,
+Loja Savassi,SKU-100,Havaianas Top,Sandálias,SE,2026,7,8.0,0.7,118,14,12.5,NÃO,
+Loja Savassi,SKU-100,Havaianas Top,Sandálias,SE,2026,8,8.2,0.8,,,

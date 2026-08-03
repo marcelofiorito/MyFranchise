@@ -1,0 +1,11 @@
+applications:
+  - name: myfranchise-rpt
+    memory: 256M
+    disk_quota: 768M
+    instances: 1
+    buildpacks:
+      - python_buildpack
+    path: rpt-predicao
+    command: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    env:
+      AI_CORE_OAUTH_URL: https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com/oauth/token
