@@ -455,7 +455,26 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 - **SAP Analytics Cloud** — dashboards executivos (hoje: Fiori Elements)
 
 ### Integração com Sistemas Retail SAP
-- **SAP S/4HANA Retail** — pedidos de reposição automáticos
+
+A integração com o S/4HANA é **bidirecional** — cada direção serve a um propósito diferente:
+
+**MyFranchise → S/4HANA** (saída — pedido de reposição):
+- Gatilho: `Pedido/StatusChanged(APROVADO)` publicado no AEM
+- iFlow no Integration Suite consome o evento → cria **Purchase Order** no S/4HANA
+- Status do pedido no MyFranchise: `APROVADO` → `ENVIADO`
+
+**S/4HANA → MyFranchise** (entrada — recebimento de mercadoria):
+- Gatilho: S/4HANA publica `MaterialDocument.Created` no AEM quando a mercadoria chega
+- iFlow consome o evento → chama OData do MyFranchise para atualizar o estoque
+- Status do pedido: `ENVIADO` → `RECEBIDO`
+- `saldoAtual` reposto + `status_code` → OK + score de saúde recalculado
+
+Hoje o botão `Simular Recebimento` (app Admin) substitui ambos os passos para fins de demo.
+
+- **SAP S/4HANA Retail** — Purchase Orders (saída) + Goods Receipt write-back (entrada)
+- **SAP Customer Activity Repository (CAR)** — dados reais de vendas nos PDVs
+- **SAP Ariba** — gestão de fornecedores para fechar o ciclo de reposição
+- **SAP Integrated Business Planning (IBP)** — previsão de demanda com sazonalidade regional
 - **SAP Customer Activity Repository (CAR)** — dados reais de vendas no PDV
 - **SAP Ariba** — gestão de fornecedores para fechar o ciclo de reposição
 - **SAP Integrated Business Planning (IBP)** — previsão de demanda com sazonalidade regional

@@ -455,7 +455,23 @@ The `mta.yaml` publishes 10 modules: `myfranchise-srv`, `db-deployer`, 6 HTML5 a
 - **SAP Analytics Cloud** — executive dashboards (today: Fiori Elements)
 
 ### Integration with SAP Retail Systems
-- **SAP S/4HANA Retail** — automatic replenishment orders
+
+The integration with S/4HANA is **bidirectional** — each direction serves a different purpose:
+
+**MyFranchise → S/4HANA** (outbound — replenishment order):
+- Trigger: `Pedido/StatusChanged(APROVADO)` published on AEM
+- IS iFlow consumes the event → creates a **Purchase Order** in S/4HANA
+- MyFranchise pedido status: `APROVADO` → `ENVIADO`
+
+**S/4HANA → MyFranchise** (inbound — goods receipt):
+- Trigger: S/4HANA publishes `MaterialDocument.Created` on AEM when goods arrive
+- IS iFlow consumes the event → calls MyFranchise OData to update stock
+- MyFranchise pedido status: `ENVIADO` → `RECEBIDO`
+- `saldoAtual` replenished + `status_code` → OK + health score recalculated
+
+Today `simularRecebimento` (Admin app) replaces both steps for demo purposes.
+
+- **SAP S/4HANA Retail** — Purchase Orders (outbound) + Goods Receipt write-back (inbound)
 - **SAP Customer Activity Repository (CAR)** — real POS sales data
 - **SAP Ariba** — supplier management to close the replenishment cycle
 - **SAP Integrated Business Planning (IBP)** — demand forecasting with regional seasonality
