@@ -25,10 +25,10 @@ Ruptura de estoque é um dos principais riscos operacionais em redes de franquia
 
 | Loja | Região | SKU | Cobertura (jul) | Status |
 |---|---|---|---|---|
-| Recife (u178) | NE | Havaianas Top | 2,6 dias | 🔴 RUPTURA |
-| Salvador (u156) | NE | Havaianas Top | 1,8 dias | 🔴 RUPTURA |
-| Porto Alegre (u147) | S | Havaianas Top | 66,7 dias | 🟢 OK |
-| Porto Alegre (u147) | S | Bota Couro Inverno | 1,8 dias | 🔴 RUPTURA |
+| Recife (u178) | NE | Sandália Feminina (MR550053) | 2,6 dias | 🔴 RUPTURA |
+| Salvador (u156) | NE | Sandália Feminina (MR550053) | 1,8 dias | 🔴 RUPTURA |
+| Porto Alegre (u147) | S | Sandália Feminina (MR550053) | 66,7 dias | 🟢 OK |
+| Porto Alegre (u147) | S | Calça Jeans Masculina (MR550061) | 1,8 dias | 🔴 RUPTURA |
 
 Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertura com fator sazonal regional e gera pedidos de reposição com justificativa do gpt-4o, considerando também o calendário de promoções.
 
@@ -45,7 +45,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 | Health Score | **32 / 100** — crítico (vermelho) |
 | Compliance | 45% |
 | Faturamento jun/2026 | R$ 162.378 (queda de R$ 199k em fev → R$ 162k em jun) |
-| Desvios detectados | 4 (Tênis Casual −14,3% ALTA, Boné −24,1% ALTA, Vestido −8,8% MÉDIA, Short não autorizado) |
+| Desvios detectados | 4 (Calça Jeans MR550061 −16,4% ALTA, Óculos Sol MR550070 −19,6% ALTA, Blusa MR550050 −8,8% MÉDIA, item mix não autorizado) |
 | Recomendações IA | 3 — via gpt-4o (`modo: "GenAI Hub"` confirmado) |
 | Donut da rede | 4 críticos / 9 em atenção / 7 saudáveis (20 unidades) |
 
@@ -165,7 +165,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 | `acionar_reposicao` | Acionar Agente de Reposição para uma ou todas as lojas |
 
 - **Fluxo validado:** aprovação de pedidos por linguagem natural end-to-end
-- **Exemplo:** *"Aprova todos os pedidos de Havaianas pendentes"* → Joule lista, identifica IDs e aprova todos automaticamente
+- **Exemplo:** *"Aprova todos os pedidos de Sandália Feminina pendentes"* → Joule lista, identifica IDs e aprova todos automaticamente
 - **Nomes de lojas:** todos os tools aceitam nome por extenso (ex: "Porto Alegre") — resolvem o ID automaticamente
 - **Auth:** OAuth2 `client_credentials` via XSUAA; busca CSRF token antes de ações POST
 
@@ -391,7 +391,7 @@ Acesse **http://localhost:4004**
 ### Endpoints úteis
 ```bash
 # Painel — todas as unidades com cobertura sazonal
-GET /franqueadora/Estoque_Unidade?$filter=sku eq 'SKU-100'
+GET /franqueadora/Estoque_Unidade?$filter=sku eq 'MR550053'
 
 # Desvios da Loja Porto Alegre (147)
 GET /franqueadora/Desvios?$filter=unidade_ID eq 'u147'

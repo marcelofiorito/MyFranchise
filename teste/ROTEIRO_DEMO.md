@@ -53,10 +53,10 @@
 ### ATO 3 — Estoque & Reposição · a camada de performance do score (≈3 min) ⭐ clímax técnico
 **App:** Estoque & Reposição (Gestor)
 
-1. Abrir. Filtrar por status **RUPTURA** → 5 itens: **3 no NE** (Havaianas — fator sazonal 1,8 em julho) e **2 no Sul** (Bota Couro Inverno, u147 — fator 1,7 no inverno).
-2. *"Mesmo produto, mesmo mês — risco oposto por região. A Bota Couro Inverno da Loja Porto Alegre (147) está em ruptura porque o Sul tem demanda 1,7x no inverno. O agente calcula a cobertura com o fator sazonal de cada região."*
+1. Abrir. Filtrar por status **RUPTURA** → 5 itens: **3 no NE** (Sandália Feminina — fator sazonal 1,8 em julho) e **2 no Sul** (Calça Jeans Masculina (MR550061), u147 — fator 1,7 no inverno).
+2. *"Mesmo produto, mesmo mês — risco oposto por região. A Calça Jeans Masculina (MR550061) da Loja Porto Alegre (147) está em ruptura porque o Sul tem demanda 1,7x no inverno. O agente calcula a cobertura com o fator sazonal de cada região."*
 3. *"Ruptura de estoque = venda perdida = faturamento cai = performance cai = score cai. O sistema fechou o ciclo."*
-4. Clicar na Bota Couro Inverno da Loja Porto Alegre (147) → Object Page → aba **Pedidos de Reposição** → pedido gerado pelo gpt-4o com justificativa detalhada.
+4. Clicar na Calça Jeans Masculina (MR550061) da Loja Porto Alegre (147) → Object Page → aba **Pedidos de Reposição** → pedido gerado pelo gpt-4o com justificativa detalhada.
 5. *"O agente não só detectou — ele já calculou a quantidade, sugeriu o fornecedor e escreveu a justificativa. Rodando no AI Core, dentro do BTP."*
 6. Mostrar o tile **"Pedidos de Reposição: 6 pendentes"** no launchpad.
 
@@ -70,7 +70,7 @@
 1. Abrir o Joule. *"Seis pedidos esperando aprovação. O gestor não precisa abrir nenhum app."*
 2. Perguntar: **"Tem pedido de reposição aguardando aprovação?"**
    → Joule lista os 6 pedidos com loja, produto e quantidade.
-3. Perguntar: **"Aprova todos os pedidos de Havaianas pendentes"**
+3. Perguntar: **"Aprova todos os pedidos de Sandália Feminina pendentes"**
    → Joule identifica os IDs, chama `aprovar_pedido` para cada um, confirma: *"6 pedidos aprovados — Fortaleza, Salvador, Recife."*
 4. Tile atualiza para **0** em 30 segundos.
 
@@ -115,7 +115,7 @@ Abrir o app **Admin** no Work Zone e executar em ordem:
 ### Dados batem com a narrativa?
 - [ ] Loja Porto Alegre (147) aparece vermelha (score 32) no Painel e no Portal
 - [ ] 4 desvios da Loja Porto Alegre (147) no Compliance com severidades certas (2 Alta, 1 Média, 1 Mix)
-- [ ] Bota Couro Inverno da Loja Porto Alegre (147) aparece em RUPTURA no Estoque
+- [ ] Calça Jeans Masculina (MR550061) da Loja Porto Alegre (147) aparece em RUPTURA no Estoque
 - [ ] 3 itens NE + 2 Sul em RUPTURA (total 5)
 - [ ] Tile "Pedidos de Reposição" mostra 6 PENDENTE
 - [ ] Tile "Estoque & Reposição" mostra 5 em RUPTURA
@@ -124,8 +124,8 @@ Abrir o app **Admin** no Work Zone e executar em ordem:
 
 ### Joule funciona?
 - [ ] *"Tem pedido de reposição aguardando aprovação?"* → lista os 6
-- [ ] *"Aprova todos os pedidos de Havaianas pendentes"* → aprovação confirmada
-- [ ] *"Quais lojas têm ruptura de Havaianas no NE?"* → lista NE com cobertura vs lead time
+- [ ] *"Aprova todos os pedidos de Sandália Feminina pendentes"* → aprovação confirmada
+- [ ] *"Quais lojas têm ruptura de Sandália Feminina no NE?"* → lista NE com cobertura vs lead time
 
 ### Mecânica ao vivo
 - [ ] Login do Gestor E do Franqueado funcionam (logout/login limpo entre eles)

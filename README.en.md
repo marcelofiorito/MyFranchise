@@ -25,10 +25,10 @@ Inventory stockout is one of the key operational risks in franchise networks: ou
 
 | Store | Region | SKU | Coverage (Jul) | Status |
 |---|---|---|---|---|
-| Recife (u178) | NE | Havaianas Top | 2.6 days | 🔴 STOCKOUT |
-| Salvador (u156) | NE | Havaianas Top | 1.8 days | 🔴 STOCKOUT |
-| Porto Alegre (u147) | S | Havaianas Top | 66.7 days | 🟢 OK |
-| Porto Alegre (u147) | S | Bota Couro Inverno | 1.8 days | 🔴 STOCKOUT |
+| Recife (u178) | NE | Sandália Feminina (MR550053) | 2.6 days | 🔴 STOCKOUT |
+| Salvador (u156) | NE | Sandália Feminina (MR550053) | 1.8 days | 🔴 STOCKOUT |
+| Porto Alegre (u147) | S | Sandália Feminina (MR550053) | 66.7 days | 🟢 OK |
+| Porto Alegre (u147) | S | Calça Jeans Masculina (MR550061) | 1.8 days | 🔴 STOCKOUT |
 
 Same product, same month → opposite risk by region. The agent calculates coverage with the regional seasonal factor and generates replenishment orders with gpt-4o justification, also considering the promotional calendar.
 
@@ -45,7 +45,7 @@ Same product, same month → opposite risk by region. The agent calculates cover
 | Health Score | **32 / 100** — critical (red) |
 | Compliance | 45% |
 | Revenue Jun/2026 | R$ 162,378 (decline from R$ 199k in Feb → R$ 162k in Jun) |
-| Detected deviations | 4 (Casual Sneaker −14.3% ALTA, Cap −24.1% ALTA, Dress −8.8% MÉDIA, unauthorized Short) |
+| Detected deviations | 4 (Calça Jeans MR550061 −16.4% HIGH, Óculos Sol MR550070 −19.6% HIGH, Blusa MR550050 −8.8% MEDIUM, unauthorized item mix) |
 | AI Recommendations | 3 — via gpt-4o (`mode: "GenAI Hub"` confirmed) |
 | Network donut | 4 critical / 9 warning / 7 healthy (20 units) |
 
@@ -165,7 +165,7 @@ Same product, same month → opposite risk by region. The agent calculates cover
 | `acionar_reposicao` | Trigger Replenishment Agent for one or all stores |
 
 - **Validated flow:** end-to-end order approval via natural language
-- **Example:** *"Approve all pending Havaianas orders"* → Joule lists, identifies IDs, and approves all automatically
+- **Example:** *"Approve all pending Sandália Feminina orders"* → Joule lists, identifies IDs, and approves all automatically
 - **Store names:** all tools accept store names (e.g. "Porto Alegre") — auto-resolve to ID
 - **Auth:** OAuth2 `client_credentials` via XSUAA; CSRF token fetch before POST actions
 
@@ -391,7 +391,7 @@ Open **http://localhost:4004**
 ### Useful Endpoints
 ```bash
 # Panel — all units with seasonal coverage
-GET /franqueadora/Estoque_Unidade?$filter=sku eq 'SKU-100'
+GET /franqueadora/Estoque_Unidade?$filter=sku eq 'MR550053'
 
 # Deviations for Porto Alegre Store (147)
 GET /franqueadora/Desvios?$filter=unidade_ID eq 'u147'
