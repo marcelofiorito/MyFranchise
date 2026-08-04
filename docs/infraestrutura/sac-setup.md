@@ -57,12 +57,14 @@ myfranchise-analytics/
 
 ---
 
-## Como criar o projeto no BAS
+## Como abrir o projeto existente no BAS (MyFranchise)
 
-1. BAS → **New Project from Template** → **SAP HANA Database Project**
-2. Preenche nome: `myfranchise-analytics`
-3. **Bind to HDI Container**: seleciona `myfranchise-db`
-4. O BAS cria a estrutura com `.hdiconfig`, `.hdinamespace`, `package.json` e `.env` automaticamente
+1. Clone o projeto: `git clone https://github.com/marcelofiorito/MyFranchise.git`
+2. **File → Open Folder → /home/user/MyFranchise**
+3. No **SAP HANA Projects** panel (ícone de banco de dados na barra lateral):
+   - Clica em **Unbind** no módulo `db`
+   - Depois clica em **Bind** → seleciona `myfranchise-db`
+   - O `.env` é criado automaticamente e o editor gráfico fica editável
 
 ---
 
