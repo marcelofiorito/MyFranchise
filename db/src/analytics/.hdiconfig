@@ -5,6 +5,12 @@
     },
     "hdbsynonym": {
       "plugin_name": "com.sap.hana.di.synonym"
+    },
+    "hdbrole": {
+      "plugin_name": "com.sap.hana.di.role"
+    },
+    "hdbgrants": {
+      "plugin_name": "com.sap.hana.di.privileges.grants"
     }
   }
 }

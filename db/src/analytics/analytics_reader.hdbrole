@@ -1,0 +1,22 @@
+{
+  "role": {
+    "name": "analytics_reader",
+    "object_privileges": [
+      {
+        "name": "CV_NETWORK_HEALTH",
+        "type": "VIEW",
+        "privileges": ["SELECT"]
+      },
+      {
+        "name": "CV_KPI_PERFORMANCE",
+        "type": "VIEW",
+        "privileges": ["SELECT"]
+      },
+      {
+        "name": "CV_INVENTORY_STATUS",
+        "type": "VIEW",
+        "privileges": ["SELECT"]
+      }
+    ]
+  }
+}
