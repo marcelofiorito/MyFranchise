@@ -24,8 +24,7 @@
   },
   "scripts": {
     "start": "cds-serve",
-    "dev": "cds watch",
-    "build": "cds build --production && cp db/src/analytics/.hdiconfig gen/db/src/analytics/"
+    "dev": "cds watch"
   },
   "cds": {
     "requires": {

@@ -12,7 +12,7 @@ build-parameters:
     - builder: custom
       commands:
         - npm ci
-        - npm run build
+        - npx -p @sap/cds-dk cds build --production
 
 modules:
   # --------------------- SERVER MODULE ------------------------
