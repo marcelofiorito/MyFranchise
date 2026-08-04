@@ -23,15 +23,24 @@
     }
   },
   "sap.ui": {
-    "technology": "HTML5",
+    "technology": "UI5",
     "icons": { "icon": "sap-icon://bar-chart" },
     "fullWidth": true
   },
   "sap.ui5": {
+    "rootView": {
+      "viewName": "myfranchise.sacoverview.view.Main",
+      "type": "XML",
+      "id": "app"
+    },
     "dependencies": {
       "minUI5Version": "1.120.0",
-      "libs": { "sap.m": {} }
-    }
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {}
+      }
+    },
+    "flexEnabled": false
   },
   "sap.cloud": {
     "public": true,
