@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" ID="demo-presalesbrazil.aws-live" entityID="demo-presalesbrazil.aws-live">
+    <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:SignedInfo>
+            <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+            <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+            <ds:Reference URI="#demo-presalesbrazil.aws-live">
+                <ds:Transforms>
+                    <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+                    <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+                </ds:Transforms>
+                <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                <ds:DigestValue>OvsLf1plsAvu45S8//V4drFSRGa80Ta/FdHb3sayiLk=</ds:DigestValue>
+            </ds:Reference>
+        </ds:SignedInfo>
+        <ds:SignatureValue>kIxLX5xavWNv1go5vzFP/GNT/8y70SEA0Iv3hxNkc5v3IM9O12vSVxZz3hwFxtWrv/ZceMSf2BXUoRT6DwAmUzBFoi+Z+pFeoC9o+6XR4zwVp+ybPjhSpS7pppL6EH5fNipxZLDYBU9P59fljKEtajdJmDjl2PLMggqHxpcvt+zOewkmyVYPwuTsJKRcuW8yEqbSfksMxWpfypelJccQ1mvNnZWzI1EDVlfDhdzKrPqm5FZaLvgJZ87grleldVif0bes5dMtUicBolbW8UlNB+bgtDaQ5UxzdlbzAYEW4cIVX5fIJyWfydJ4MrBQPus//lkFX9QU04WkEctT91xLbSx8cxo9hEhDC8ETOVfYVL764YpUNLQIWHR0KpLE4YfGb3yK6HxzPd5vQMhpxeAxiqzD51+1XC1d94dRfchxqerh6UHhjTjecBk/Svnl2cir1rde61rsLnDXucZa+soE38V6FFGRiPBkE4+P4FnJiLRKtkqo8/aleEH9KwaafeZRgfrfmosVvvTjETXfREJ9vZc9uYrsK1eAgMp/CZYjvjo1gdowTIlZclmhihTuJ5sroPh2pj7Ai6/HpU+EcrJFFZhiV+oFuhWiS3eL5jh9fmoiwvHQFEr6DwMdsid5YIGpgC4cK3Yi0JKy3VoPb3QNy7BvC5iRUzm9BXXeP8dxXJQ=</ds:SignatureValue>
+        <ds:KeyInfo>
+            <ds:X509Data>
+                <ds:X509Certificate>MIIFrTCCA5WgAwIBAgIUK9YMNxqoKK/+IJRaxBoxO4rte1kwDQYJKoZIhvcNAQELBQAwfzEaMBgG
+A1UEAwwRc2FtbC1zcCBhd3MtbGl2ZSwxEDAOBgNVBAsMB0hDUC1DRiwxEDAOBgNVBAoMB1NBUCBT
+RSwxEjAQBgNVBAcMCVdhbGxkb3JmLDEcMBoGA1UECAwTQmFkZW4tV3VlcnR0ZW1iZXJnLDELMAkG
+A1UEBhMCREUwHhcNMjYwNjE2MTI1NjMyWhcNMzYwNjEzMTI1NjMyWjB/MRowGAYDVQQDDBFzYW1s
+LXNwIGF3cy1saXZlLDEQMA4GA1UECwwHSENQLUNGLDEQMA4GA1UECgwHU0FQIFNFLDESMBAGA1UE
+BwwJV2FsbGRvcmYsMRwwGgYDVQQIDBNCYWRlbi1XdWVydHRlbWJlcmcsMQswCQYDVQQGEwJERTCC
+AiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAL/wTbvNoLO3WX4TY5mdx8lQGVeB0yXVUgLu
+vkLg1Djs/DOfqFV/qlWVQO++HGpN1biI/A+zH4dZFEjFz2saXEMsZyr6jPZH34wuHQyTCAtpTt4T
+i3/oDPyXNkJWWqZ1Fdr+z3wrtiESB02ySQj/PDzqD1ZtICHwPrXjiHTI4bMVwhjOcsK36V7yi1VU
+gk+wcY1us8Aqcthu7XH4DUfmxS5s+MTrJLjdVXu+OnOR3EQsBL6fdeC7KMtYomEPYca7CqjBu1r3
+DwXilKvB7KDztR+44n27qeODcTYGmKlPZd2THXc5m2iWbB8AzQJtX/el6sst3iRNWAmUoj4UrZGy
+xd3rmM9TvPggEef++8RZtq+05XvtUnTV4QzYbVnKNE3e/FeNhDQSzRbpfO2rNIdr4nTl80t7u4tU
+omdNpjKF/sj2nQ2dVP2dTnJPh09nVrRvZ027wqck1jEvI2/JQjpORZaV/B90C4xtTl6RtKnzggMF
+osgPvDjlvHlwFLwjG3RNJc6JNrbpTFYQViiZWb6hKhlocKLuOrPBoMIaUlKl8EKqI8U/sMGK00PZ
+VIYtyHuiw6UVlL8eSqlpaQ2vO7bej8shuOFTa5djsDALx/OTEQHhlyPiLXzkudRD2GItryDwdw2S
+JFOBu3ZhuXJ6G9quHmFdlbszMvg7VvNKOYASoDltAgMBAAGjITAfMB0GA1UdDgQWBBTn9NCZLmQj
+zym4prwZTVmjGWGZYjANBgkqhkiG9w0BAQsFAAOCAgEAVFh3+CW/Cqg/HnlOBtZEQI90nukRxCrM
+ITHGy1jgzdafQ8RsDthFRKTzq75YNXnPpH5Yu/FBW/CvZxhQjb7hBuim3TkfJshnI+bxrwTqIr0k
+wIvh768FkwvR1BDpcOPf/liIQtqWRsThejHDoFlzG91D3cldcPCqnyj9h041QZEPaXRuu2k90kLk
+fPTr4PaEVW4beo7y0Iuel4oYpMJWi5M063b1ap9l5qQ+HTI8uH6BvooQk2dOBIhSR22kxk5bsVTa
+sky9DTaZ+LO7kZtHTY59HqZw8Tuw3tNtGeuz2bSU8w7EmnvXRbLJNXdfwc9LVQceVxuM8iLayM3T
+/ISxV2DecX87vpI3uONdPs9ltdRyADvTi/8/7K4GcyLr0irEKYOMKhj6yi7Y9njgtMB5WqzoPFwi
+BPybXHoW9Hh4GLYY+pluXnacADwgbrdyjLRGYLU3oktfhuy5Op4SDGnUAwI4TScBzp5Bf0yK0dcF
+zNVvbeyKxjRf988CakBJtBeTRhmFnkwr+lRsW4NMCF5kPHZo4qRqqzDuVy2K5pSNuq6Q4/gPtmII
+wTY0WsQSy0qLv8l0mdyzKuh3bZj9KKP+Oh7lUl5+o4aqARQ4XRzNkZID0+3qcGNumtpBf0eKbvGl
+0nWolas85v6Vlt+1bJUdXzc7VSK5SxIfM+tIEQTA0p4=</ds:X509Certificate>
+            </ds:X509Data>
+        </ds:KeyInfo>
+    </ds:Signature>
+    <md:SPSSODescriptor AuthnRequestsSigned="true" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+        <md:KeyDescriptor use="signing">
+            <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                <ds:X509Data>
+                    <ds:X509Certificate>MIIFrTCCA5WgAwIBAgIUK9YMNxqoKK/+IJRaxBoxO4rte1kwDQYJKoZIhvcNAQELBQAwfzEaMBgGA1UEAwwRc2FtbC1zcCBhd3MtbGl2ZSwxEDAOBgNVBAsMB0hDUC1DRiwxEDAOBgNVBAoMB1NBUCBTRSwxEjAQBgNVBAcMCVdhbGxkb3JmLDEcMBoGA1UECAwTQmFkZW4tV3VlcnR0ZW1iZXJnLDELMAkGA1UEBhMCREUwHhcNMjYwNjE2MTI1NjMyWhcNMzYwNjEzMTI1NjMyWjB/MRowGAYDVQQDDBFzYW1sLXNwIGF3cy1saXZlLDEQMA4GA1UECwwHSENQLUNGLDEQMA4GA1UECgwHU0FQIFNFLDESMBAGA1UEBwwJV2FsbGRvcmYsMRwwGgYDVQQIDBNCYWRlbi1XdWVydHRlbWJlcmcsMQswCQYDVQQGEwJERTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAL/wTbvNoLO3WX4TY5mdx8lQGVeB0yXVUgLuvkLg1Djs/DOfqFV/qlWVQO++HGpN1biI/A+zH4dZFEjFz2saXEMsZyr6jPZH34wuHQyTCAtpTt4Ti3/oDPyXNkJWWqZ1Fdr+z3wrtiESB02ySQj/PDzqD1ZtICHwPrXjiHTI4bMVwhjOcsK36V7yi1VUgk+wcY1us8Aqcthu7XH4DUfmxS5s+MTrJLjdVXu+OnOR3EQsBL6fdeC7KMtYomEPYca7CqjBu1r3DwXilKvB7KDztR+44n27qeODcTYGmKlPZd2THXc5m2iWbB8AzQJtX/el6sst3iRNWAmUoj4UrZGyxd3rmM9TvPggEef++8RZtq+05XvtUnTV4QzYbVnKNE3e/FeNhDQSzRbpfO2rNIdr4nTl80t7u4tUomdNpjKF/sj2nQ2dVP2dTnJPh09nVrRvZ027wqck1jEvI2/JQjpORZaV/B90C4xtTl6RtKnzggMFosgPvDjlvHlwFLwjG3RNJc6JNrbpTFYQViiZWb6hKhlocKLuOrPBoMIaUlKl8EKqI8U/sMGK00PZVIYtyHuiw6UVlL8eSqlpaQ2vO7bej8shuOFTa5djsDALx/OTEQHhlyPiLXzkudRD2GItryDwdw2SJFOBu3ZhuXJ6G9quHmFdlbszMvg7VvNKOYASoDltAgMBAAGjITAfMB0GA1UdDgQWBBTn9NCZLmQjzym4prwZTVmjGWGZYjANBgkqhkiG9w0BAQsFAAOCAgEAVFh3+CW/Cqg/HnlOBtZEQI90nukRxCrMITHGy1jgzdafQ8RsDthFRKTzq75YNXnPpH5Yu/FBW/CvZxhQjb7hBuim3TkfJshnI+bxrwTqIr0kwIvh768FkwvR1BDpcOPf/liIQtqWRsThejHDoFlzG91D3cldcPCqnyj9h041QZEPaXRuu2k90kLkfPTr4PaEVW4beo7y0Iuel4oYpMJWi5M063b1ap9l5qQ+HTI8uH6BvooQk2dOBIhSR22kxk5bsVTasky9DTaZ+LO7kZtHTY59HqZw8Tuw3tNtGeuz2bSU8w7EmnvXRbLJNXdfwc9LVQceVxuM8iLayM3T/ISxV2DecX87vpI3uONdPs9ltdRyADvTi/8/7K4GcyLr0irEKYOMKhj6yi7Y9njgtMB5WqzoPFwiBPybXHoW9Hh4GLYY+pluXnacADwgbrdyjLRGYLU3oktfhuy5Op4SDGnUAwI4TScBzp5Bf0yK0dcFzNVvbeyKxjRf988CakBJtBeTRhmFnkwr+lRsW4NMCF5kPHZo4qRqqzDuVy2K5pSNuq6Q4/gPtmIIwTY0WsQSy0qLv8l0mdyzKuh3bZj9KKP+Oh7lUl5+o4aqARQ4XRzNkZID0+3qcGNumtpBf0eKbvGl0nWolas85v6Vlt+1bJUdXzc7VSK5SxIfM+tIEQTA0p4=</ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </md:KeyDescriptor>
+        <md:KeyDescriptor use="encryption">
+            <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                <ds:X509Data>
+                    <ds:X509Certificate>MIIFrTCCA5WgAwIBAgIUK9YMNxqoKK/+IJRaxBoxO4rte1kwDQYJKoZIhvcNAQELBQAwfzEaMBgGA1UEAwwRc2FtbC1zcCBhd3MtbGl2ZSwxEDAOBgNVBAsMB0hDUC1DRiwxEDAOBgNVBAoMB1NBUCBTRSwxEjAQBgNVBAcMCVdhbGxkb3JmLDEcMBoGA1UECAwTQmFkZW4tV3VlcnR0ZW1iZXJnLDELMAkGA1UEBhMCREUwHhcNMjYwNjE2MTI1NjMyWhcNMzYwNjEzMTI1NjMyWjB/MRowGAYDVQQDDBFzYW1sLXNwIGF3cy1saXZlLDEQMA4GA1UECwwHSENQLUNGLDEQMA4GA1UECgwHU0FQIFNFLDESMBAGA1UEBwwJV2FsbGRvcmYsMRwwGgYDVQQIDBNCYWRlbi1XdWVydHRlbWJlcmcsMQswCQYDVQQGEwJERTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAL/wTbvNoLO3WX4TY5mdx8lQGVeB0yXVUgLuvkLg1Djs/DOfqFV/qlWVQO++HGpN1biI/A+zH4dZFEjFz2saXEMsZyr6jPZH34wuHQyTCAtpTt4Ti3/oDPyXNkJWWqZ1Fdr+z3wrtiESB02ySQj/PDzqD1ZtICHwPrXjiHTI4bMVwhjOcsK36V7yi1VUgk+wcY1us8Aqcthu7XH4DUfmxS5s+MTrJLjdVXu+OnOR3EQsBL6fdeC7KMtYomEPYca7CqjBu1r3DwXilKvB7KDztR+44n27qeODcTYGmKlPZd2THXc5m2iWbB8AzQJtX/el6sst3iRNWAmUoj4UrZGyxd3rmM9TvPggEef++8RZtq+05XvtUnTV4QzYbVnKNE3e/FeNhDQSzRbpfO2rNIdr4nTl80t7u4tUomdNpjKF/sj2nQ2dVP2dTnJPh09nVrRvZ027wqck1jEvI2/JQjpORZaV/B90C4xtTl6RtKnzggMFosgPvDjlvHlwFLwjG3RNJc6JNrbpTFYQViiZWb6hKhlocKLuOrPBoMIaUlKl8EKqI8U/sMGK00PZVIYtyHuiw6UVlL8eSqlpaQ2vO7bej8shuOFTa5djsDALx/OTEQHhlyPiLXzkudRD2GItryDwdw2SJFOBu3ZhuXJ6G9quHmFdlbszMvg7VvNKOYASoDltAgMBAAGjITAfMB0GA1UdDgQWBBTn9NCZLmQjzym4prwZTVmjGWGZYjANBgkqhkiG9w0BAQsFAAOCAgEAVFh3+CW/Cqg/HnlOBtZEQI90nukRxCrMITHGy1jgzdafQ8RsDthFRKTzq75YNXnPpH5Yu/FBW/CvZxhQjb7hBuim3TkfJshnI+bxrwTqIr0kwIvh768FkwvR1BDpcOPf/liIQtqWRsThejHDoFlzG91D3cldcPCqnyj9h041QZEPaXRuu2k90kLkfPTr4PaEVW4beo7y0Iuel4oYpMJWi5M063b1ap9l5qQ+HTI8uH6BvooQk2dOBIhSR22kxk5bsVTasky9DTaZ+LO7kZtHTY59HqZw8Tuw3tNtGeuz2bSU8w7EmnvXRbLJNXdfwc9LVQceVxuM8iLayM3T/ISxV2DecX87vpI3uONdPs9ltdRyADvTi/8/7K4GcyLr0irEKYOMKhj6yi7Y9njgtMB5WqzoPFwiBPybXHoW9Hh4GLYY+pluXnacADwgbrdyjLRGYLU3oktfhuy5Op4SDGnUAwI4TScBzp5Bf0yK0dcFzNVvbeyKxjRf988CakBJtBeTRhmFnkwr+lRsW4NMCF5kPHZo4qRqqzDuVy2K5pSNuq6Q4/gPtmIIwTY0WsQSy0qLv8l0mdyzKuh3bZj9KKP+Oh7lUl5+o4aqARQ4XRzNkZID0+3qcGNumtpBf0eKbvGl0nWolas85v6Vlt+1bJUdXzc7VSK5SxIfM+tIEQTA0p4=</ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </md:KeyDescriptor>
+        <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://demo-presalesbrazil.authentication.us10.hana.ondemand.com/saml/SingleLogout/alias/demo-presalesbrazil.aws-live" ResponseLocation="https://demo-presalesbrazil.authentication.us10.hana.ondemand.com/saml/SingleLogout/alias/demo-presalesbrazil.aws-live"/>
+        <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://demo-presalesbrazil.authentication.us10.hana.ondemand.com/saml/SingleLogout/alias/demo-presalesbrazil.aws-live" ResponseLocation="https://demo-presalesbrazil.authentication.us10.hana.ondemand.com/saml/SingleLogout/alias/demo-presalesbrazil.aws-live"/>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName</md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent</md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
+        <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://demo-presalesbrazil.authentication.us10.hana.ondemand.com/saml/SSO/alias/demo-presalesbrazil.aws-live" index="0" isDefault="true"/>
+        <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:URI" Location="https://demo-presalesbrazil.authentication.us10.hana.ondemand.com/oauth/token/alias/demo-presalesbrazil.aws-live" index="1"/>
+    </md:SPSSODescriptor>
+</md:EntityDescriptor>

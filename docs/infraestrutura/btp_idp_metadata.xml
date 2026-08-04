@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" ID="https___build-platform-rfm61ms1.authentication.us10.hana.ondemand.com" entityID="https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com">
+    <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:SignedInfo>
+            <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+            <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+            <ds:Reference URI="#https___build-platform-rfm61ms1.authentication.us10.hana.ondemand.com">
+                <ds:Transforms>
+                    <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+                    <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+                </ds:Transforms>
+                <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                <ds:DigestValue>zfcJMOuShz/xIHgokfEw7uhPgosEROWWD7uo019eyVM=</ds:DigestValue>
+            </ds:Reference>
+        </ds:SignedInfo>
+        <ds:SignatureValue>I4W9nLcK6hRY3TOYTii7TOMKUeYw7wgcjnPLpSjPdpGywL4rQOQ3JzlSKySzfuwy1zGxrGhtkkLv5mDmd8feg/JxWM+w6gpw1BgPoXTkbOWkwvdvkwW0C+LC5OokIhas0A2dTOvIGhKdBrMLlCqnct4d0QoTq9PRjdZRvug9O6v2Uyom7cx7KfnL6TzWE088AqncFKkpRbQmbBCEh9gztgaOAoxdM7m1oU3WGs7ZvsjrfN0JnS9N8nizMDShBMW4dohO/OQbmfHjHvDFF7V65rOTQj/q8I67E+ljB6nLeE3vmJwJjSAV4kqlp9ItA0H6mSaBCGfiuwEhH3ky2plQIA==</ds:SignatureValue>
+        <ds:KeyInfo>
+            <ds:X509Data>
+                <ds:X509Certificate>MIIDMjCCAhqgAwIBAgIGElXjqKNAMA0GCSqGSIb3DQEBCwUAMFAxTjBMBgNVBAMMRWh0dHBzOi8v
+YnVpbGQtcGxhdGZvcm0tcmZtNjFtczEuYXV0aGVudGljYXRpb24udXMxMC5oYW5hLm9uZGVtYW5k
+LmNvbTAgFw0xNjAxMDEwMDAwMDBaGA8yMDUwMDEwMTAwMDAwMFowUDFOMEwGA1UEAwxFaHR0cHM6
+Ly9idWlsZC1wbGF0Zm9ybS1yZm02MW1zMS5hdXRoZW50aWNhdGlvbi51czEwLmhhbmEub25kZW1h
+bmQuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuYdhcSDVzzS6QOc0jbJ8wifi
+6P1mj6HRuWB7s/5Nlt001vU4uceRF7KYO8nOQQ5lcIOlIBsqvN+misF3tk93syE+8cTIwG0Rfm9/
+HnUxeP2hERkRdVWn2O8ku3W4xEsRRg5+kAeFlEOiZHO9qvzu0JEBGtVc+N2d+RfqNt2NWyc8y8fS
+g7fHY/oo7+VGImEvEdG+22wM4lQt/+l9DvnIaGf20UfJ0e66C5Vcsiu/QfL7xFChtQXN/XjD49qV
+RhWUdiEoOWiJlfsoiXejKgogOnDX4Akfw2c/3hTeaLU7XabxOjBIgUzjMj+1HhppPAXhAvYr0XyV
+w2wpM9yTs+n9gQIDAQABoxAwDjAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBCwUAA4IBAQBCvD5l
+JnARJuaOgHYhHI4/5HdnZAvNyg1mCQ+wF68HMrEPIie1W0eGoWVzao7G1ZCfgoBqaSqVi11PsLqi
+AK03QguEt8o05mlPz9NMtUB05l+O/GVixta++cr/tr55JUx9JwOTVweLKf6P/d1H3Zvy8/iaW3ZO
+yNib9ZRAQtZwSziHS76MHPYtRHB8bL4Uf0WiALtQREPP45jVlSi6ATtpIfOl398LL+hc2srk8x0R
+DYfWx9k+37jtlm+F4j9j4mMKDp7SAgjrly8eG252uYwCruE6lEgUjOZnCx1irnGh3ojA5cqfWoXL
+aqXCohIOqpw+iFrix3Vt1AZmYFfg1FEc</ds:X509Certificate>
+            </ds:X509Data>
+        </ds:KeyInfo>
+    </ds:Signature>
+    <md:SPSSODescriptor AuthnRequestsSigned="true" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+        <md:KeyDescriptor use="signing">
+            <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                <ds:X509Data>
+                    <ds:X509Certificate>MIIDMjCCAhqgAwIBAgIGElXjqKNAMA0GCSqGSIb3DQEBCwUAMFAxTjBMBgNVBAMMRWh0dHBzOi8vYnVpbGQtcGxhdGZvcm0tcmZtNjFtczEuYXV0aGVudGljYXRpb24udXMxMC5oYW5hLm9uZGVtYW5kLmNvbTAgFw0xNjAxMDEwMDAwMDBaGA8yMDUwMDEwMTAwMDAwMFowUDFOMEwGA1UEAwxFaHR0cHM6Ly9idWlsZC1wbGF0Zm9ybS1yZm02MW1zMS5hdXRoZW50aWNhdGlvbi51czEwLmhhbmEub25kZW1hbmQuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuYdhcSDVzzS6QOc0jbJ8wifi6P1mj6HRuWB7s/5Nlt001vU4uceRF7KYO8nOQQ5lcIOlIBsqvN+misF3tk93syE+8cTIwG0Rfm9/HnUxeP2hERkRdVWn2O8ku3W4xEsRRg5+kAeFlEOiZHO9qvzu0JEBGtVc+N2d+RfqNt2NWyc8y8fSg7fHY/oo7+VGImEvEdG+22wM4lQt/+l9DvnIaGf20UfJ0e66C5Vcsiu/QfL7xFChtQXN/XjD49qVRhWUdiEoOWiJlfsoiXejKgogOnDX4Akfw2c/3hTeaLU7XabxOjBIgUzjMj+1HhppPAXhAvYr0XyVw2wpM9yTs+n9gQIDAQABoxAwDjAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBCwUAA4IBAQBCvD5lJnARJuaOgHYhHI4/5HdnZAvNyg1mCQ+wF68HMrEPIie1W0eGoWVzao7G1ZCfgoBqaSqVi11PsLqiAK03QguEt8o05mlPz9NMtUB05l+O/GVixta++cr/tr55JUx9JwOTVweLKf6P/d1H3Zvy8/iaW3ZOyNib9ZRAQtZwSziHS76MHPYtRHB8bL4Uf0WiALtQREPP45jVlSi6ATtpIfOl398LL+hc2srk8x0RDYfWx9k+37jtlm+F4j9j4mMKDp7SAgjrly8eG252uYwCruE6lEgUjOZnCx1irnGh3ojA5cqfWoXLaqXCohIOqpw+iFrix3Vt1AZmYFfg1FEc</ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </md:KeyDescriptor>
+        <md:KeyDescriptor use="encryption">
+            <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                <ds:X509Data>
+                    <ds:X509Certificate>MIIDMjCCAhqgAwIBAgIGElXjqKNAMA0GCSqGSIb3DQEBCwUAMFAxTjBMBgNVBAMMRWh0dHBzOi8vYnVpbGQtcGxhdGZvcm0tcmZtNjFtczEuYXV0aGVudGljYXRpb24udXMxMC5oYW5hLm9uZGVtYW5kLmNvbTAgFw0xNjAxMDEwMDAwMDBaGA8yMDUwMDEwMTAwMDAwMFowUDFOMEwGA1UEAwxFaHR0cHM6Ly9idWlsZC1wbGF0Zm9ybS1yZm02MW1zMS5hdXRoZW50aWNhdGlvbi51czEwLmhhbmEub25kZW1hbmQuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuYdhcSDVzzS6QOc0jbJ8wifi6P1mj6HRuWB7s/5Nlt001vU4uceRF7KYO8nOQQ5lcIOlIBsqvN+misF3tk93syE+8cTIwG0Rfm9/HnUxeP2hERkRdVWn2O8ku3W4xEsRRg5+kAeFlEOiZHO9qvzu0JEBGtVc+N2d+RfqNt2NWyc8y8fSg7fHY/oo7+VGImEvEdG+22wM4lQt/+l9DvnIaGf20UfJ0e66C5Vcsiu/QfL7xFChtQXN/XjD49qVRhWUdiEoOWiJlfsoiXejKgogOnDX4Akfw2c/3hTeaLU7XabxOjBIgUzjMj+1HhppPAXhAvYr0XyVw2wpM9yTs+n9gQIDAQABoxAwDjAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBCwUAA4IBAQBCvD5lJnARJuaOgHYhHI4/5HdnZAvNyg1mCQ+wF68HMrEPIie1W0eGoWVzao7G1ZCfgoBqaSqVi11PsLqiAK03QguEt8o05mlPz9NMtUB05l+O/GVixta++cr/tr55JUx9JwOTVweLKf6P/d1H3Zvy8/iaW3ZOyNib9ZRAQtZwSziHS76MHPYtRHB8bL4Uf0WiALtQREPP45jVlSi6ATtpIfOl398LL+hc2srk8x0RDYfWx9k+37jtlm+F4j9j4mMKDp7SAgjrly8eG252uYwCruE6lEgUjOZnCx1irnGh3ojA5cqfWoXLaqXCohIOqpw+iFrix3Vt1AZmYFfg1FEc</ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </md:KeyDescriptor>
+        <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com/saml/SingleLogout/alias/build-platform-rfm61ms1.aws-live" ResponseLocation="https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com/saml/SingleLogout/alias/build-platform-rfm61ms1.aws-live"/>
+        <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com/saml/SingleLogout/alias/build-platform-rfm61ms1.aws-live" ResponseLocation="https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com/saml/SingleLogout/alias/build-platform-rfm61ms1.aws-live"/>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName</md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent</md:NameIDFormat>
+        <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com/saml/SSO/alias/build-platform-rfm61ms1.aws-live" index="0" isDefault="true"/>
+        <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:URI" Location="https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com/oauth/token/alias/build-platform-rfm61ms1.aws-live" index="1"/>
+    </md:SPSSODescriptor>
+</md:EntityDescriptor>
