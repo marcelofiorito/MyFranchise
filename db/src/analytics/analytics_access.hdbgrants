@@ -1,7 +1,7 @@
 {
   "myfranchise-db": {
     "application_user": {
-      "roles": ["analytics_reader"]
+      "container_roles": ["analytics_reader"]
     }
   }
 }
