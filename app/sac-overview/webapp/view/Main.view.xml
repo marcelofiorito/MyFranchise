@@ -1,8 +1,10 @@
 <mvc:View
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns:html="sap.ui.core"
+    xmlns:core="sap.ui.core"
     displayBlock="true">
-    <html:HTML
-        content='&lt;iframe src="https://demo-presalesbrazil.us10.sapanalytics.cloud/sap/fpa/ui/tenants/78e94/bo/story/30A0BD802422836E3B9C1743AC9A913D?mode=embed&amp;pagebar=disable" style="width:100%;height:100vh;border:none;" /&gt;'
+    <core:HTML
+        id="sacFrame"
+        preferDOM="true"
+        content="&lt;iframe src='https://demo-presalesbrazil.us10.sapanalytics.cloud/sap/fpa/ui/tenants/78e94/bo/story/30A0BD802422836E3B9C1743AC9A913D?mode=embed&amp;pagebar=disable' width='100%' height='100vh' frameborder='0' style='border:none;display:block;'&gt;&lt;/iframe&gt;"
     />
 </mvc:View>
