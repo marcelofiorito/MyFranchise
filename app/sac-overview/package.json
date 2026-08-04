@@ -2,9 +2,10 @@
   "name": "sac-overview",
   "version": "1.0.0",
   "devDependencies": {
+    "@ui5/cli": "^3",
     "ui5-task-zipper": "^3"
   },
-  "ui5": {
-    "bundler": "none"
+  "scripts": {
+    "build": "ui5 build --clean-dest"
   }
 }

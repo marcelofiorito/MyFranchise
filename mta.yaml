@@ -194,9 +194,9 @@ modules:
     type: html5
     path: app/sac-overview
     build-parameters:
-      build-result: webapp
+      build-result: dist
       builder: custom
-      commands: []
+      commands: [npm install, npm run build]
       supported-platforms: []
 
   # ------------------ DESTINATION CONTENT ---------------------
