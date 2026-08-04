@@ -113,6 +113,9 @@ modules:
         - name: admin
           artifacts: [admin.zip]
           target-path: app/
+        - name: sac-overview
+          artifacts: [sac-overview.zip]
+          target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
   - name: network
@@ -185,6 +188,15 @@ modules:
       build-result: dist
       builder: custom
       commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: sac-overview
+    type: html5
+    path: app/sac-overview
+    build-parameters:
+      build-result: webapp
+      builder: custom
+      commands: []
       supported-platforms: []
 
   # ------------------ DESTINATION CONTENT ---------------------

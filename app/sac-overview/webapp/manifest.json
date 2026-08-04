@@ -1,0 +1,44 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "myfranchise.sacoverview",
+    "type": "application",
+    "title": "Network Overview",
+    "description": "RunMyFranchise Network Health Dashboard — SAP Analytics Cloud",
+    "applicationVersion": { "version": "1.0.0" },
+    "crossNavigation": {
+      "inbounds": {
+        "SACOverview-display": {
+          "semanticObject": "SACOverview",
+          "action": "display",
+          "title": "Network Overview",
+          "subTitle": "SAP Analytics Cloud",
+          "icon": "sap-icon://bar-chart",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "HTML5",
+    "icons": { "icon": "sap-icon://bar-chart" },
+    "fullWidth": true
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": { "sap.m": {} }
+    }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
+  },
+  "sap.fiori": {
+    "registrationIds": ["myfranchise-sac-overview"],
+    "archeType": "analytical"
+  }
+}
