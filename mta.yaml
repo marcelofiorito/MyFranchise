@@ -53,6 +53,10 @@ modules:
         - app/
         - mta_archives/
         - .MyFranchise_mta_build_tmp/
+        - exemplo/
+        - db/
+        - joule-mcp/
+        - rpt-predicao/
     provides:
       - name: mcp-api
         properties:
