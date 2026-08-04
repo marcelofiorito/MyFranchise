@@ -5,6 +5,7 @@
     <core:HTML
         id="sacFrame"
         preferDOM="true"
-        content="&lt;style&gt;html,body,#sacFrame,#sacFrame iframe{height:100%!important;width:100%!important;border:none;margin:0;padding:0;overflow:hidden}&lt;/style&gt;&lt;iframe src='https://demo-presalesbrazil.us10.sapanalytics.cloud/sap/fpa/ui/tenants/78e94/bo/story/30A0BD802422836E3B9C1743AC9A913D?mode=embed&amp;pagebar=disable&amp;splashScreen=false&amp;shellMode=embed&amp;view=view' style='width:100%;height:calc(100vh - 44px);border:none;display:block;' frameborder='0'&gt;&lt;/iframe&gt;"
+        afterRendering=".onAfterRendering"
+        content="&lt;div id='sac-container' style='width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;'&gt;&lt;iframe id='sac-iframe' src='https://demo-presalesbrazil.us10.sapanalytics.cloud/sap/fpa/ui/tenants/78e94/bo/story/30A0BD802422836E3B9C1743AC9A913D?mode=embed&amp;pagebar=disable&amp;splashScreen=false&amp;shellMode=embed&amp;view=view' style='width:100%;height:100%;border:none;' frameborder='0'&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;script&gt;(function(){function resize(){var el=document.getElementById('sac-container');if(!el)return;var h=window.innerHeight-(el.getBoundingClientRect().top||0);el.style.height=Math.max(h,400)+'px';}resize();window.addEventListener('resize',resize);}())&lt;/script&gt;"
     />
 </mvc:View>
