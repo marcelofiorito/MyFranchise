@@ -71,6 +71,8 @@ modules:
       - name: myfranchise-db
     build-parameters:
       ignore: ["node_modules/"]
+      commands:
+        - mkdir -p src/analytics && cp -r ../../db/src/analytics/. src/analytics/
 
   # ------------------ APPLICATION CONTENT ---------------------
   # Publica os 4 apps HTML5 no repo (html5-repo-host)
