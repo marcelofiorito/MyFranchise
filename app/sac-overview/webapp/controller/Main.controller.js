@@ -2,8 +2,8 @@ sap.ui.define(["sap/ui/core/mvc/Controller"], function (Controller) {
     "use strict";
 
     var SAC_BASE_URL = "https://demo-presalesbrazil.us10.sapanalytics.cloud/sap/fpa/ui";
-    var STORY_ID = "30A0BD802422836E3B9C1743AC9A913D";
-    var WIDGET_ID = "Chart_1";
+    var STORY_ID = "2AC0BD802424A3FE4EDEA8C056538AB0";
+    var WIDGET_ID = "FlowLayoutPanel_1";
 
     return Controller.extend("myfranchise.sacoverview.controller.Main", {
 

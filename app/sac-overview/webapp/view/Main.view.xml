@@ -6,6 +6,6 @@
     <core:HTML
         id="sacFrame"
         preferDOM="true"
-        content="&lt;div id='sac-widget-container' style='width:100%;height:calc(100vh - 50px);min-height:500px;'&gt;&lt;/div&gt;"
+        content="&lt;div id='sac-widget-container' style='width:100%;height:500px;max-height:500px;overflow:hidden;'&gt;&lt;/div&gt;"
     />
 </mvc:View>
