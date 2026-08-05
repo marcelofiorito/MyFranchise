@@ -206,7 +206,7 @@ modules:
     type: html5
     path: app/network-dashboard
     build-parameters:
-      build-result: dist
+      build-result: .
       builder: custom
       commands: [npm install, npm run build]
       supported-platforms: []
