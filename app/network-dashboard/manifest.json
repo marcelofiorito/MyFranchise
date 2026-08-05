@@ -1,0 +1,37 @@
+{
+  "sap.app": {
+    "id": "myfranchise.networkdashboard2",
+    "type": "application",
+    "title": "Network Dashboard",
+    "description": "RunMyFranchise Network Dashboard — React + ECharts + Live HANA Cloud",
+    "applicationVersion": { "version": "1.0.0" },
+    "crossNavigation": {
+      "inbounds": {
+        "NetworkDashboard-display": {
+          "semanticObject": "NetworkDashboard",
+          "action": "display",
+          "title": "Network Dashboard",
+          "subTitle": "React + ECharts + HANA Cloud",
+          "icon": "sap-icon://bar-chart",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "HTML5",
+    "icons": { "icon": "sap-icon://bar-chart" },
+    "fullWidth": true
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
+  },
+  "sap.fiori": {
+    "registrationIds": ["myfranchise-network-dashboard"],
+    "archeType": "analytical"
+  }
+}
