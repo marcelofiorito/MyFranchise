@@ -116,6 +116,9 @@ modules:
         - name: sac-overview
           artifacts: [sac-overview.zip]
           target-path: app/
+        - name: network-dashboard
+          artifacts: [network-dashboard.zip]
+          target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
   - name: network
@@ -193,6 +196,15 @@ modules:
   - name: sac-overview
     type: html5
     path: app/sac-overview
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: network-dashboard
+    type: html5
+    path: app/network-dashboard
     build-parameters:
       build-result: dist
       builder: custom
