@@ -87,6 +87,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 | **SAP Advanced Event Mesh (AEM)** | ✅ Produção — broker pub/sub, loop de eventos autônomo |
 | **Loop de Reposição Autônomo** | ✅ Produção — varredura no startup + agente orientado a eventos |
 | **SAP RPT Predictive App** | ✅ Produção — `myfranchise-rpt.cfapps.us10.hana.ondemand.com` |
+| **SAC Overview App (Network Dashboard)** | ✅ Produção — tile no Work Zone com iFrame embed da story SAC |
 | Agente nível 3 (aprovação automática via BPA) | ⬜ Pós-demo — futuro: SAP BPA + IS iFlow como consumer AEM |
 
 **Backend:** `https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com`
@@ -99,7 +100,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 
 ---
 
-## Módulos (8 apps Fiori + Joule)
+## Módulos (9 apps Fiori + Joule)
 
 ### 1. Painel da Rede
 - **Floorplan:** List Report + Object Page
@@ -145,6 +146,13 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
   - **Etapa 4 — Simular Recebimento**: repõe estoque → emite eventos AEM → handler registra a resolução
   - Log de operações com timestamp (últimas 20 ações)
 
+### 9. SAC Overview (Network Dashboard)
+- **Floorplan:** UI5 customizado com iFrame embed (SAC Widget API não suporta containers)
+- **semanticObject/action:** `SACOverview` / `display`
+- **URL Work Zone:** `https://build-platform-rfm61ms1.dt.launchpad.cfapps.us10.hana.ondemand.com`
+- **Destaque:** Renderiza o painel `FlowLayoutPanel_1` da story `RunMyFranchise — Network Overview` diretamente no Work Zone via SAC Widget API. Fallback automático para iFrame se a Widget API não estiver disponível.
+- **Story:** `2AC0BD802424A3FE4EDEA8C056538AB0` no tenant `demo-presalesbrazil.us10.sapanalytics.cloud`
+
 ### Joule (copiloto conversacional)
 - **MCP Server Python:** `joule-myfranchise-mcp` (Python FastMCP, CF — ativo no Joule Studio)
   `https://joule-myfranchise-mcp.cfapps.us10.hana.ondemand.com`
@@ -159,9 +167,9 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 | `get_pedidos_pendentes` | Pedidos de reposição aguardando aprovação |
 | `get_recomendacoes` | Recomendações da IA por loja e prioridade |
 | `get_score_rede` | Scores de saúde na rede |
-| `aprovar_pedido` | Aprovar pedido individual por ID |
-| `recusar_pedido` | Recusar pedido individual por ID |
-| `aprovar_pedidos` | Aprovar TODOS os pedidos pendentes (rede ou por loja) |
+| `confirm_single_order` | Aprovar pedido individual por ID (Node.js) / `aprovar_pedido` (Python) |
+| `reject_order` | Recusar pedido individual por ID (Node.js) / `recusar_pedido` (Python) |
+| `process_replenishment_orders` | Aprovar TODOS os pedidos pendentes (rede ou por loja) (Node.js) / `aprovar_pedidos` (Python) |
 | `acionar_reposicao` | Acionar Agente de Reposição para uma ou todas as lojas |
 
 - **Fluxo validado:** aprovação de pedidos por linguagem natural end-to-end
@@ -194,6 +202,21 @@ A integração com o **SAP Advanced Event Mesh** (Solace PubSub+) está totalmen
 
 ---
 
+## SAP Analytics Cloud (SAC)
+
+Story executiva publicada no SAC, alimentada diretamente pelo HANA Cloud via conexão ao vivo.
+
+- **Tenant SAC:** `demo-presalesbrazil.us10.sapanalytics.cloud` (região us10 — mesma do BTP)
+- **Conexão HANA:** `MFRANCHISE` — usuário técnico `_RT` com `access_role` concedido via DBADMIN
+- **Identidade:** IDP confiável configurado no SAC App Integration (BTP XSUAA)
+- **Modelo analítico:** `MF_NetworkHealth` baseado na Calculation View `myfranchise::CV_NET_HEALTH_SAC`
+- **Story:** `RunMyFranchise — Network Overview` (publicada para o time "Viewer")
+- **Story ID:** `2AC0BD802424A3FE4EDEA8C056538AB0`
+- **App SAC Overview:** renderiza `FlowLayoutPanel_1` da story via SAC Widget API diretamente no Work Zone
+- **Projeto SAC separado:** `https://github.com/marcelofiorito/MyFranchise-SAC`
+
+---
+
 ## Agentes de IA
 
 ### Agente de Recomendações (`srv/ai/recommendations-job.js`)
@@ -210,6 +233,28 @@ A integração com o **SAP Advanced Event Mesh** (Solace PubSub+) está totalmen
 - **Lógica sazonal:** `coberturaDias = saldoAtual / (giroMedioDiario × fatorSazonal × upliftPromo)`. Ruptura quando `coberturaDias < leadTimeDias`.
 - **Actions:** `gerarReposicao(unidade_ID)`, `gerarReposicaoTodas()`
 - **Nível:** 1-2 (detecta + propõe). Nível 3 (aprovação via BPA) = próximo passo.
+
+---
+
+## Dados Reais SAP (Master Data)
+
+Os seeds do projeto foram substituídos por dados reais extraídos de arquivos de master data SAP Retail (pasta `master_data/`).
+
+**SKUs reais (material IDs SAP):**
+- `MR550053` — Sandália Feminina A
+- `MR550099` — Sandália Feminina B
+- `MR550153` — Sandália Feminina C
+- `MR550253` — Sandália Feminina D
+- `MR550061` — Calça Jeans Masculina
+- `MR550070` — Óculos Sol
+- `MR550050` / `MR550051` / `MR550052` — Blusas
+- Série `MR560*` — itens adicionais do mix
+
+**Lojas adicionadas de dados reais de sortimento:**
+- `R163` — Loja Maceió Jaraguá
+- `R114` — Loja João Pessoa Manaíra
+
+**Fonte:** arquivos exportados de master data SAP Retail em `master_data/` (`EXPORT_20260803_*.xlsx`, `Products.xlsx`).
 
 ---
 
@@ -325,7 +370,7 @@ MyFranchise/
 │   ├── service.js              # Handlers: desvios, score, estoque, aprovação pedidos, KPI endpoints
 │   ├── franqueado-service.js   # Impl FranqueadoService
 │   ├── server.js               # Middleware JWT + endpoints /kpi/ruptura e /kpi/pedidos-pendentes
-│   ├── mcp-server.js           # Bridge MCP Server Node.js (CF)
+│   ├── mcp-server.js           # Bridge MCP Server Node.js (CF) — 9 tools
 │   ├── aem-patched.js          # PatchedAEM — correção Basic Auth para plano Developer 100
 │   ├── events/
 │   │   └── messaging.js        # Handlers de eventos autônomos (tópicos AEM)
@@ -340,13 +385,18 @@ MyFranchise/
 │   ├── replenishment/    # Pedidos de Reposição (LR + OP + Aprovar/Recusar) — KPI tile
 │   ├── recommendations/  # Recomendações da IA (LR + OP)
 │   ├── franchisee/       # Portal do Franqueado (OVP — 5 cards)
-│   └── admin/            # Admin — Controle da Demo (UI5 customizado)
+│   ├── admin/            # Admin — Controle da Demo (UI5 customizado)
+│   └── sac-overview/     # SAC Overview — Network Dashboard (iFrame embed (SAC Widget API não suporta containers))
 ├── joule-mcp/
 │   └── mcp_server_cf.py        # Python FastMCP — 9 tools, ativo no Joule Studio
 ├── rpt-predicao/               # App preditivo SAP RPT (Streamlit)
 │   ├── app.py                  # App principal — predição RPT em 2 etapas
 │   ├── dados/historico_estoque_franquias.csv  # Dados de treinamento (94 linhas)
 │   └── requirements.txt
+├── master_data/                # Arquivos de master data SAP Retail (fonte dos seeds reais)
+│   ├── EXPORT_20260803_202202.xlsx
+│   ├── EXPORT_20260803_202256.xlsx
+│   └── Products.xlsx
 ├── docs/
 │   ├── especificação/SPEC.md               # Especificação técnica
 │   ├── requisitos/PRD.md                   # Product Requirements Document
@@ -360,7 +410,7 @@ MyFranchise/
 ├── teste/
 │   └── ROTEIRO_DEMO.md   # Roteiro 4 atos, checklist, plano B
 ├── manifest-rpt.yml      # Deploy CF para app RPT
-├── mta.yaml              # Deploy CF (11 módulos, 6 serviços)
+├── mta.yaml              # Deploy CF (12 módulos, 6 serviços)
 ├── xs-security.json      # XSUAA (roles, scopes, atributos)
 └── README.md
 ```
@@ -420,7 +470,7 @@ mbt build
 cf deploy mta_archives/myfranchise_1.0.0.mtar -f
 ```
 
-O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5, `appcontent`, `destinationcontent`. Serviços: HANA (hdi-shared), XSUAA, HTML5 Repo (host + runtime), Destination, AI Core (existing `default_aicore`), Advanced Event Mesh.
+O `mta.yaml` publica 12 módulos: `myfranchise-srv`, `myfranchise-mcp`, `db-deployer`, 9 apps HTML5 (network, compliance, franchisee, onboarding, recommendations, inventory, replenishment, admin, sac-overview), `appcontent`, `destinationcontent`. Serviços: HANA (hdi-shared), XSUAA, HTML5 Repo (host + runtime), Destination, AI Core (existing `default_aicore`), Advanced Event Mesh.
 
 **Após cada deploy do appcontent:** remover e re-adicionar os apps no Content Manager do Work Zone para limpar o cache (o site não recarrega automaticamente).
 
@@ -435,6 +485,7 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 | Pedidos de Reposição | `Replenishment` | `manage` | Franqueadora_Gestor | contagem `PENDENTE` |
 | Recomendações da IA | `Recommendations` | `display` | Franqueado | — |
 | Portal do Franqueado | `FranchiseePortal` | `display` | Franqueado | — |
+| SAC Overview | `SACOverview` | `display` | Franqueadora_Gestor | — |
 
 ---
 
@@ -452,7 +503,7 @@ O `mta.yaml` publica 10 módulos: `myfranchise-srv`, `db-deployer`, 6 apps HTML5
 ### Inteligência e Automação
 - **SAP RPT Preditivo de Ruptura** — prova de conceito validada em produção (`myfranchise-rpt`). Próximo passo: integrar as predições diretamente no Agente de Reposição para substituir a fórmula heurística de quantidade pelo RPT. O modelo já prediz risco de ruptura E quantidade ótima de reposição a partir de 94 linhas de histórico, zero-shot.
 - **BPA + Integration Suite como consumers AEM** — o broker de eventos está pronto. Próximo passo: configurar gatilho SAP Build Process Automation em `Pedido/StatusChanged(APROVADO)` e iFlow da Integration Suite em `Estoque/Changed` para write-back no ERP.
-- **SAP Analytics Cloud** — dashboards executivos (hoje: Fiori Elements)
+- **SAP Analytics Cloud** — dashboards executivos em produção (story `RunMyFranchise — Network Overview` + app SAC Overview no Work Zone)
 
 ### Integração com Sistemas Retail SAP
 
