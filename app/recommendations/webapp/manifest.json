@@ -1,7 +1,7 @@
 {
   "_version": "1.65.0",
   "sap.app": {
-    "id": "myfranchise.recommendations",
+    "id": "myfranchise.categories",
     "type": "application",
     "i18n": "i18n/i18n.properties",
     "applicationVersion": {
@@ -11,7 +11,7 @@
     "description": "{{appDescription}}",
     "dataSources": {
       "mainService": {
-        "uri": "franqueado/",
+        "uri": "franqueadora/",
         "type": "OData",
         "settings": {
           "odataVersion": "4.0"
@@ -20,12 +20,12 @@
     },
     "crossNavigation": {
       "inbounds": {
-        "Recommendations-display": {
-          "semanticObject": "Recommendations",
+        "CategoryPerformance-display": {
+          "semanticObject": "CategoryPerformance",
           "action": "display",
-          "title": "{{appTitle}}",
+          "title": "Category Performance",
           "subTitle": "{{appDescription}}",
-          "icon": "sap-icon://ai",
+          "icon": "sap-icon://product",
           "signature": {
             "parameters": {},
             "additionalParameters": "allowed"
@@ -37,7 +37,7 @@
   "sap.ui": {
     "technology": "UI5",
     "icons": {
-      "icon": "sap-icon://ai"
+      "icon": "sap-icon://product"
     },
     "fullWidth": true
   },
@@ -65,37 +65,37 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "myfranchise.recommendations.i18n.i18n"
+          "bundleName": "myfranchise.categories.i18n.i18n"
         }
       }
     },
     "routing": {
       "routes": [
         {
-          "name": "RecomendacoesList",
+          "name": "KPI_CategoriaList",
           "pattern": ":?query:",
-          "target": "RecomendacoesList"
+          "target": "KPI_CategoriaList"
         },
         {
-          "name": "RecomendacaoObjectPage",
-          "pattern": "MinhasRecomendacoes({key}):?query:",
-          "target": "RecomendacaoObjectPage"
+          "name": "KPI_CategoriaObjectPage",
+          "pattern": "KPI_Categoria({key}):?query:",
+          "target": "KPI_CategoriaObjectPage"
         }
       ],
       "targets": {
-        "RecomendacoesList": {
+        "KPI_CategoriaList": {
           "type": "Component",
-          "id": "RecomendacoesList",
+          "id": "KPI_CategoriaList",
           "name": "sap.fe.templates.ListReport",
           "options": {
             "settings": {
               "initialLoad": true,
               "variantManagement": "Page",
-              "contextPath": "/MinhasRecomendacoes",
+              "contextPath": "/KPI_Categoria",
               "navigation": {
-                "MinhasRecomendacoes": {
+                "KPI_Categoria": {
                   "detail": {
-                    "route": "RecomendacaoObjectPage"
+                    "route": "KPI_CategoriaObjectPage"
                   }
                 }
               },
@@ -109,13 +109,13 @@
             }
           }
         },
-        "RecomendacaoObjectPage": {
+        "KPI_CategoriaObjectPage": {
           "type": "Component",
-          "id": "RecomendacaoObjectPage",
+          "id": "KPI_CategoriaObjectPage",
           "name": "sap.fe.templates.ObjectPage",
           "options": {
             "settings": {
-              "contextPath": "/MinhasRecomendacoes",
+              "contextPath": "/KPI_Categoria",
               "editableHeaderContent": false
             }
           }
@@ -129,7 +129,7 @@
   },
   "sap.fiori": {
     "registrationIds": [
-      "myfranchise-recommendations"
+      "myfranchise-categories"
     ],
     "archeType": "transactional"
   }

@@ -1,9 +1,9 @@
 using FranqueadoraService as service from '../../srv/service';
 
-// ── ValueHelp nos filtros do Painel da Rede ───────────────────
+// ── Value Help on List Report filters ─────────────────────────
 annotate service.Saude_Dashboard with {
   regiao_code @(
-    title: 'Região',
+    title: 'Region',
     Common.ValueListWithFixedValues: true,
     Common.ValueList: {
       CollectionPath: 'Regiao',
@@ -30,243 +30,126 @@ annotate service.Saude_Dashboard with {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// PAINEL DA REDE — Analytical List Page (view Saude_Dashboard)
-// View agregável (@Aggregation.ApplySupported) → suporta chart
-// ═════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// FRANCHISOR NETWORK DASHBOARD — Analytical List Page
+// View: Saude_Dashboard  |  contextPath=/Saude_Dashboard
+// ═══════════════════════════════════════════════════════════════
 
 annotate service.Saude_Dashboard with @(
-  Aggregation.CustomAggregate #scoreSaude : 'Edm.Decimal',
+  Aggregation.CustomAggregate #scoreSaude    : 'Edm.Decimal',
   Aggregation.CustomAggregate #compliancePct : 'Edm.Decimal',
   Common.SemanticKey : [ID]
 ) {
-  ID           @Analytics.Measure: false  @ID: 'ID';
-  scoreSaude   @Aggregation.default: #AVG;
-  compliancePct @Aggregation.default: #AVG;
-  // Dimensão do chart: código + texto (padrão sflight status/statusName)
-  scoreCriticality @Common.Text: criticalityText @Common.TextArrangement: #TextOnly;
+  ID               @Analytics.Measure: false  @ID: 'ID';
+  scoreSaude       @Aggregation.default: #AVG;
+  compliancePct    @Aggregation.default: #AVG;
+  scoreCriticality @Common.Text: criticalityText
+                   @Common.TextArrangement: #TextOnly;
 };
 
 annotate service.Saude_Dashboard with @(
 
   UI.HeaderInfo: {
-    TypeName       : '{i18n>Unidades}',
-    TypeNamePlural : '{i18n>lbl_network_unidadesDaRede}',
+    TypeName       : 'Unit',
+    TypeNamePlural : 'Network Units',
     Title          : { Value: nome },
     Description    : { Value: cidade }
   },
 
-  UI.SelectionFields: [ cluster_code, regiao_code, scoreCriticality ],
+  UI.SelectionFields: [ regiao_code, cluster_code, scoreCriticality, emReforma ],
 
   UI.LineItem: [
-    { Value: codigo,       Label: '{i18n>lbl_network_loja}'   },
-    { Value: nome,         Label: '{i18n>Unidades_nome}'      },
-    { Value: cidade,       Label: '{i18n>Unidades_cidade}'    },
-    { Value: cluster_code, Label: '{i18n>Unidades_cluster}'   },
-    { Value: regiao_code,  Label: '{i18n>Unidades_regiao}'    },
+    { Value: nome,          Label: 'Name'              },
+    { Value: cidade,        Label: 'City'              },
+    { Value: regiao_code,   Label: 'Region'            },
+    { Value: cluster_code,  Label: 'Cluster'           },
     {
-      Value      : scoreSaude,
-      Label      : '{i18n>Saude_Unidade_scoreSaude}',
-      Criticality: scoreCriticality,
-      CriticalityRepresentation: #WithIcon
+      $Type : 'UI.DataFieldForAnnotation',
+      Target: '@UI.DataPoint#ScoreSaude',
+      Label : 'Health Score'
     },
-    { Value: compliancePct,   Label: '{i18n>Saude_Unidade_compliancePct}'   },
-    { Value: performancePct,  Label: '{i18n>Saude_Unidade_performancePct}'  },
-    { Value: qtdAlertasAlta,  Label: '{i18n>Saude_Unidade_qtdAlertasAlta}'  },
-    { Value: qtdAlertasMedia, Label: '{i18n>Saude_Unidade_qtdAlertasMedia}' }
+    { Value: compliancePct,  Label: 'Compliance %'    },
+    { Value: performancePct, Label: 'Performance %'   },
+    { Value: emReforma,      Label: 'Under Renovation' },
+    { Value: qtdAlertasAlta, Label: 'High Alerts'     }
   ],
 
-  // Medida agregada (padrão oficial: AggregatedProperty singular + qualifier)
-  Analytics.AggregatedProperty #totalUnidades: {
-    Name                : 'totalUnidades',
-    AggregationMethod   : 'countdistinct',
-    AggregatableProperty: ID,
-    ![@Common.Label]    : '{i18n>lbl_network_unidadesDaRede}'
-  },
-
-  UI.PresentationVariant: {
-    GroupBy       : [ scoreCriticality ],
-    Total         : [ scoreSaude ],
-    Visualizations: ['@UI.Chart', '@UI.LineItem']
-  },
-
-  UI.Chart: {
-    Title           : '{i18n>lbl_network_chartTitle}',
-    ChartType       : #Donut,
-    DynamicMeasures : [ '@Analytics.AggregatedProperty#totalUnidades' ],
-    Dimensions      : [ scoreCriticality ],
-    MeasureAttributes: [{
-      $Type          : 'UI.ChartMeasureAttributeType',
-      DynamicMeasure : '@Analytics.AggregatedProperty#totalUnidades',
-      Role           : #Axis1
-    }],
-    DimensionAttributes: [{
-      $Type    : 'UI.ChartDimensionAttributeType',
-      Dimension: scoreCriticality,
-      Role     : #Category
-    }]
-  }
-);
-
-// ─────────────────────────────────────────────────────────────
-// (legado) Saude_Unidade — mantido para referência/navegação
-// ─────────────────────────────────────────────────────────────
-
-annotate service.Saude_Unidade with @(
-
-  UI.HeaderInfo: {
-    TypeName       : '{i18n>Unidades}',
-    TypeNamePlural : '{i18n>lbl_network_unidadesDaRede}',
-    Title          : { Value: unidade.nome },
-    Description    : { Value: unidade.cidade }
-  },
-
-  // ── Colunas da tabela ─────────────────────────────────────
-  UI.LineItem: [
-    { Value: unidade_ID,          Label: '{i18n>lbl_network_id}'                  },
-    { Value: unidade.codigo,      Label: '{i18n>lbl_network_loja}'                },
-    { Value: unidade.nome,        Label: '{i18n>Unidades_nome}'                   },
-    { Value: unidade.cidade,      Label: '{i18n>Unidades_cidade}'                 },
-    { Value: unidade.cluster_code,Label: '{i18n>Unidades_cluster}'                },
-    { Value: unidade.regiao_code, Label: '{i18n>Unidades_regiao}'                 },
-    {
-      Value      : scoreSaude,
-      Label      : '{i18n>Saude_Unidade_scoreSaude}',
-      Criticality: scoreCriticality
-    },
-    { Value: compliancePct,   Label: '{i18n>Saude_Unidade_compliancePct}'   },
-    { Value: performancePct,  Label: '{i18n>Saude_Unidade_performancePct}'  },
-    { Value: qtdAlertasAlta,  Label: '{i18n>Saude_Unidade_qtdAlertasAlta}'  },
-    { Value: qtdAlertasMedia, Label: '{i18n>Saude_Unidade_qtdAlertasMedia}' }
-  ],
-
-  // ── Filtros ───────────────────────────────────────────────
-  UI.SelectionFields: [
-    unidade.cluster_code,
-    unidade.regiao_code,
-    unidade.status_code
-  ],
-
-  // ── Selection Variants ────────────────────────────────────
-  UI.SelectionVariant #Criticas: {
-    Text          : '{i18n>lbl_network_varCriticas}',
-    SelectOptions : [{
-      PropertyName: scoreSaude,
-      Ranges      : [{ Sign: #I, Option: #LE, Low: 44 }]
-    }]
-  },
-
-  UI.SelectionVariant #Destaques: {
-    Text          : '{i18n>lbl_network_varDestaques}',
-    SelectOptions : [{
-      PropertyName: scoreSaude,
-      Ranges      : [{ Sign: #I, Option: #GE, Low: 80 }]
-    }]
-  },
-
-  UI.SelectionVariant #Atencao: {
-    Text          : '{i18n>lbl_network_varAtencao}',
-    SelectOptions : [{
-      PropertyName: scoreSaude,
-      Ranges      : [
-        { Sign: #I, Option: #GE, Low: 45 },
-        { Sign: #I, Option: #LT, Low: 70 }
-      ]
-    }]
-  },
-
-  // ── Gráfico (mantido para uso futuro; não referenciado no manifest LR) ──
-  UI.Chart: {
-    Title         : '{i18n>lbl_network_chartTitle}',
-    ChartType     : #Donut,
-    Dimensions    : [scoreCriticality],
-    DimensionAttributes: [{
-      Dimension: scoreCriticality,
-      Role     : #Category
-    }],
-    Measures      : [scoreSaude],
-    MeasureAttributes: [{
-      Measure: scoreSaude,
-      Role   : #Axis1
-    }]
-  },
-
-  // ── DataPoint para o Score (usado no chart e header) ──────
   UI.DataPoint #ScoreSaude: {
     Value                    : scoreSaude,
-    Title                    : '{i18n>Saude_Unidade_scoreSaude}',
+    Title                    : 'Health Score',
     Criticality              : scoreCriticality,
+    CriticalityRepresentation: #WithIcon,
     CriticalityCalculation   : {
       ImprovementDirection   : #Maximize,
       ToleranceRangeLowValue : 45,
       DeviationRangeLowValue : 0
     }
+  },
+
+  Analytics.AggregatedProperty #avgScoreSaude: {
+    Name                : 'avgScoreSaude',
+    AggregationMethod   : 'average',
+    AggregatableProperty: scoreSaude,
+    ![@Common.Label]    : 'Avg Health Score'
+  },
+
+  UI.PresentationVariant: {
+    SortOrder     : [{ Property: scoreSaude, Descending: false }],
+    Visualizations: ['@UI.Chart', '@UI.LineItem']
+  },
+
+  UI.Chart: {
+    Title           : 'Health Score by Region',
+    ChartType       : #Bar,
+    DynamicMeasures : ['@Analytics.AggregatedProperty#avgScoreSaude'],
+    Dimensions      : [ regiao_code ],
+    MeasureAttributes: [{
+      $Type         : 'UI.ChartMeasureAttributeType',
+      DynamicMeasure: '@Analytics.AggregatedProperty#avgScoreSaude',
+      Role          : #Axis1
+    }],
+    DimensionAttributes: [{
+      $Type    : 'UI.ChartDimensionAttributeType',
+      Dimension: regiao_code,
+      Role     : #Category
+    }]
   }
 );
 
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
 // OBJECT PAGE — Unidades
-// Navegação: Saude_Unidade → Unidades
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
 
 annotate service.Unidades with @(
 
   UI.HeaderInfo: {
-    TypeName       : '{i18n>Unidades}',
-    TypeNamePlural : '{i18n>Unidades_plural}',
+    TypeName       : 'Unit',
+    TypeNamePlural : 'Units',
     Title          : { Value: nome },
     Description    : { Value: cidade }
-  },
-
-  UI.HeaderFacets: [
-    {
-      $Type : 'UI.ReferenceFacet',
-      Target: '@UI.FieldGroup#Resumo',
-      Label : '{i18n>lbl_network_facetResumo}'
-    }
-  ],
-
-  UI.FieldGroup #Resumo: {
-    Data: [
-      { Value: codigo,        Label: '{i18n>Unidades_codigo}'        },
-      { Value: cluster_code,  Label: '{i18n>Unidades_cluster}'       },
-      { Value: regiao_code,   Label: '{i18n>Unidades_regiao}'        },
-      { Value: estado,        Label: '{i18n>Unidades_estado}'        },
-      { Value: dataAbertura,  Label: '{i18n>lbl_network_abertura}'   },
-      { Value: status_code,   Label: '{i18n>Unidades_status}'        }
-    ]
   },
 
   UI.Facets: [
     {
       $Type : 'UI.ReferenceFacet',
-      Target: '@UI.FieldGroup#DadosGerais',
-      Label : '{i18n>lbl_network_facetDadosGerais}'
-    },
-    {
-      $Type : 'UI.ReferenceFacet',
-      Target: '@UI.FieldGroup#Endereco',
-      Label : '{i18n>lbl_network_facetEndereco}'
+      Target: '@UI.FieldGroup#Details',
+      Label : 'Details'
     }
   ],
 
-  UI.FieldGroup #DadosGerais: {
+  UI.FieldGroup #Details: {
+    Label: 'Unit Details',
     Data: [
-      { Value: codigo,           Label: '{i18n>Unidades_codigo}'          },
-      { Value: nome,             Label: '{i18n>lbl_network_nome}'         },
-      { Value: franqueado_ID,    Label: '{i18n>lbl_network_franqueadoId}' },
-      { Value: cluster_code,     Label: '{i18n>Unidades_cluster}'         },
-      { Value: regiao_code,      Label: '{i18n>Unidades_regiao}'          },
-      { Value: dataAbertura,     Label: '{i18n>Unidades_dataAbertura}'    },
-      { Value: status_code,      Label: '{i18n>Unidades_status}'          }
-    ]
-  },
-
-  UI.FieldGroup #Endereco: {
-    Data: [
-      { Value: endereco, Label: '{i18n>Unidades_endereco}' },
-      { Value: cidade,   Label: '{i18n>Unidades_cidade}'   },
-      { Value: estado,   Label: '{i18n>Unidades_estado}'   }
+      { Value: codigo,       Label: 'Code'         },
+      { Value: nome,         Label: 'Name'         },
+      { Value: cidade,       Label: 'City'         },
+      { Value: estado,       Label: 'State'        },
+      { Value: regiao_code,  Label: 'Region'       },
+      { Value: cluster_code, Label: 'Cluster'      },
+      { Value: franqueado_ID,Label: 'Franchisee'   },
+      { Value: dataAbertura, Label: 'Opening Date' },
+      { Value: status_code,  Label: 'Status'       },
+      { Value: endereco,     Label: 'Address'      }
     ]
   }
 );

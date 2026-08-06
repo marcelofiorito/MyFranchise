@@ -26,7 +26,7 @@
           "title": "{{appTitle}}",
           "subTitle": "{{appDescription}}",
           "icon": "sap-icon://product",
-          "numberUnit": "pendentes",
+          "numberUnit": "pending",
           "numberState": "Negative",
           "indicatorDataSource": {
             "dataSource": "mainService",

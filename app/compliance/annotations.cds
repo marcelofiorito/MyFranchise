@@ -1,10 +1,11 @@
 using FranqueadoraService as service from '../../srv/service';
 
 // ─────────────────────────────────────────────────────────────
-// GOVERNANÇA & COMPLIANCE — List Report Object Page
-// EntitySet: Desvios
+// GOVERNANCE & COMPLIANCE — List Report / Object Page
+// EntitySet: Desvios (price deviations from authorized catalog)
+// ─────────────────────────────────────────────────────────────
 
-// ── ValueHelp nos filtros ─────────────────────────────────────
+// ── Value Helps ──────────────────────────────────────────────
 annotate service.Desvios with {
   tipo @(
     Common.ValueListWithFixedValues: true,
@@ -42,62 +43,54 @@ annotate service.Desvios with {
       ]
     }
   );
-  unidadeNome @(
-    title: '{i18n>Unidades_nome}',
-    Common.ValueList: {
-      CollectionPath: 'Unidades',
-      Parameters    : [
-        { $Type: 'Common.ValueListParameterOut',
-          LocalDataProperty: unidadeNome, ValueListProperty: 'nome' },
-        { $Type: 'Common.ValueListParameterDisplayOnly',
-          ValueListProperty: 'cidade' }
-      ]
-    }
-  );
 }
-// ─────────────────────────────────────────────────────────────
 
 annotate service.Desvios with @(
 
-  UI.DataPoint #Status: {
-    Value       : status_code,
-    Title       : '{i18n>Desvios_status}',
-    Criticality : severidadeCriticality
-  },
-
   UI.HeaderInfo: {
-    TypeName       : '{i18n>Desvios}',
-    TypeNamePlural : '{i18n>Desvios_plural}',
-    Title          : { Value: nomeProduto },
-    Description    : { Value: sku }
+    TypeName      : 'Deviation',
+    TypeNamePlural: 'Compliance Deviations',
+    Title         : { Value: nomeProduto },
+    Description   : { Value: unidadeNome }
   },
 
-  // ── Colunas da lista ──────────────────────────────────────
+  UI.DataPoint #Severidade: {
+    Value      : severidade_code,
+    Title      : 'Severity',
+    Criticality: severidadeCriticality
+  },
+
+  UI.DataPoint #Desvio: {
+    Value      : percentualDesvio,
+    Title      : 'Deviation %',
+    Criticality: severidadeCriticality
+  },
+
+  // ── List columns ─────────────────────────────────────────
   UI.LineItem: [
-    { Value: unidadeNome,        Label: '{i18n>Unidades_nome}',           ![@UI.Importance]: #High },
-    { Value: unidadeCidade,      Label: '{i18n>Unidades_cidade}'          },
-    { Value: tipo_code,          Label: '{i18n>Alertas_tipo}'             },
-    { Value: sku,                Label: '{i18n>Desvios_sku}'              },
-    { Value: nomeProduto,        Label: '{i18n>Desvios_nomeProduto}',     ![@UI.Importance]: #High },
-    { Value: precoAutorizado,    Label: '{i18n>Desvios_precoAutorizado}',  Criticality: severidadeCriticality },
-    { Value: precoPraticado,     Label: '{i18n>Desvios_precoPraticado}',   Criticality: severidadeCriticality },
+    { Value: unidadeNome,     Label: 'Store',           ![@UI.Importance]: #High },
+    { Value: unidadeCidade,   Label: 'City'                                      },
+    { Value: tipo_code,       Label: 'Type'                                      },
+    { Value: nomeProduto,     Label: 'Product',         ![@UI.Importance]: #High },
+    { Value: precoAutorizado, Label: 'Auth. Price',     Criticality: severidadeCriticality, ![@UI.Importance]: #High },
+    { Value: precoPraticado,  Label: 'Charged Price',   Criticality: severidadeCriticality, ![@UI.Importance]: #High },
     {
-      Value      : percentualDesvio,
-      Label      : '{i18n>Desvios_percentualDesvio}',
-      Criticality: severidadeCriticality,
+      $Type : 'UI.DataFieldForAnnotation',
+      Target: '@UI.DataPoint#Desvio',
+      Label : 'Deviation %',
       ![@UI.Importance]: #High
     },
     {
-      Value      : severidade_code,
-      Label      : '{i18n>Desvios_severidade}',
-      Criticality: severidadeCriticality,
+      $Type : 'UI.DataFieldForAnnotation',
+      Target: '@UI.DataPoint#Severidade',
+      Label : 'Severity',
       ![@UI.Importance]: #High
     },
-    { Value: status_code,        Label: '{i18n>Desvios_status}',         Criticality: severidadeCriticality, ![@UI.Importance]: #High },
-    { Value: dataDeteccao,       Label: '{i18n>Desvios_dataDeteccao}'     }
+    { Value: status_code,   Label: 'Status',   Criticality: severidadeCriticality, ![@UI.Importance]: #High },
+    { Value: dataDeteccao,  Label: 'Detected'                                      }
   ],
 
-  // ── Filtros ───────────────────────────────────────────────
+  // ── Filters ──────────────────────────────────────────────
   UI.SelectionFields: [
     tipo_code,
     severidade_code,
@@ -105,29 +98,20 @@ annotate service.Desvios with @(
     unidadeNome
   ],
 
-  // ── Selection Variants ────────────────────────────────────
-  UI.SelectionVariant #AltaSeveridade: {
-    Text         : '{i18n>lbl_compliance_varAltaSeveridade}',
-    SelectOptions: [{
-      PropertyName: severidade_code,
-      Ranges      : [{ Sign: #I, Option: #EQ, Low: 'ALTA' }]
-    }]
+  UI.PresentationVariant: {
+    SortOrder     : [{ Property: severidadeCriticality, Descending: false }, { Property: percentualDesvio, Descending: true }],
+    Visualizations: ['@UI.LineItem']
   },
 
-  UI.SelectionVariant #SemResposta: {
-    Text         : '{i18n>lbl_compliance_varSemResposta}',
-    SelectOptions: [{
-      PropertyName: status_code,
-      Ranges      : [{ Sign: #I, Option: #EQ, Low: 'NOTIFICADO' }]
-    }]
+  // ── Selection Variants ────────────────────────────────────
+  UI.SelectionVariant #AltaSeveridade: {
+    Text         : 'High severity',
+    SelectOptions: [{ PropertyName: severidade_code, Ranges: [{ Sign: #I, Option: #EQ, Low: 'ALTA' }] }]
   },
 
   UI.SelectionVariant #Abertos: {
-    Text         : '{i18n>lbl_compliance_varAbertos}',
-    SelectOptions: [{
-      PropertyName: status_code,
-      Ranges      : [{ Sign: #I, Option: #EQ, Low: 'ABERTO' }]
-    }]
+    Text         : 'Open',
+    SelectOptions: [{ PropertyName: status_code, Ranges: [{ Sign: #I, Option: #EQ, Low: 'ABERTO' }] }]
   },
 
   // ── Object Page ───────────────────────────────────────────
@@ -135,56 +119,52 @@ annotate service.Desvios with @(
     {
       $Type : 'UI.ReferenceFacet',
       Target: '@UI.FieldGroup#Comparativo',
-      Label : '{i18n>lbl_compliance_facetComparativo}'
+      Label : 'Price Comparison'
     },
     {
       $Type : 'UI.ReferenceFacet',
       Target: '@UI.FieldGroup#Unidade',
-      Label : '{i18n>lbl_compliance_facetUnidade}'
+      Label : 'Store Details'
     },
     {
-      $Type        : 'UI.ReferenceFacet',
-      Target       : 'notificacoes/@UI.LineItem',
-      Label        : '{i18n>lbl_compliance_facetNotificacoes}'
+      $Type : 'UI.ReferenceFacet',
+      Target: 'notificacoes/@UI.LineItem',
+      Label : 'Notifications'
     }
   ],
 
   UI.FieldGroup #Comparativo: {
     Data: [
-      { Value: tipo_code,          Label: '{i18n>Desvios_tipo}'            },
-      { Value: sku,                Label: '{i18n>Desvios_sku}'             },
-      { Value: nomeProduto,        Label: '{i18n>Desvios_nomeProduto}'     },
-      { Value: precoAutorizado,    Label: '{i18n>Desvios_precoAutorizado}' },
-      { Value: precoPraticado,     Label: '{i18n>Desvios_precoPraticado}'  },
-      { Value: percentualDesvio,   Label: '{i18n>Desvios_percentualDesvio}'},
-      {
-        Value      : severidade_code,
-        Label      : '{i18n>Desvios_severidade}',
-        Criticality: severidadeCriticality
-      },
-      { Value: status_code,        Label: '{i18n>Desvios_status}'          },
-      { Value: dataDeteccao,       Label: '{i18n>Desvios_dataDeteccao}'    },
-      { Value: dataResolucao,      Label: '{i18n>Desvios_dataResolucao}'   }
+      { Value: tipo_code,        Label: 'Deviation Type'   },
+      { Value: sku,              Label: 'SKU'               },
+      { Value: nomeProduto,      Label: 'Product'           },
+      { Value: precoAutorizado,  Label: 'Authorized Price'  },
+      { Value: precoPraticado,   Label: 'Charged Price'     },
+      { Value: percentualDesvio, Label: 'Deviation %',       Criticality: severidadeCriticality },
+      { Value: severidade_code,  Label: 'Severity',          Criticality: severidadeCriticality },
+      { Value: status_code,      Label: 'Status'             },
+      { Value: dataDeteccao,     Label: 'Detected On'        },
+      { Value: dataResolucao,    Label: 'Resolved On'        }
     ]
   },
 
   UI.FieldGroup #Unidade: {
     Data: [
-      { Value: unidade.nome,         Label: '{i18n>Unidades_nome}'    },
-      { Value: unidade.cidade,       Label: '{i18n>Unidades_cidade}'  },
-      { Value: unidade.estado,       Label: '{i18n>Unidades_estado}'  },
-      { Value: unidade.cluster_code, Label: '{i18n>Unidades_cluster}' },
-      { Value: unidade.regiao_code,  Label: '{i18n>Unidades_regiao}'  }
+      { Value: unidadeNome,          Label: 'Store Name'  },
+      { Value: unidadeCidade,        Label: 'City'        },
+      { Value: unidade.estado,       Label: 'State'       },
+      { Value: unidade.cluster_code, Label: 'Cluster'     },
+      { Value: unidade.regiao_code,  Label: 'Region'      }
     ]
   }
 );
 
-// ── Notificações (sub-table na Object Page) ───────────────────
+// ── Notifications sub-table ───────────────────────────────────
 annotate service.NotificacoesCompliance with @(
   UI.LineItem: [
-    { Value: dataEnvio,          Label: '{i18n>NotificacoesCompliance_dataEnvio}'     },
-    { Value: prazoCorrecao,      Label: '{i18n>NotificacoesCompliance_prazoCorrecao}' },
-    { Value: status_code,        Label: '{i18n>NotificacoesCompliance_status}'        },
-    { Value: comentarioResposta, Label: '{i18n>lbl_compliance_resposta}'              }
+    { Value: dataEnvio,          Label: 'Sent On'          },
+    { Value: prazoCorrecao,      Label: 'Correction Due'   },
+    { Value: status_code,        Label: 'Status'           },
+    { Value: comentarioResposta, Label: 'Store Response'   }
   ]
 );

@@ -1,20 +1,28 @@
 using FranqueadoraService as service from '../../srv/service';
 
 // ─────────────────────────────────────────────────────────────
-// ESTOQUE & REPOSIÇÃO — List Report + Object Page
-// Mostra risco de ruptura por loja/região com sazonalidade.
-// Cenário-âncora: Havaianas em julho — NE em ruptura x Sul OK.
+// STOCK MANAGEMENT — List Report + Object Page
+// Shows stockout risk by store/region with seasonality.
+// Anchor scenario: Havaianas in July — NE in stockout vs. South OK.
 // ─────────────────────────────────────────────────────────────
 
 annotate service.Estoque_Unidade with @(
 
-  // ── Filtros: região (Sul × Nordeste), status, categoria ──
-  UI.SelectionFields: [ regiaoCode, status_code, categoria ],
+  // ── Filters: region, cluster, status, category ──
+  UI.SelectionFields: [ regiaoCode, clusterCode, status_code, categoria ],
+
+  // ── Presentation: sort by coverage ascending (shortest coverage first) ──
+  UI.PresentationVariant: {
+    SortOrder     : [
+      { Property: coberturaDias, Descending: false }
+    ],
+    Visualizations: [ '@UI.LineItem' ]
+  }
 
 ) {
-  // ValueHelp na região: apresenta lista N/NE/CO/SE/S com o nome completo
+  // ValueHelp for region: displays N / NE / CO / SE / S with full name
   regiaoCode @(
-    title: 'Região',
+    title: 'Region',
     Common.ValueListWithFixedValues: true,
     Common.ValueList: {
       CollectionPath: 'Regiao',
@@ -26,7 +34,7 @@ annotate service.Estoque_Unidade with @(
       ]
     }
   );
-  // ValueHelp no status: OK / ATENCAO / RUPTURA
+  // ValueHelp for status: OK / WARNING / STOCKOUT
   status @(
     Common.ValueListWithFixedValues: true,
     Common.ValueList: {
@@ -43,30 +51,31 @@ annotate service.Estoque_Unidade with @(
 
 annotate service.Estoque_Unidade with @(
 
-  // ── DataPoint: cobertura com criticality (vermelho = ruptura) ──
+  // ── DataPoint: coverage with criticality (red = stockout) ──
   UI.DataPoint #Cobertura: {
     Value       : coberturaDias,
-    Title       : '{i18n>Estoque_coberturaDias}',
+    Title       : 'Coverage (days)',
     Criticality : estoqueCriticality
   },
 
-  // ── Tabela ────────────────────────────────────────────────
+  // ── Table ──────────────────────────────────────────────────
   UI.LineItem: [
-    { Value: unidadeCodigo, Label: '{i18n>lbl_network_loja}' },
-    { Value: unidadeNome,   Label: '{i18n>Unidades_nome}', ![@UI.Importance]: #High },
-    { Value: regiaoCode,    Label: '{i18n>Unidades_regiao}', ![@UI.Importance]: #High },
-    { Value: nomeProduto,   Label: '{i18n>ItensCatalogo_nomeProduto}', ![@UI.Importance]: #High },
-    { Value: categoria,     Label: '{i18n>ItensCatalogo_categoria}' },
-    { Value: saldoAtual,    Label: '{i18n>Estoque_saldoAtual}' },
+    { Value: unidadeNome,   Label: 'Store',            ![@UI.Importance]: #High },
+    { Value: unidadeCidade, Label: 'City',             ![@UI.Importance]: #Medium },
+    { Value: regiaoCode,    Label: 'Region',           ![@UI.Importance]: #High },
+    { Value: nomeProduto,   Label: 'Product',          ![@UI.Importance]: #High },
+    { Value: categoria,     Label: 'Category' },
+    { Value: saldoAtual,    Label: 'Current Stock' },
+    { Value: estoqueMinimo, Label: 'Min. Stock' },
     {
       $Type : 'UI.DataFieldForAnnotation',
       Target: '@UI.DataPoint#Cobertura',
-      Label : '{i18n>Estoque_coberturaDias}',
+      Label : 'Coverage (days)',
       ![@UI.Importance]: #High
     },
     {
       Value      : status_code,
-      Label      : '{i18n>Estoque_status}',
+      Label      : 'Status',
       Criticality: estoqueCriticality,
       ![@UI.Importance]: #High
     }
@@ -74,31 +83,33 @@ annotate service.Estoque_Unidade with @(
 
   // ── Object Page ───────────────────────────────────────────
   UI.HeaderInfo: {
-    TypeName       : '{i18n>Estoque_titulo}',
-    TypeNamePlural : '{i18n>Estoque_titulo_plural}',
+    TypeName       : 'Inventory Item',
+    TypeNamePlural : 'Inventory Items',
     Title          : { Value: nomeProduto },
     Description    : { Value: unidadeNome }
   },
 
   UI.FieldGroup #Situacao: {
-    Data: [
-      { $Type: 'UI.DataFieldForAnnotation', Target: '@UI.DataPoint#Cobertura', Label: '{i18n>Estoque_coberturaDias}' },
-      { Value: status_code,     Label: '{i18n>Estoque_status}', Criticality: estoqueCriticality },
-      { Value: saldoAtual,      Label: '{i18n>Estoque_saldoAtual}' },
-      { Value: estoqueMinimo,   Label: '{i18n>Estoque_estoqueMinimo}' },
-      { Value: giroMedioDiario, Label: '{i18n>Estoque_giroMedioDiario}' },
-      { Value: leadTimeDias,    Label: '{i18n>Estoque_leadTimeDias}' }
+    Label: 'Stock Situation',
+    Data : [
+      { $Type: 'UI.DataFieldForAnnotation', Target: '@UI.DataPoint#Cobertura', Label: 'Coverage (days)' },
+      { Value: status_code,     Label: 'Status',              Criticality: estoqueCriticality },
+      { Value: saldoAtual,      Label: 'Current Stock' },
+      { Value: estoqueMinimo,   Label: 'Min. Stock' },
+      { Value: giroMedioDiario, Label: 'Avg. Daily Turnover' },
+      { Value: leadTimeDias,    Label: 'Lead Time (days)' }
     ]
   },
 
   UI.FieldGroup #Localizacao: {
-    Data: [
-      { Value: unidadeNome,   Label: '{i18n>Unidades_nome}' },
-      { Value: unidadeCidade, Label: '{i18n>Unidades_cidade}' },
-      { Value: regiaoCode,    Label: '{i18n>Unidades_regiao}' },
-      { Value: clusterCode,   Label: '{i18n>Unidades_cluster}' },
-      { Value: sku,           Label: '{i18n>ItensCatalogo_sku}' },
-      { Value: categoria,     Label: '{i18n>ItensCatalogo_categoria}' }
+    Label: 'Store and Product',
+    Data : [
+      { Value: unidadeNome,   Label: 'Store' },
+      { Value: unidadeCidade, Label: 'City' },
+      { Value: regiaoCode,    Label: 'Region' },
+      { Value: clusterCode,   Label: 'Cluster' },
+      { Value: sku,           Label: 'SKU' },
+      { Value: categoria,     Label: 'Category' }
     ]
   },
 
@@ -106,38 +117,38 @@ annotate service.Estoque_Unidade with @(
     {
       $Type : 'UI.ReferenceFacet',
       Target: '@UI.FieldGroup#Situacao',
-      Label : '{i18n>Estoque_facetSituacao}'
+      Label : 'Stock Situation'
     },
     {
       $Type : 'UI.ReferenceFacet',
       Target: '@UI.FieldGroup#Localizacao',
-      Label : '{i18n>Estoque_facetLocalizacao}'
+      Label : 'Store and Product'
     },
     {
       $Type : 'UI.ReferenceFacet',
       Target: 'pedidos/@UI.LineItem#Pedidos',
-      Label : '{i18n>Estoque_facetPedidos}'
+      Label : 'Replenishment Orders'
     }
   ]
 );
 
-// ── Pedidos de Reposição — tabela inline no OP do Estoque ─────────────────────
-// A anotação é feita em Pedidos_Reposicao com qualifier #Pedidos,
-// referenciada pelo Facet acima via 'pedidos/@UI.LineItem#Pedidos'.
+// ── Replenishment Orders — inline table in Stock Object Page ──────────────────
+// Annotation on Pedidos_Reposicao with qualifier #Pedidos,
+// referenced by the Facet above via 'pedidos/@UI.LineItem#Pedidos'.
 annotate service.Pedidos_Reposicao with @(
   UI.LineItem #Pedidos: [
-    { Value: nomeProduto,        Label: '{i18n>ItensCatalogo_nomeProduto}' },
-    { Value: qtdSugerida,        Label: '{i18n>PedidoRep_qtdSugerida}' },
-    { Value: qtdAprovada,        Label: '{i18n>PedidoRep_qtdAprovada}' },
+    { Value: nomeProduto,        Label: 'Product' },
+    { Value: qtdSugerida,        Label: 'Suggested Qty' },
+    { Value: qtdAprovada,        Label: 'Approved Qty' },
     {
       Value      : status_code,
-      Label      : '{i18n>PedidoRep_status}',
+      Label      : 'Status',
       Criticality: urgenciaCriticality,
       ![@UI.Importance]: #High
     },
-    { Value: fornecedorSugerido, Label: '{i18n>PedidoRep_fornecedor}' },
-    { Value: prazoDesejado,      Label: '{i18n>PedidoRep_prazoDesejado}' },
-    { Value: origem,             Label: '{i18n>PedidoRep_origem}' },
-    { Value: justificativa,      Label: '{i18n>PedidoRep_justificativa}', ![@UI.MultiLineText]: true }
+    { Value: fornecedorSugerido, Label: 'Suggested Supplier' },
+    { Value: prazoDesejado,      Label: 'Desired Date' },
+    { Value: origem,             Label: 'Origin' },
+    { Value: justificativa,      Label: 'AI Agent Rationale', ![@UI.MultiLineText]: true }
   ]
 );
