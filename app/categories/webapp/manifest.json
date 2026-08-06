@@ -7,8 +7,8 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "title": "{{appTitle}}",
-    "description": "{{appDescription}}",
+    "title": "Category Performance",
+    "description": "Gross margin and revenue by product category",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
@@ -24,7 +24,7 @@
           "semanticObject": "CategoryPerformance",
           "action": "display",
           "title": "Category Performance",
-          "subTitle": "{{appDescription}}",
+          "subTitle": "Gross margin and revenue by product category",
           "icon": "sap-icon://product",
           "signature": {
             "parameters": {},

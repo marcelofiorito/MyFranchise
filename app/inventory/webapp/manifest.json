@@ -7,8 +7,8 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "title": "{{appTitle}}",
-    "description": "{{appDescription}}",
+    "title": "Stock Management",
+    "description": "Stock levels and coverage days by store",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
@@ -23,8 +23,8 @@
         "Inventory-manage": {
           "semanticObject": "Inventory",
           "action": "manage",
-          "title": "{{appTitle}}",
-          "subTitle": "{{appDescription}}",
+          "title": "Stock Management",
+          "subTitle": "Stock levels and coverage days by store",
           "icon": "sap-icon://retail-store",
           "numberUnit": "in stockout",
           "numberState": "Negative",

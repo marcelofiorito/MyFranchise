@@ -101,8 +101,8 @@ modules:
         - name: onboarding
           artifacts: [onboarding.zip]
           target-path: app/
-        - name: recommendations
-          artifacts: [recommendations.zip]
+        - name: categories
+          artifacts: [categories.zip]
           target-path: app/
         - name: inventory
           artifacts: [inventory.zip]
@@ -115,9 +115,6 @@ modules:
           target-path: app/
         - name: sac-overview
           artifacts: [sac-overview.zip]
-          target-path: app/
-        - name: network-dashboard
-          artifacts: [network-dashboard.zip]
           target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
@@ -157,9 +154,9 @@ modules:
       commands: [npm install, npm run build]
       supported-platforms: []
 
-  - name: recommendations
+  - name: categories
     type: html5
-    path: app/recommendations
+    path: app/categories
     build-parameters:
       build-result: dist
       builder: custom
@@ -198,15 +195,6 @@ modules:
     path: app/sac-overview
     build-parameters:
       build-result: dist
-      builder: custom
-      commands: [npm install, npm run build]
-      supported-platforms: []
-
-  - name: network-dashboard
-    type: html5
-    path: app/network-dashboard
-    build-parameters:
-      build-result: .
       builder: custom
       commands: [npm install, npm run build]
       supported-platforms: []

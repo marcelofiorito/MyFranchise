@@ -7,8 +7,8 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "title": "{{appTitle}}",
-    "description": "{{appDescription}}",
+    "title": "Franchisee Portal",
+    "description": "My store dashboard — revenue, health score and AI recommendations",
     "dataSources": {
       "mainService": {
         "uri": "franqueado/",
@@ -23,8 +23,8 @@
         "FranchiseePortal-display": {
           "semanticObject": "FranchiseePortal",
           "action": "display",
-          "title": "{{appTitle}}",
-          "subTitle": "{{appDescription}}",
+          "title": "Franchisee Portal",
+          "subTitle": "My store dashboard — revenue, health score and AI recommendations",
           "icon": "sap-icon://home",
           "signature": {
             "parameters": {},

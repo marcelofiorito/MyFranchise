@@ -4,14 +4,18 @@
     "id": "myfranchise.admin",
     "type": "application",
     "i18n": "i18n/i18n.properties",
-    "applicationVersion": { "version": "1.0.0" },
-    "title": "{{appTitle}}",
-    "description": "{{appDescription}}",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "Demo Control Panel",
+    "description": "Administrative panel — reset demo and simulate events",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
         "type": "OData",
-        "settings": { "odataVersion": "4.0" }
+        "settings": {
+          "odataVersion": "4.0"
+        }
       }
     },
     "crossNavigation": {
@@ -19,24 +23,35 @@
         "Admin-manage": {
           "semanticObject": "Admin",
           "action": "manage",
-          "title": "{{appTitle}}",
-          "subTitle": "{{appDescription}}",
+          "title": "Demo Control Panel",
+          "subTitle": "Administrative panel — reset demo and simulate events",
           "icon": "sap-icon://technical-object",
-          "signature": { "parameters": {}, "additionalParameters": "allowed" }
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
         }
       }
     }
   },
   "sap.ui": {
     "technology": "UI5",
-    "icons": { "icon": "sap-icon://technical-object" },
+    "icons": {
+      "icon": "sap-icon://technical-object"
+    },
     "fullWidth": false
   },
   "sap.ui5": {
     "flexEnabled": false,
     "dependencies": {
       "minUI5Version": "1.120.0",
-      "libs": { "sap.m": {}, "sap.ui.core": {}, "sap.ui.layout": {}, "sap.fe.templates": {}, "sap.fe.core": {} }
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ui.layout": {},
+        "sap.fe.templates": {},
+        "sap.fe.core": {}
+      }
     },
     "models": {
       "": {
@@ -52,7 +67,9 @@
       },
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "settings": { "bundleName": "myfranchise.admin.i18n.i18n" }
+        "settings": {
+          "bundleName": "myfranchise.admin.i18n.i18n"
+        }
       }
     },
     "rootView": {
@@ -78,9 +95,14 @@
       }
     }
   },
-  "sap.cloud": { "public": true, "service": "myfranchise.service" },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
+  },
   "sap.fiori": {
-    "registrationIds": ["myfranchise-admin"],
+    "registrationIds": [
+      "myfranchise-admin"
+    ],
     "archeType": "transactional"
   }
 }

@@ -7,8 +7,8 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "title": "{{appTitle}}",
-    "description": "{{appDescription}}",
+    "title": "Governance & Compliance",
+    "description": "Price deviation monitoring — authorized vs. charged prices",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
@@ -23,8 +23,8 @@
         "Compliance-manage": {
           "semanticObject": "Compliance",
           "action": "manage",
-          "title": "{{appTitle}}",
-          "subTitle": "{{appDescription}}",
+          "title": "Governance & Compliance",
+          "subTitle": "Price deviation monitoring — authorized vs. charged prices",
           "icon": "sap-icon://alert",
           "signature": {
             "parameters": {},

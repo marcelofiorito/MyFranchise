@@ -3,16 +3,18 @@
   "sap.app": {
     "id": "myfranchise.sacoverview",
     "type": "application",
-    "title": "Network Overview",
-    "description": "RunMyFranchise Network Health Dashboard — SAP Analytics Cloud",
-    "applicationVersion": { "version": "1.0.0" },
+    "title": "SAC Dashboard",
+    "description": "Franchisor KPI dashboard — SAP Analytics Cloud",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
     "crossNavigation": {
       "inbounds": {
         "SACOverview-display": {
           "semanticObject": "SACOverview",
           "action": "display",
-          "title": "Network Overview",
-          "subTitle": "SAP Analytics Cloud",
+          "title": "SAC Dashboard",
+          "subTitle": "Franchisor KPI dashboard — SAP Analytics Cloud",
           "icon": "sap-icon://bar-chart",
           "signature": {
             "parameters": {},
@@ -24,7 +26,9 @@
   },
   "sap.ui": {
     "technology": "UI5",
-    "icons": { "icon": "sap-icon://bar-chart" },
+    "icons": {
+      "icon": "sap-icon://bar-chart"
+    },
     "fullWidth": true
   },
   "sap.ui5": {
@@ -47,7 +51,9 @@
     "service": "myfranchise.service"
   },
   "sap.fiori": {
-    "registrationIds": ["myfranchise-sac-overview"],
+    "registrationIds": [
+      "myfranchise-sac-overview"
+    ],
     "archeType": "analytical"
   }
 }

@@ -7,8 +7,8 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "title": "{{appTitle}}",
-    "description": "{{appDescription}}",
+    "title": "Network Overview",
+    "description": "Franchise network health — scores, performance and compliance",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
@@ -23,8 +23,8 @@
         "NetworkPanel-display": {
           "semanticObject": "NetworkPanel",
           "action": "display",
-          "title": "{{appTitle}}",
-          "subTitle": "{{appDescription}}",
+          "title": "Network Overview",
+          "subTitle": "Franchise network health — scores, performance and compliance",
           "icon": "sap-icon://org-chart",
           "signature": {
             "parameters": {},
