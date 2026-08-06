@@ -279,6 +279,47 @@ service FranqueadoService {
     end as prioridadeCrit : Integer
   };
 
+  // ── KPI por Categoria ────────────────────────────────────
+  @readonly
+  @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
+  entity MeusKPI_Categoria   as projection on mf.KPI_Categoria {
+    *,
+    unidade.nome         as unidadeNome   : String,
+    unidade.cidade       as unidadeCidade : String,
+    unidade.regiao.code  as regiaoCode    : String,
+    case substring(periodo, 4, 2)
+      when '01' then 'Jan' when '02' then 'Feb' when '03' then 'Mar'
+      when '04' then 'Apr' when '05' then 'May' when '06' then 'Jun'
+      when '07' then 'Jul' when '08' then 'Aug' when '09' then 'Sep'
+      when '10' then 'Oct' when '11' then 'Nov' when '12' then 'Dec'
+      else substring(periodo, 4, 2)
+    end || '/' || substring(periodo, 0, 4) as periodoLabel : String(8),
+    // 3=green (>=meta), 2=yellow (meta-5 to meta), 1=red (<meta-5)
+    case
+      when margemBruta >= meta       then 3
+      when margemBruta >= meta - 5.0 then 2
+      else 1
+    end as margemCriticality : Integer
+  };
+
+  // ── Campanhas da minha loja ──────────────────────────────
+  @readonly
+  @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
+  entity MinhasAtivacoes     as projection on mf.Ativacao_Campanha_Unidade {
+    *,
+    unidade.nome          as unidadeNome    : String,
+    campanha.nome         as campanhaNome   : String,
+    campanha.metaAtivacao as metaAtivacao   : Decimal(5,2),
+    campanha.dataInicio   as campanhaInicio : Date,
+    campanha.dataFim      as campanhaFim    : Date,
+    // 3=green (>=meta), 2=yellow (meta-15 to meta), 1=red (<meta-15)
+    case
+      when taxaAtivacao >= campanha.metaAtivacao             then 3
+      when taxaAtivacao >= campanha.metaAtivacao - 15.0      then 2
+      else 1
+    end as ativacaoCriticality : Integer
+  };
+
   // ── Onboarding ───────────────────────────────────────────
   @readonly
   @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])

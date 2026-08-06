@@ -80,31 +80,51 @@
     "enableLiveFilter": true,
     "considerAnalyticalParameters": false,
     "cards": {
-      "card00_kpis": {
+      "card00_revenue": {
         "template": "sap.ovp.cards.v4.table",
         "settings": {
-          "title": "My Performance",
-          "subTitle": "{{appStoreName}} · last 6 months",
+          "title": "My Revenue",
+          "subTitle": "Last 6 months · revenue, margin & NPS",
           "entitySet": "MeusKPIs",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Trend",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
         }
       },
-      "card01_saude": {
+      "card01_health": {
         "template": "sap.ovp.cards.v4.table",
         "settings": {
           "title": "Health Score",
-          "subTitle": "{{appStoreName}} · vs. cluster average",
+          "subTitle": "Compliance · Performance · Contract",
           "entitySet": "MinhaSaude",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Saude",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Current"
         }
       },
-      "card02_acoes": {
+      "card02_categories": {
+        "template": "sap.ovp.cards.v4.table",
+        "settings": {
+          "title": "Category Margins",
+          "subTitle": "Moda · Acessórios · Beleza",
+          "entitySet": "MeusKPI_Categoria",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Categoria",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByCategoria"
+        }
+      },
+      "card03_campaigns": {
+        "template": "sap.ovp.cards.v4.table",
+        "settings": {
+          "title": "Campaign Activation",
+          "subTitle": "Activation rate vs. 90% target",
+          "entitySet": "MinhasAtivacoes",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Campanhas",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ativas"
+        }
+      },
+      "card04_actions": {
         "template": "sap.ovp.cards.v4.list",
         "settings": {
           "title": "Pending Actions",
-          "subTitle": "{{appStoreName}} · requires attention",
+          "subTitle": "Compliance deviations requiring attention",
           "entitySet": "MeusDesvios",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Pendentes",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Abertos",
@@ -113,11 +133,11 @@
           "listType": "extended"
         }
       },
-      "card03_recomendacoes": {
+      "card05_recommendations": {
         "template": "sap.ovp.cards.v4.list",
         "settings": {
           "title": "AI Recommendations",
-          "subTitle": "{{appStoreName}} · AI assistant",
+          "subTitle": "Joule · AI-generated insights",
           "entitySet": "MinhasRecomendacoes",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Recomendacoes",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Novas",
@@ -126,11 +146,24 @@
           "sortOrder": "ascending"
         }
       },
-      "card04_benchmark": {
+      "card06_stock": {
+        "template": "sap.ovp.cards.v4.list",
+        "settings": {
+          "title": "Stock Alerts",
+          "subTitle": "Critical and low-stock items",
+          "entitySet": "MeuEstoque",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#EstoqueAlertas",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Criticos",
+          "sortBy": "coberturaDias",
+          "sortOrder": "ascending",
+          "listType": "extended"
+        }
+      },
+      "card07_benchmark": {
         "template": "sap.ovp.cards.v4.table",
         "settings": {
           "title": "Network Position",
-          "subTitle": "Cluster STD · anonymized average",
+          "subTitle": "Cluster benchmark · anonymized average",
           "entitySet": "BenchmarkMeuCluster",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Benchmark",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
