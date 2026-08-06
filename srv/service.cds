@@ -67,6 +67,27 @@ service FranqueadoraService {
   // ── Contratos ─────────────────────────────────────────────
   entity Contratos_Franquia as projection on mf.Contratos_Franquia;
 
+  // ── Analytics — KPI por Categoria e Campanhas ────────────
+  @readonly
+  entity KPI_Categoria          as projection on mf.KPI_Categoria {
+    *,
+    unidade.nome        as unidadeNome   : String,
+    unidade.regiao.code as regiaoCode    : String,
+    unidade.cluster.code as clusterCode  : String
+  };
+
+  @readonly
+  entity Campanhas              as projection on mf.Campanhas;
+
+  @readonly
+  entity Ativacao_Campanha_Unidade as projection on mf.Ativacao_Campanha_Unidade {
+    *,
+    unidade.nome        as unidadeNome   : String,
+    unidade.regiao.code as regiaoCode    : String,
+    campanha.nome       as campanhaNome  : String,
+    campanha.metaAtivacao as metaAtivacao : Decimal(5,2)
+  };
+
   // ── Estoque & Reposição ──────────────────────────────────
   // Nota: drill-down (List Report → Object Page) NÃO habilitado — o FE V4 marca
   // as linhas como "Active" (não "Navigation") em todos os apps deste projeto,

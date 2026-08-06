@@ -59,6 +59,11 @@ entity Unidades : cuid, managed {
   cluster      : Association to Cluster @title : '{i18n>Unidades_cluster}';
   dataAbertura : Date        @title : '{i18n>Unidades_dataAbertura}';
   status       : Association to StatusUnidade @title : '{i18n>Unidades_status}';
+  // Geolocalização para mapa e D5
+  lat          : Decimal(9,6)  @title : '{i18n>Unidades_lat}';
+  lon          : Decimal(9,6)  @title : '{i18n>Unidades_lon}';
+  // Status operacional para D6
+  emReforma    : Boolean default false @title : '{i18n>Unidades_emReforma}';
   // Navegação para entidades filhas via OData $expand — sem back-associations
   // para evitar problemas de resolveView no CAP 10 durante o deploy.
   // Use: /Unidades('u147')?$expand=saude,kpis,alertas,desvios
@@ -79,6 +84,13 @@ entity KPI_Unidade : cuid, managed {
   crescimentoYoY : Decimal(5,2)   @title : '{i18n>KPI_Unidade_crescimentoYoY}';
   nps            : Decimal(4,1)   @title : '{i18n>KPI_Unidade_nps}';
   statusKPI      : Association to StatusKPI @title : '{i18n>KPI_Unidade_statusKPI}';
+  // Financeiro por loja — para D3 (drill-down) e D6 (KPIs financeiros)
+  margemBruta    : Decimal(5,2)   @title : '{i18n>KPI_Unidade_margemBruta}';      // % margem bruta
+  cmv            : Decimal(5,2)   @title : '{i18n>KPI_Unidade_cmv}';              // custo mercadoria vendida %
+  royalties      : Decimal(15,2)  @title : '{i18n>KPI_Unidade_royalties}';        // valor R$ pago
+  inadimplencia  : Decimal(5,2)   @title : '{i18n>KPI_Unidade_inadimplencia}';    // % receita em atraso
+  fluxoClientes  : Integer        @title : '{i18n>KPI_Unidade_fluxoClientes}';    // qtd clientes que entraram
+  conversao      : Decimal(5,2)   @title : '{i18n>KPI_Unidade_conversao}';        // % visitantes que compraram
 }
 
 /**
@@ -103,7 +115,7 @@ entity Saude_Unidade : cuid, managed {
  */
 @Aggregation.ApplySupported: {
   Transformations       : ['aggregate', 'groupby', 'filter'],
-  GroupableProperties   : [codigo, nome, cidade, cluster_code, regiao_code, scoreCriticality],
+  GroupableProperties   : [codigo, nome, cidade, cluster_code, regiao_code, scoreCriticality, emReforma],
   AggregatableProperties: [
     { Property: ID },
     { Property: scoreSaude },
@@ -119,8 +131,12 @@ view Saude_Dashboard as select from Saude_Unidade {
   unidade.codigo         as codigo,
   unidade.nome           as nome,
   unidade.cidade         as cidade,
+  unidade.estado         as estado,
   unidade.cluster.code   as cluster_code,
   unidade.regiao.code    as regiao_code,
+  unidade.lat            as lat,
+  unidade.lon            as lon,
+  unidade.emReforma      as emReforma,
   scoreSaude,
   compliancePct,
   performancePct,
@@ -129,10 +145,10 @@ view Saude_Dashboard as select from Saude_Unidade {
   scoreCriticality,
   // Texto da criticidade para o chart agrupar/rotular (padrão sflight: dimensão + texto)
   case scoreCriticality
-    when 1 then 'Crítico'
-    when 2 then 'Atenção'
-    when 3 then 'Saudável'
-    else 'N/D'
+    when 1 then 'Critical'
+    when 2 then 'Warning'
+    when 3 then 'Healthy'
+    else 'N/A'
   end                    as criticalityText : String(20)
 };
 
@@ -180,6 +196,7 @@ entity ItensCatalogo : cuid, managed {
   sku           : String(50)    @title : '{i18n>ItensCatalogo_sku}';
   nomeProduto   : String(150)   @title : '{i18n>ItensCatalogo_nomeProduto}';
   categoria     : String(100)   @title : '{i18n>ItensCatalogo_categoria}';
+  subCategoria  : String(100)   @title : '{i18n>ItensCatalogo_subCategoria}';  // ex: Moda, Acessórios, Beleza
   precoMinimo   : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoMinimo}';
   precoMaximo   : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoMaximo}';
   precoSugerido : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoSugerido}';
@@ -327,6 +344,50 @@ entity Contratos_Franquia : cuid, managed {
   dataVencimento : Date         @title : '{i18n>Contratos_Franquia_dataVencimento}';
   status         : Association to StatusContrato @title : '{i18n>Contratos_Franquia_status}';
   valorRoyalties : Decimal(15,2)@title : '{i18n>Contratos_Franquia_valorRoyalties}';
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// ANALYTICS — KPIs por Categoria e Campanhas de Marketing
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * KPIs financeiros agregados por categoria de produto por unidade/período.
+ * Alimenta D3 (drill-down Beleza) e D6 (tabela Margem por Categoria).
+ */
+entity KPI_Categoria : cuid, managed {
+  unidade      : Association to Unidades @title : '{i18n>Unidades}';
+  periodo      : String(6)     @title : '{i18n>KPI_Unidade_periodo}';
+  categoria    : String(100)   @title : '{i18n>ItensCatalogo_categoria}';
+  faturamento  : Decimal(15,2) @title : '{i18n>KPI_Unidade_faturamento}';
+  margemBruta  : Decimal(5,2)  @title : '{i18n>KPI_Unidade_margemBruta}';   // % margem desta categoria
+  qtdProdutos  : Integer       @title : '{i18n>KPI_Categoria_qtdProdutos}';  // SKUs vendidos
+  participacao : Decimal(5,2)  @title : '{i18n>KPI_Categoria_participacao}'; // % do faturamento total
+  meta         : Decimal(5,2)  @title : '{i18n>KPI_Categoria_meta}';         // margem meta %
+}
+
+/**
+ * Campanhas de marketing da rede (Black Friday, Verão BR, etc.)
+ * Usada no D6 para o gráfico de Taxa de Ativação.
+ */
+entity Campanhas : cuid, managed {
+  nome         : String(150)  @title : '{i18n>Campanhas_nome}';
+  pais         : String(50)   @title : '{i18n>Campanhas_pais}';            // BR, AR, US, CL, etc.
+  dataInicio   : Date         @title : '{i18n>Campanhas_dataInicio}';
+  dataFim      : Date         @title : '{i18n>Campanhas_dataFim}';
+  metaAtivacao : Decimal(5,2) @title : '{i18n>Campanhas_metaAtivacao}';    // % meta (ex: 90)
+  ativa        : Boolean default true;
+}
+
+/**
+ * Adesão de cada unidade a cada campanha.
+ * taxaAtivacao = se a loja executou a campanha (100 = sim, 0 = não, valores intermediários = parcial).
+ */
+entity Ativacao_Campanha_Unidade : cuid, managed {
+  campanha     : Association to Campanhas @title : '{i18n>Campanhas_nome}';
+  unidade      : Association to Unidades  @title : '{i18n>Unidades}';
+  taxaAtivacao : Decimal(5,2)  @title : '{i18n>Ativacao_taxaAtivacao}';    // 0–100%
+  dataRegistro : Date          @title : '{i18n>Ativacao_dataRegistro}';
 }
 
 
