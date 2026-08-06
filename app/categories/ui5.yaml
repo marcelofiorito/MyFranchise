@@ -1,6 +1,6 @@
 specVersion: "3.0"
 metadata:
-  name: myfranchise-recommendations
+  name: myfranchise-categories
 type: application
 framework:
   name: SAPUI5
@@ -23,6 +23,6 @@ builder:
     - name: ui5-task-zipper
       afterTask: generateCachebusterInfo
       configuration:
-        archiveName: recommendations
+        archiveName: categories
         additionalFiles:
           - xs-app.json
