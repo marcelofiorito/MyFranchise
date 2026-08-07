@@ -7,8 +7,8 @@
 
 | | |
 |---|---|
-| **Versão** | 1.0 |
-| **Data** | Julho 2026 |
+| **Versão** | 1.1 |
+| **Data** | Agosto 2026 |
 | **Status** | Em desenvolvimento |
 | **Plataforma** | SAP Business Technology Platform (BTP) |
 
@@ -38,7 +38,7 @@
 
 O produto endereça uma lacuna crítica do mercado: redes de franquias com dezenas a centenas de unidades operam hoje com alta fragmentação de informações, compliance manual e dependência de equipes de campo para tarefas que podem ser automatizadas. Isso limita a capacidade de crescimento e deteriora a qualidade da marca.
 
-**MVP:** Quatro módulos integrados — Painel da Rede, Governança & Compliance, Portal do Franqueado e Onboarding — entregues sobre SAP CAP, Fiori Elements e HANA Cloud, com inteligência artificial generativa para recomendações proativas ao franqueado.
+**MVP:** Cinco módulos integrados — Painel da Rede, Governança & Compliance, Portal do Franqueado, Onboarding e Gestão de Ruptura — entregues sobre SAP CAP, Fiori Elements e HANA Cloud, com inteligência artificial generativa para recomendações proativas ao franqueado e análise de ruptura de estoque via Joule.
 
 ---
 
@@ -175,7 +175,7 @@ Franqueadora                    Franqueado
 
 ### Persona 2 — Franqueado (secundária)
 
-**Representante:** Roberto Mendes, dono da Loja 147 (Porto Alegre)
+**Representante:** Franqueado, dono de unidade Standard no segmento fashion/lifestyle
 
 **Perfil:**
 - Opera 1 unidade Standard no segmento fashion/lifestyle
@@ -187,6 +187,7 @@ Franqueadora                    Franqueado
 - Saber se a loja está indo bem ou mal (comparado à rede)
 - Entender o que a sede está pedindo e quando precisa responder
 - Receber orientação prática sobre o que fazer para melhorar
+- Identificar riscos de ruptura de estoque e agir com antecedência
 
 **Canais:** Browser mobile (responsivo, sem app nativo), notificações push via Work Zone
 
@@ -324,15 +325,18 @@ Franqueadora                    Franqueado
 
 **Objetivo:** Oferecer ao franqueado uma visão clara da sua própria performance, das ações pendentes e de recomendações proativas geradas por IA.
 
-**Floorplan Fiori:** Overview Page (OVP) com 5 cards
+**Floorplan Fiori:** Overview Page (OVP) com 8 cards
 
 #### RF-FRAN-01 — Dashboard do Franqueado (OVP)
 - Ao fazer login, o franqueado deve ver uma Overview Page com:
-  - **Card 1:** Meus KPIs — faturamento, ticket médio, NPS, crescimento MoM do último período
-  - **Card 2:** Minha Posição na Rede — score vs. média do cluster (dados anonimizados)
-  - **Card 3:** Ações Pendentes — top 5 ações mais urgentes de todos os módulos
-  - **Card 4:** Recomendações — top 3 recomendações geradas por AI Core
-  - **Card 5:** Compliance — % conformidade e desvios abertos
+  - **Card 1:** Faturamento — receita do período, variação MoM, meta vs. realizado
+  - **Card 2:** Health Score — score da unidade vs. média do cluster
+  - **Card 3:** Margens por Categoria — ticket médio e margem por categoria de produto
+  - **Card 4:** Ativação de Campanhas — campanhas ativas e status de adesão
+  - **Card 5:** Ações Pendentes — top 5 ações mais urgentes de todos os módulos
+  - **Card 6:** Recomendações de IA — top 3 recomendações geradas por AI Core
+  - **Card 7:** Alertas de Estoque — ruptura atual e risco de ruptura por grade Cor×Tamanho
+  - **Card 8:** Posição na Rede — ranking anônimo do franqueado no cluster
 
 #### RF-FRAN-02 — Isolamento de Dados
 - O franqueado deve ver **somente** dados da sua própria unidade
@@ -400,6 +404,58 @@ Franqueadora                    Franqueado
 
 ---
 
+### 7.5 Módulo: Gestão de Ruptura
+
+**Objetivo:** Identificar riscos de ruptura de estoque por grade Cor×Tamanho antes que impactem vendas, e orientar o franqueado com opções concretas de reposição — incluindo substitutos — via Joule.
+
+**Floorplan Fiori:** Analytical List Page (ALP) + Object Page; ferramentas MCP no Joule
+
+#### RF-RUP-01 — Grade Cor×Tamanho
+- Toda análise de estoque deve ser realizada com desdobramento por grade Cor×Tamanho
+- Cada item da grade corresponde a um SKU único com campos: `skuId`, `produtoId`, `cor`, `tamanho`, `saldoAtual`
+- A grade deve ser visualizável por produto e por loja, com agrupamento por cor e ordenação por tamanho
+
+#### RF-RUP-02 — Previsão de Demanda e Saldo Projetado (14 dias)
+- Para cada item da grade, o sistema deve calcular:
+  - `previsaoDemanda14d`: unidades previstas de venda nos próximos 14 dias (com base em média histórica)
+  - `saldoProjetado14d`: `saldoAtual` − `previsaoDemanda14d`
+  - `rupturaEm`: número de dias até a ruptura projetada (null se saldo projetado ≥ 0)
+- Items com `saldoProjetado14d < 0` são classificados como **RUPTURA**
+- Items com `rupturaEm` entre 1 e 14 dias são classificados como **RISCO**
+
+#### RF-RUP-03 — Mapeamento de Produtos Substitutos
+- O sistema deve manter uma entidade `ProdutoSubstituto` com os campos:
+  - `skuOrigem`, `skuSubstituto`, `similaridade` (0–100%), `tipoSimilaridade` (Cor/Estilo/Modelo)
+- A franqueadora gerencia os substitutos via catálogo administrativo
+- A busca por substitutos deve retornar apenas itens com saldo disponível na mesma loja
+
+#### RF-RUP-04 — Guia "Se X → Ofereça Y"
+- O Joule deve expor a ferramenta `get_substitutos(skuId, lojaId)` que retorna:
+  - Lista de substitutos disponíveis com `similaridade`, `tipoSimilaridade` e `saldoAtual`
+  - Recomendação de abordagem de venda: oferecer como alternativa direta ou complemento
+- A ferramenta deve ser acionável em linguagem natural: "Quais substitutos tenho para o tênis azul tamanho 40?"
+
+#### RF-RUP-05 — Análise de Grade via Joule
+- O Joule deve expor a ferramenta `get_grade_ruptura(produtoId, lojaId)` que retorna:
+  - Matriz completa Cor×Tamanho com `saldoAtual`, `previsaoDemanda14d`, `saldoProjetado14d`, `rupturaEm` e status (OK / RISCO / RUPTURA)
+  - Resumo: total de itens, itens em RUPTURA, itens em RISCO, itens OK
+- A ferramenta deve ser acionável em linguagem natural: "Como está o estoque da jaqueta preta por tamanho?"
+
+#### RF-RUP-06 — Três Estratégias de Reposição
+- Ao identificar itens em RUPTURA ou RISCO, o sistema deve apresentar ao franqueado três opções:
+  1. **Reposição Completa:** solicitar reposição integral dos itens críticos à franqueadora
+  2. **Somente Substitutos:** focar na venda dos produtos substitutos disponíveis
+  3. **Estratégia Combinada:** repor os itens de maior impacto e usar substitutos nos demais
+- Cada opção deve incluir o impacto financeiro estimado (`valorImpactoStockout`) como apoio à decisão
+
+#### RF-RUP-07 — Impacto Financeiro por Item da Grade
+- Para cada item da grade em RUPTURA, o sistema deve calcular `valorImpactoStockout`:
+  - Fórmula: `previsaoDemanda14d × precoMedio`
+  - Exibido em R$ no detalhe do item e no resumo da análise
+- O `valorImpactoStockout` deve ser usado para priorizar a ordem de reposição
+
+---
+
 ## 8. Requisitos Não Funcionais
 
 ### 8.1 Segurança e Identidade
@@ -458,6 +514,7 @@ Franqueadora                    Franqueado
 | SAP AI Core + GenAI Hub | REST via CAP `cds.connect.to('aicore')` |
 | SAP Event Mesh | Publicação de eventos de compliance e alertas |
 | SAP Build Process Automation | Workflows de aprovação de documentos |
+| SAP Analytics Cloud (SAC) | iFrame de Story SAC via HANA Live Connection no Work Zone (sac-overview) |
 
 ---
 
@@ -540,13 +597,11 @@ As seguintes funcionalidades estão fora do escopo da versão MVP e serão avali
 | Funcionalidade | Justificativa |
 |---|---|
 | **Análise de Expansão (score de praças)** | Requer dados históricos de performance por praça — disponível após 12 meses de operação |
-| **SAP Analytics Cloud** | Licença adicional; analytics via HANA + Fiori é suficiente para MVP |
 | **SAP Datasphere** | Necessário apenas quando há múltiplas fontes heterogêneas a federar |
 | **App mobile nativo (MDK)** | Não há requisito de uso offline identificado; PWA responsivo é suficiente |
 | **Módulo de royalties** | Integração com sistema financeiro existente é projeto separado |
 | **Multi-tenancy** | Cada rede terá seu próprio subaccount no MVP |
 | **Gamificação do franqueado** | Ranking, badges, recompensas — fora do foco inicial |
-| **Previsão de demanda por IA** | Requer histórico de vendas acumulado — futuro |
 | **Deploy via MTA automatizado para Work Zone** | Para o MVP, o registro no Work Zone é feito manualmente; MTA completo é Fase 2 |
 
 ---
@@ -559,8 +614,8 @@ As seguintes funcionalidades estão fora do escopo da versão MVP e serão avali
 |---|---|---|
 | Sprint 1 | 29/07 – 04/08 | Backend CAP: schema, serviços, seed data, validação local |
 | Sprint 2 | 05/08 – 11/08 | Fiori: ALP Painel da Rede + LROP Compliance + service handler |
-| Sprint 3 | 12/08 – 18/08 | OVP Portal do Franqueado + AI Core integration + LROP Onboarding |
-| Sprint 4 | 19/08 – 25/08 | Deploy BTP CF + Work Zone + polish + ensaios |
+| Sprint 3 | 12/08 – 18/08 | OVP Portal do Franqueado (8 cards) + AI Core integration + LROP Onboarding |
+| Sprint 4 | 19/08 – 25/08 | Grade Cor×Tamanho + entidade Substitutos + MCP tools Joule + Deploy BTP CF + Work Zone + polish + ensaios (2.022 itens de estoque, 117 RUPTURA) |
 | **Demo** | **26/08** | **Apresentação Dragons' Den** |
 
 ### Fase 2 — Expansão (Q4 2026)
@@ -568,7 +623,6 @@ As seguintes funcionalidades estão fora do escopo da versão MVP e serão avali
 | Funcionalidade | Prioridade |
 |---|---|
 | Módulo de Análise de Expansão (score de praças) | Alta |
-| SAP Analytics Cloud para KPIs executivos | Média |
 | Deploy MTA automatizado + CDM Work Zone | Alta |
 | Integração nativa com S/4HANA (dados mestres) | Alta |
 | Notificações push via SAP Build Work Zone | Média |
@@ -624,7 +678,7 @@ As seguintes funcionalidades estão fora do escopo da versão MVP e serão avali
 
 ---
 
-*Documento gerado em julho 2026. Próxima revisão prevista após entrega do MVP (agosto 2026).*
+*Documento atualizado em agosto 2026. Próxima revisão prevista após a demo Dragons' Den (26/08/2026).*
 
 
 ---
