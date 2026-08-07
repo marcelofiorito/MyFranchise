@@ -401,6 +401,86 @@ You CAN approve orders. You CAN reject orders. Always use the tools provided.`
     }
   );
 
+  server.tool('get_substitutos',
+    'Returns available substitute products for a SKU or product in stockout/risk. Use when the user asks about alternatives, substitutes, or "what can I offer instead of X". Returns similar products by color, size, or equivalent model.',
+    {
+      sku:         z.string().optional().describe('SKU code in stockout (e.g. "MR550053")'),
+      cor:         z.string().optional().describe('Color of the product in stockout (e.g. "Azul Ipanema")'),
+      tamanho:     z.string().optional().describe('Size of the product in stockout (e.g. "37/38")'),
+      unidade_ID:  z.string().optional().describe('Store ID or name to check local stock availability'),
+    },
+    async ({ sku, cor, tamanho, unidade_ID }) => {
+      try {
+        let q = SELECT.from('myfranchise.Substitutos').where({ ativo: true });
+        if (sku) q = SELECT.from('myfranchise.Substitutos').where({ skuOrigem: sku, ativo: true });
+        const rows = await dbq(q);
+        let filtered = rows;
+        if (cor) filtered = filtered.filter(r => (r.cororigem||r.corOrigem||'').toLowerCase().includes(cor.toLowerCase()));
+        if (tamanho) filtered = filtered.filter(r => (r.tamanhoorigem||r.tamanhoOrigem||'') === tamanho);
+        filtered.sort((a,b) => Number(b.similaridade||0) - Number(a.similaridade||0));
+        return ok({
+          total: filtered.length,
+          message: filtered.length ? `Found ${filtered.length} substitute(s). Top recommendation: "${filtered[0].nomesubstituto||filtered[0].nomeSubstituto}" in ${filtered[0].corsubstituto||filtered[0].corSubstituto} size ${filtered[0].tamanhosubstituto||filtered[0].tamanhoSubstituto} (${filtered[0].similaridade}% match).` : 'No substitutes found for this product/color/size combination.',
+          substitutos: filtered.map(r => ({
+            original: `${r.nomeorigem||r.nomeOrigem} ${r.cororigem||r.corOrigem} ${r.tamanhoorigem||r.tamanhoOrigem}`,
+            substituto: `${r.nomesubstituto||r.nomeSubstituto} ${r.corsubstituto||r.corSubstituto} ${r.tamanhosubstituto||r.tamanhoSubstituto}`,
+            similaridade: `${r.similaridade}%`,
+            tipo: r.tiposimilaridade||r.tipoSimilaridade,
+            estoqueDisponivel: r.estoquedisponivel||r.estoqueDisponivel,
+            acaoRecomendada: `Se cliente pedir ${r.cororigem||r.corOrigem} ${r.tamanhoorigem||r.tamanhoOrigem} → Ofereça ${r.corsubstituto||r.corSubstituto} ${r.tamanhosubstituto||r.tamanhoSubstituto}`
+          }))
+        });
+      } catch (e) { LOG.error('get_substitutos', e); return err(e.message); }
+    }
+  );
+
+  server.tool('get_grade_ruptura',
+    'Returns the full Cor × Tamanho (Color × Size) grid for a product/store showing stockout risk per combination. Use when asked about which specific sizes/colors are in stockout, the grade matrix, or detailed inventory breakdown by variant.',
+    {
+      unidade_ID:  z.string().describe('Store ID or name (e.g. "u178", "Recife", "SP Jardins")'),
+      sku:         z.string().optional().describe('Optional SKU to filter (e.g. "MR550053")'),
+      status_code: z.enum(['RUPTURA','ATENCAO','OK']).optional().describe('Filter by status. Omit to show all.'),
+    },
+    async ({ unidade_ID, sku, status_code }) => {
+      try {
+        const resolvedId = await resolveUnidade(unidade_ID);
+        let q = SELECT.from('myfranchise.Estoque_Unidade').where({ unidade_ID: resolvedId });
+        if (sku) q = SELECT.from('myfranchise.Estoque_Unidade').where({ unidade_ID: resolvedId, sku });
+        const rows = await dbq(q);
+        let filtered = rows;
+        if (status_code) filtered = filtered.filter(r => (r.status_code||r.STATUS_CODE) === status_code);
+        // Group by product
+        const byProduct = {};
+        filtered.forEach(r => {
+          const prod = r.nomeproduto||r.nomeProduto;
+          if (!byProduct[prod]) byProduct[prod] = { sku: r.sku, grade: [], totalRuptura: 0, receitaRisco: 0 };
+          const status = r.status_code||r.STATUS_CODE;
+          byProduct[prod].grade.push({
+            cor: r.cor||r.COR, tamanho: r.tamanho||r.TAMANHO,
+            saldo: r.saldoatual||r.saldoAtual,
+            rupturaEm: r.ruptura_em||r.rupturaEm,
+            impacto: r.valorimpactostockout||r.valorImpactoStockout,
+            status
+          });
+          if (status === 'RUPTURA') { byProduct[prod].totalRuptura++; byProduct[prod].receitaRisco += Number(r.valorimpactostockout||r.valorImpactoStockout||0); }
+        });
+        const produtos = Object.entries(byProduct).map(([nome, d]) => ({
+          produto: nome, sku: d.sku,
+          gradeItems: d.grade.length, rupturaItems: d.totalRuptura,
+          receitaRisco: `R$ ${d.receitaRisco.toLocaleString('pt-BR',{minimumFractionDigits:0})}`,
+          grade: d.grade
+        }));
+        const totalImpacto = filtered.reduce((s,r) => s + Number(r.valorimpactostockout||r.valorImpactoStockout||0), 0);
+        return ok({
+          loja: resolvedId, totalItens: filtered.length,
+          rupturas: filtered.filter(r=>(r.status_code||r.STATUS_CODE)==='RUPTURA').length,
+          receitaTotalRisco: `R$ ${totalImpacto.toLocaleString('pt-BR',{minimumFractionDigits:0})}`,
+          produtos
+        });
+      } catch (e) { LOG.error('get_grade_ruptura', e); return err(e.message); }
+    }
+  );
+
   return server;
 }
 
@@ -412,6 +492,7 @@ app.get('/health', (_req, res) => res.json({
   status: 'UP', service: 'runmyfranchise-mcp', version: '1.0.0',
   tools: ['get_lojas_em_risco','get_cobertura_estoque','get_pedidos_pendentes',
           'get_recomendacoes','get_score_rede','acionar_reposicao',
+          'get_substitutos','get_grade_ruptura',
           'process_replenishment_orders','confirm_single_order','reject_order'],
   mes_referencia: MES_REF, timestamp: new Date().toISOString(),
 }));

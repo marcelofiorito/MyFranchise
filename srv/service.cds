@@ -110,12 +110,18 @@ service FranqueadoraService {
   @readonly
   entity Estoque_Unidade        as projection on mf.Estoque_Unidade {
     *,
-    unidade.nome        as unidadeNome : String,
-    unidade.codigo      as unidadeCodigo : String,
-    unidade.cidade      as unidadeCidade : String,
-    unidade.regiao.code as regiaoCode  : String,
-    unidade.cluster.code as clusterCode : String,
+    unidade.nome         as unidadeNome    : String,
+    unidade.codigo       as unidadeCodigo  : String,
+    unidade.cidade       as unidadeCidade  : String,
+    unidade.regiao.code  as regiaoCode     : String,
+    unidade.cluster.code as clusterCode    : String,
+    unidade.tipoLoja     as tipoLoja       : String,
     pedidos
+  };
+  @readonly
+  entity Substitutos            as projection on mf.Substitutos {
+    *,
+    unidade.nome         as unidadeNome    : String
   };
   @readonly
   entity Sazonalidade_Regional  as projection on mf.Sazonalidade_Regional;
@@ -271,6 +277,14 @@ service FranqueadoService {
     *,
     unidade.nome          as unidadeNome : String,
     unidade.regiao.code   as regiaoCode  : String
+  };
+
+  // ── Substitutos disponíveis na minha loja ─────────────────
+  @readonly
+  @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID or unidade_ID is null' }])
+  entity MeusSubstitutos     as projection on mf.Substitutos {
+    *,
+    unidade.nome          as unidadeNome : String
   };
 
   @(restrict: [{ grant: ['READ','WRITE'], where: 'unidade_ID = $user.unidade_ID' }])

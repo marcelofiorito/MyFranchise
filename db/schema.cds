@@ -452,23 +452,51 @@ entity Ativacao_Campanha_Unidade : cuid, managed {
  * Base para detecção de risco de ruptura (cobertura vs. ponto de reposição).
  */
 entity Estoque_Unidade : cuid, managed {
-  unidade          : Association to Unidades @title : '{i18n>Unidades}';
+  unidade              : Association to Unidades @title : '{i18n>Unidades}';
   sku                  : String(50)   @title : 'SKU';
   nomeProduto          : String(150)  @title : 'Product';
   categoria            : String(100)  @title : 'Category';
+  // Grade — Cor × Tamanho (central para o fluxo de ruptura)
+  cor                  : String(50)   @title : 'Color';
+  tamanho              : String(10)   @title : 'Size';        // P, M, G, GG, 33, 34...
+  skuGrade             : String(100)  @title : 'Grade SKU';  // sku + cor + tamanho para unicidade
   saldoAtual           : Integer      @title : 'On Hand';
   estoqueMinimo        : Integer      @title : 'Reorder Point';
   giroMedioDiario      : Decimal(8,2) @title : 'Daily Sales Rate';
   leadTimeDias         : Integer      @title : 'Lead Time (days)';
+  previsaoDemanda14d   : Integer      @title : 'Demand Forecast 14d'; // previsão de venda em 14 dias
+  saldoProjetado14d    : Integer      @title : 'Projected Balance 14d'; // saldoAtual - previsaoDemanda14d
+  rupturaEm            : Integer      @title : 'Stockout in (days)';   // dias até ruptura
   coberturaDias        : Decimal(6,1) @title : 'Days Cover'           @Core.Computed: true;
   status               : Association to StatusEstoque @title : 'Status';
   estoqueCriticality   : Integer      @title : 'Criticality'          @Core.Computed: true;
   dataAtualizacao      : DateTime     @title : 'Last Updated';
-  centroDistribuicao   : String(20)   @title : 'Distribution Center'; // DC-SP, DC-CWB, DC-REC, etc.
+  centroDistribuicao   : String(20)   @title : 'Distribution Center';
   valorImpactoStockout : Decimal(15,2)@title : 'Stockout Impact (R$)';
   pedidos              : Association to many Pedidos_Reposicao
                            on  pedidos.unidade = unidade
                            and pedidos.sku     = sku;
+}
+
+/**
+ * Produtos substitutos mapeados pela IA.
+ * Para cada SKU em risco de ruptura, lista alternativas com % de similaridade.
+ * Base para o "Se pedir X → Ofereça Y" no fluxo de ruptura.
+ */
+entity Substitutos : cuid, managed {
+  skuOrigem          : String(50)   @title : 'Original SKU';
+  nomeOrigem         : String(150)  @title : 'Original Product';
+  corOrigem          : String(50)   @title : 'Original Color';
+  tamanhoOrigem      : String(10)   @title : 'Original Size';
+  skuSubstituto      : String(50)   @title : 'Substitute SKU';
+  nomeSubstituto     : String(150)  @title : 'Substitute Product';
+  corSubstituto      : String(50)   @title : 'Substitute Color';
+  tamanhoSubstituto  : String(10)   @title : 'Substitute Size';
+  similaridade       : Decimal(5,2) @title : 'Similarity %';   // 0-100
+  tipoSimilaridade   : String(50)   @title : 'Similarity Type'; // COR_SIMILAR, TAMANHO_PROXIMO, MODELO_EQUIVALENTE
+  unidade            : Association to Unidades @title : 'Store'; // null = válido para toda a rede
+  estoqueDisponivel  : Integer      @title : 'Available Stock';
+  ativo              : Boolean default true;
 }
 
 /**
