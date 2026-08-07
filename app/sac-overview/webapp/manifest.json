@@ -3,8 +3,8 @@
   "sap.app": {
     "id": "myfranchise.sacoverview",
     "type": "application",
-    "title": "SAC Dashboard",
-    "description": "Franchisor KPI dashboard — SAP Analytics Cloud",
+    "title": "Franchisor Dashboard",
+    "description": "Strategic KPI dashboard — margins, campaigns and network performance",
     "applicationVersion": {
       "version": "1.0.0"
     },
@@ -13,8 +13,8 @@
         "SACOverview-display": {
           "semanticObject": "SACOverview",
           "action": "display",
-          "title": "SAC Dashboard",
-          "subTitle": "Franchisor KPI dashboard — SAP Analytics Cloud",
+          "title": "Franchisor Dashboard",
+          "subTitle": "Strategic KPI dashboard — margins, campaigns and network performance",
           "icon": "sap-icon://bar-chart",
           "signature": {
             "parameters": {},
