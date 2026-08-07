@@ -74,6 +74,39 @@ entity Unidades : cuid, managed {
 // NETWORK — KPIs, Saúde, Alertas, Benchmark
 // ═══════════════════════════════════════════════════════════
 
+/**
+ * KPIs agregados da rede inteira por trimestre.
+ * Alimenta o Executive Home (D1) — faturamento, clientes, NPS, margem.
+ */
+entity KPI_Rede : cuid, managed {
+  periodo          : String(6)     @title : 'Period';          // ex: 202601
+  periodoLabel     : String(10)    @title : 'Period Label';    // ex: Q1 2026
+  totalRevenue     : Decimal(15,2) @title : 'Total Revenue';
+  netNewRevenue    : Decimal(15,2) @title : 'Net-New Revenue';
+  retentionRevenue : Decimal(15,2) @title : 'Retention Revenue';
+  totalCustomers   : Integer       @title : 'Total Customers';
+  qoqGrowth        : Decimal(5,2)  @title : 'QoQ Growth %';
+  yoyGrowth        : Decimal(5,2)  @title : 'YoY Growth %';
+  avgNPS           : Decimal(4,1)  @title : 'Avg NPS';
+  avgMargemBruta   : Decimal(5,2)  @title : 'Avg Gross Margin %';
+  totalLojas       : Integer       @title : 'Active Stores';
+  lojasNovas       : Integer       @title : 'New Stores';
+  lojasEmReforma   : Integer       @title : 'Stores in Renovation';
+}
+
+/**
+ * Atividades/destaques do dia — para o card "Today's Highlights" (D1).
+ */
+entity Atividades_Rede : cuid, managed {
+  titulo      : String(200) @title : 'Title';
+  descricao   : String(500) @title : 'Description';
+  tipo        : String(50)  @title : 'Type';       // REUNIAO, ENTREGA, ALERTA
+  horario     : String(10)  @title : 'Time';
+  status      : String(20)  @title : 'Status';     // PENDENTE, APROVADO, ABERTO
+  data        : Date        @title : 'Date';
+}
+
+
 entity KPI_Unidade : cuid, managed {
   unidade        : Association to Unidades;
   periodo        : String(6)      @title : '{i18n>KPI_Unidade_periodo}';

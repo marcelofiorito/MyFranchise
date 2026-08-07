@@ -89,6 +89,9 @@ modules:
     build-parameters:
       build-result: app/
       requires:
+        - name: home
+          artifacts: [home.zip]
+          target-path: app/
         - name: network
           artifacts: [network.zip]
           target-path: app/
@@ -118,6 +121,15 @@ modules:
           target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
+  - name: home
+    type: html5
+    path: app/home
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
   - name: network
     type: html5
     path: app/network

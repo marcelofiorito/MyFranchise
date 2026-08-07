@@ -23,6 +23,19 @@ service FranqueadoraService {
   @readonly
   entity KPI_Unidade      as projection on mf.KPI_Unidade;
 
+  @readonly
+  entity KPI_Rede         as projection on mf.KPI_Rede;
+
+  @readonly
+  entity Atividades_Rede  as projection on mf.Atividades_Rede {
+    *,
+    case status
+      when 'APROVADO' then 3
+      when 'PENDENTE' then 2
+      else 1
+    end as statusCriticality : Integer
+  };
+
   entity Alertas          as projection on mf.Alertas;
 
   @readonly
