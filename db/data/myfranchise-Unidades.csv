@@ -1,23 +1,23 @@
-ID,codigo,nome,franqueado_ID,endereco,cidade,estado,regiao_code,cluster_code,dataAbertura,status_code,lat,lon,emReforma
-u023,023,Loja Paulista,f1,"Av. Paulista, 1578",São Paulo,SP,SE,FLG,2019-03-15,ATIVA,-23.5613,-46.6558,false
-u045,045,Loja Ipanema,f2,"R. Visconde de Pirajá, 414",Rio de Janeiro,RJ,SE,FLG,2020-06-01,ATIVA,-22.9846,-43.2058,false
-u163,163,Loja Maceió Jaraguá,f7,"R. Sá e Albuquerque, 111",Maceió,AL,NE,FLG,2020-09-12,ATIVA,-9.6658,-35.7350,false
-u114,114,Loja João Pessoa Manaíra,f7,"Av. Flávio Ribeiro Coutinho, 805",João Pessoa,PB,NE,STD,2021-04-08,ATIVA,-7.1153,-34.8641,false
-u225,225,Loja Campinas,f1,"Av. José de Souza Campos, 800",Campinas,SP,SE,STD,2021-02-10,ATIVA,-22.9010,-47.0587,false
-u078,078,Loja Savassi,f3,"R. Fernandes Tourinho, 200",Belo Horizonte,MG,SE,STD,2020-08-20,ATIVA,-19.9332,-43.9368,false
-u134,134,Loja Floripa,f5,"Av. Beira-Mar Norte, 212",Florianópolis,SC,S,STD,2021-05-12,ATIVA,-27.5784,-48.5056,false
-u256,256,Loja Ribeirão Preto,f4,"Av. Presidente Vargas, 1600",Ribeirão Preto,SP,SE,STD,2021-11-08,ATIVA,-21.1692,-47.8101,false
-u092,092,Loja Asa Sul,f4,"SCS Quadra 6, Bloco A",Brasília,DF,CO,STD,2020-10-05,ATIVA,-15.7942,-47.8825,false
-u295,295,Loja Vitória,f3,"Av. Jerônimo Monteiro, 500",Vitória,ES,SE,STD,2022-03-01,ATIVA,-20.3155,-40.3128,false
-u115,115,Loja Curitiba Batel,f5,"R. Saldanha Marinho, 1522",Curitiba,PR,S,STD,2021-01-18,ATIVA,-25.4425,-49.2912,false
-u234,234,Loja Niterói,f2,"R. Visconde de Uruguai, 380",Niterói,RJ,SE,EXP,2022-07-14,ATIVA,-22.8888,-43.1044,false
-u278,278,Loja Joinville,f5,"R. das Princesas, 210",Joinville,SC,S,EXP,2022-09-20,ATIVA,-26.3045,-48.8487,true
-u189,189,Loja Fortaleza Aldeota,f7,"Av. Monsenhor Tabosa, 740",Fortaleza,CE,NE,EXP,2022-01-10,ATIVA,-3.7305,-38.5086,false
-u245,245,Loja Santos,f3,"Av. Ana Costa, 555",Santos,SP,SE,EXP,2022-04-05,ATIVA,-23.9618,-46.3322,false
-u156,156,Loja Salvador Itaigara,f7,"Av. Tancredo Neves, 1632",Salvador,BA,NE,STD,2021-08-22,ATIVA,-12.9714,-38.5014,false
-u201,201,Loja Manaus,f8,"Av. Djalma Batista, 1350",Manaus,AM,N,EXP,2022-06-30,ATIVA,-3.1176,-60.0226,false
-u213,213,Loja Belém,f8,"Av. Visconde de Souza Franco, 776",Belém,PA,N,EXP,2022-08-15,ATIVA,-1.4557,-48.4902,true
-u267,267,Loja Goiânia,f4,"Av. Anhanguera, 9755",Goiânia,GO,CO,EXP,2022-11-01,ATIVA,-16.6864,-49.2643,false
-u178,178,Loja Recife Boa Viagem,f7,"Av. Boa Viagem, 1000",Recife,PE,NE,STD,2021-03-25,ATIVA,-8.1170,-34.8972,false
-u289,289,Loja Natal Ponta Negra,f8,"Av. Engenheiro Roberto Freire, 1300",Natal,RN,NE,EXP,2023-01-15,ATIVA,-5.8814,-35.1769,false
-u147,147,Loja Porto Alegre,f6,"Av. Ipiranga, 1080",Porto Alegre,RS,S,STD,2021-07-01,ATIVA,-30.0277,-51.2287,false
+ID,codigo,nome,franqueado_ID,endereco,cidade,estado,regiao_code,cluster_code,dataAbertura,status_code,lat,lon,emReforma,tipoLoja
+u023,023,Loja Paulista,f1,"Av. Paulista, 1578",São Paulo,SP,SE,FLG,2019-03-15,ATIVA,-23.5613,-46.6558,false,Flagship
+u045,045,Loja Ipanema,f2,"R. Visconde de Pirajá, 414",Rio de Janeiro,RJ,SE,FLG,2020-06-01,ATIVA,-22.9846,-43.2058,false,Flagship
+u163,163,Loja Maceió Jaraguá,f7,"R. Sá e Albuquerque, 111",Maceió,AL,NE,FLG,2020-09-12,ATIVA,-9.6658,-35.7350,false,Flagship
+u114,114,Loja João Pessoa Manaíra,f7,"Av. Flávio Ribeiro Coutinho, 805",João Pessoa,PB,NE,STD,2021-04-08,ATIVA,-7.1153,-34.8641,false,Tier1
+u225,225,Loja Campinas,f1,"Av. José de Souza Campos, 800",Campinas,SP,SE,STD,2021-02-10,ATIVA,-22.9010,-47.0587,false,Tier1
+u078,078,Loja Savassi,f3,"R. Fernandes Tourinho, 200",Belo Horizonte,MG,SE,STD,2020-08-20,ATIVA,-19.9332,-43.9368,false,Tier1
+u134,134,Loja Floripa,f5,"Av. Beira-Mar Norte, 212",Florianópolis,SC,S,STD,2021-05-12,ATIVA,-27.5784,-48.5056,false,Tier1
+u256,256,Loja Ribeirão Preto,f4,"Av. Presidente Vargas, 1600",Ribeirão Preto,SP,SE,STD,2021-11-08,ATIVA,-21.1692,-47.8101,false,Tier1
+u092,092,Loja Asa Sul,f4,"SCS Quadra 6, Bloco A",Brasília,DF,CO,STD,2020-10-05,ATIVA,-15.7942,-47.8825,false,Tier1
+u295,295,Loja Vitória,f3,"Av. Jerônimo Monteiro, 500",Vitória,ES,SE,STD,2022-03-01,ATIVA,-20.3155,-40.3128,false,Tier1
+u115,115,Loja Curitiba Batel,f5,"R. Saldanha Marinho, 1522",Curitiba,PR,S,STD,2021-01-18,ATIVA,-25.4425,-49.2912,false,Tier1
+u234,234,Loja Niterói,f2,"R. Visconde de Uruguai, 380",Niterói,RJ,SE,EXP,2022-07-14,ATIVA,-22.8888,-43.1044,false,Tier2
+u278,278,Loja Joinville,f5,"R. das Princesas, 210",Joinville,SC,S,EXP,2022-09-20,ATIVA,-26.3045,-48.8487,true,Tier2
+u189,189,Loja Fortaleza Aldeota,f7,"Av. Monsenhor Tabosa, 740",Fortaleza,CE,NE,EXP,2022-01-10,ATIVA,-3.7305,-38.5086,false,Tier2
+u245,245,Loja Santos,f3,"Av. Ana Costa, 555",Santos,SP,SE,EXP,2022-04-05,ATIVA,-23.9618,-46.3322,false,Tier2
+u156,156,Loja Salvador Itaigara,f7,"Av. Tancredo Neves, 1632",Salvador,BA,NE,STD,2021-08-22,ATIVA,-12.9714,-38.5014,false,Tier1
+u201,201,Loja Manaus,f8,"Av. Djalma Batista, 1350",Manaus,AM,N,EXP,2022-06-30,ATIVA,-3.1176,-60.0226,false,Tier2
+u213,213,Loja Belém,f8,"Av. Visconde de Souza Franco, 776",Belém,PA,N,EXP,2022-08-15,ATIVA,-1.4557,-48.4902,true,Tier2
+u267,267,Loja Goiânia,f4,"Av. Anhanguera, 9755",Goiânia,GO,CO,EXP,2022-11-01,ATIVA,-16.6864,-49.2643,false,Tier2
+u178,178,Loja Recife Boa Viagem,f7,"Av. Boa Viagem, 1000",Recife,PE,NE,STD,2021-03-25,ATIVA,-8.1170,-34.8972,false,Tier1
+u289,289,Loja Natal Ponta Negra,f8,"Av. Engenheiro Roberto Freire, 1300",Natal,RN,NE,EXP,2023-01-15,ATIVA,-5.8814,-35.1769,false,Tier2
+u147,147,Loja Porto Alegre,f6,"Av. Ipiranga, 1080",Porto Alegre,RS,S,STD,2021-07-01,ATIVA,-30.0277,-51.2287,false,Tier1

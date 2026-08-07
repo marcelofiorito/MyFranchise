@@ -60,10 +60,12 @@ entity Unidades : cuid, managed {
   dataAbertura : Date        @title : '{i18n>Unidades_dataAbertura}';
   status       : Association to StatusUnidade @title : '{i18n>Unidades_status}';
   // Geolocalização para mapa e D5
-  lat          : Decimal(9,6)  @title : '{i18n>Unidades_lat}';
-  lon          : Decimal(9,6)  @title : '{i18n>Unidades_lon}';
+  lat          : Decimal(9,6)  @title : 'Latitude';
+  lon          : Decimal(9,6)  @title : 'Longitude';
   // Status operacional para D6
-  emReforma    : Boolean default false @title : '{i18n>Unidades_emReforma}';
+  emReforma    : Boolean default false @title : 'In Renovation';
+  // Tipo de loja — para drill-down no slide D2
+  tipoLoja     : String(20)    @title : 'Store Type';  // Flagship, Tier1, Tier2, Online
   // Navegação para entidades filhas via OData $expand — sem back-associations
   // para evitar problemas de resolveView no CAP 10 durante o deploy.
   // Use: /Unidades('u147')?$expand=saude,kpis,alertas,desvios
@@ -129,8 +131,13 @@ entity KPI_Unidade : cuid, managed {
   cmv            : Decimal(5,2)   @title : '{i18n>KPI_Unidade_cmv}';              // custo mercadoria vendida %
   royalties      : Decimal(15,2)  @title : '{i18n>KPI_Unidade_royalties}';        // valor R$ pago
   inadimplencia  : Decimal(5,2)   @title : '{i18n>KPI_Unidade_inadimplencia}';    // % receita em atraso
-  fluxoClientes  : Integer        @title : '{i18n>KPI_Unidade_fluxoClientes}';    // qtd clientes que entraram
-  conversao      : Decimal(5,2)   @title : '{i18n>KPI_Unidade_conversao}';        // % visitantes que compraram
+  fluxoClientes        : Integer        @title : 'Customer Entrances';
+  conversao            : Decimal(5,2)   @title : 'Conversion Rate %';
+  // Customer acquisition breakdown — for D1 acquisition sources chart
+  pctAIChatTool        : Decimal(5,2)   @title : 'AI Chat Tool %';
+  pctLoyaltyProgram    : Decimal(5,2)   @title : 'Loyalty Program %';
+  pctMarketingCampaign : Decimal(5,2)   @title : 'Marketing Campaign %';
+  pctOther             : Decimal(5,2)   @title : 'Other %';
 }
 
 /**
