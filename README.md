@@ -13,7 +13,7 @@
 
 **Solução:** Plataforma SAP BTP que conecta franqueadora e franqueados em tempo real: painel executivo da rede, compliance automático, agentes de IA para recomendações e reposição de estoque, broker de eventos autônomo (AEM) e portal do franqueado com dashboard próprio.
 
-**Persona âncora:** Alexandre Mendes — Diretor de Operações, rede de 300 lojas fashion/lifestyle (R$ 177–179M/trimestre), quer dobrar a rede sem multiplicar o caos.
+**Persona âncora:** Gestor da Franqueadora — Diretor de Operações, rede de 300 lojas fashion/lifestyle (R$ 177–179M/trimestre), quer dobrar a rede sem multiplicar o caos.
 
 ---
 
@@ -40,20 +40,7 @@ Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertu
 
 ### Fluxo da Demo
 
-![Fluxo da Demo — BPMN](docs/imagens/bpmn_pt.png)
-
-### Dados validados em produção — Loja Porto Alegre (u147)
-
-| Dado | Valor |
-|---|---|
-| Health Score | **32 / 100** — crítico (vermelho) |
-| Compliance | 45% |
-| Faturamento jun/2026 | R$ 162.378 (queda de R$ 199k em fev → R$ 162k em jun) |
-| Desvios detectados | 4 (Calça Jeans MR550061 −16,4% ALTA, Óculos Sol MR550070 −19,6% ALTA, Blusa MR550050 −8,8% MÉDIA, item mix não autorizado) |
-| Recomendações IA | 3 — via gpt-4o (`modo: "GenAI Hub"` confirmado) |
-| Donut da rede | 4 críticos / 9 em atenção / 7 saudáveis (22 unidades) |
-
-**Roteiro detalhado:** ver `teste/ROTEIRO_DEMO.md` (4 atos: Visão Geral → Causa Raiz → IA → Endpoint)
+O fluxo central é a **gestão de ruptura de estoque** — desde a detecção pela IA até a aprovação pelo Joule e reposição confirmada. Ver `teste/ROTEIRO_DEMO.md` para o roteiro completo com checklist pré-demo.
 
 ---
 
@@ -429,9 +416,7 @@ MyFranchise/
 │   ├── ideias/visao-produto.md             # Roadmap pós-demo
 │   └── imagens/
 │       ├── arquitetura_solucao_franquias_v2_en.png  # Diagrama de arquitetura (EN)
-│       ├── arquitetura_solucao_franquias_v2.png     # Diagrama de arquitetura (PT)
-│       ├── bpmn_en.png                              # Fluxo da demo BPMN (EN)
-│       └── bpmn_pt.png                              # Fluxo da demo BPMN (PT)
+│       └── arquitetura_solucao_franquias_v2.png     # Diagrama de arquitetura (PT)
 ├── teste/
 │   └── ROTEIRO_DEMO.md   # Roteiro 4 atos, checklist, plano B
 ├── manifest-rpt.yml      # Deploy CF para app RPT
@@ -461,27 +446,27 @@ Acesse **http://localhost:4004**
 | Usuário | Senha | Role | Serviço |
 |---|---|---|---|
 | `gestor` | `gestor` | Franqueadora_Gestor | `/franqueadora` |
-| `roberto` | `roberto` | Franqueado (Loja Porto Alegre / u147 / cluster STD) | `/franqueado` |
+| `roberto` | `roberto` | Franqueado (unidade STD) | `/franqueado` |
 
 ### Endpoints úteis
 ```bash
 # Estoque — grade Cor×Tamanho de uma loja
 GET /franqueadora/Estoque_Unidade?$filter=sku eq 'MR550053'
 
-# Desvios da Loja Porto Alegre (u147)
-GET /franqueadora/Desvios?$filter=unidade_ID eq 'u147'
+# Desvios de uma loja
+GET /franqueadora/Desvios?$filter=unidade_ID eq 'u178'
 
-# KPIs jan–jun (Loja Porto Alegre / u147)
-GET /franqueadora/KPI_Unidade?$filter=unidade_ID eq 'u147'&$orderby=periodo
+# KPIs jan–jun por loja
+GET /franqueadora/KPI_Unidade?$filter=unidade_ID eq 'u163'&$orderby=periodo
 
-# KPI por categoria (subcategorias Beauty/Fashion/Accessories)
-GET /franqueadora/KPI_Categoria?$filter=unidade_ID eq 'u147'
+# KPI por categoria
+GET /franqueadora/KPI_Categoria?$filter=unidade_ID eq 'u023'
 
 # Produtos substitutos
 GET /franqueadora/Substitutos
 
 # Agente de recomendações (gpt-4o)
-POST /franqueadora/gerarRecomendacoes   { "unidade_ID": "u147" }
+POST /franqueadora/gerarRecomendacoes   { "unidade_ID": "u178" }
 
 # Agente de reposição (gpt-4o, com sazonalidade)
 POST /franqueadora/gerarReposicao       { "unidade_ID": "u178" }

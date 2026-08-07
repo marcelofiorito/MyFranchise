@@ -13,7 +13,7 @@
 
 **Solution:** An SAP BTP platform that connects franchisors and franchisees in real time: executive network panel, automatic compliance, AI agents for recommendations and inventory replenishment, an autonomous event broker (AEM), and a franchisee portal with its own dashboard.
 
-**Anchor persona:** Alexandre Mendes — Operations Director, network of 300 fashion/lifestyle stores (R$ 177–179M/quarter), wants to double the network without multiplying the chaos.
+**Anchor persona:** Franchisor Manager — Operations Director, network of 300 fashion/lifestyle stores (R$ 177–179M/quarter), wants to double the network without multiplying the chaos.
 
 ---
 
@@ -40,20 +40,7 @@ Same product, same month → opposite risk by region. The agent calculates cover
 
 ### Demo Flow
 
-![Demo Flow — BPMN](docs/imagens/bpmn_en.png)
-
-### Data validated in production — Porto Alegre Store (u147)
-
-| Data | Value |
-|---|---|
-| Health Score | **32 / 100** — critical (red) |
-| Compliance | 45% |
-| Revenue Jun/2026 | R$ 162,378 (decline from R$ 199k in Feb → R$ 162k in Jun) |
-| Detected deviations | 4 (Calça Jeans MR550061 −16.4% HIGH, Óculos Sol MR550070 −19.6% HIGH, Blusa MR550050 −8.8% MEDIUM, unauthorized item mix) |
-| AI Recommendations | 3 — via gpt-4o (`mode: "GenAI Hub"` confirmed) |
-| Network donut | 4 critical / 9 warning / 7 healthy (22 units) |
-
-**Detailed script:** see `teste/ROTEIRO_DEMO.md` (4 acts: Overview → Root Cause → AI → Endpoint)
+The central flow is **stockout rupture management** — from AI detection to Joule approval and confirmed replenishment. See `teste/ROTEIRO_DEMO.md` for the full script with pre-demo checklist.
 
 ---
 
@@ -430,8 +417,6 @@ MyFranchise/
 │   └── imagens/
 │       ├── arquitetura_solucao_franquias_v2_en.png  # Architecture diagram (EN)
 │       ├── arquitetura_solucao_franquias_v2.png     # Architecture diagram (PT)
-│       ├── bpmn_en.png                              # Demo flow BPMN (EN)
-│       └── bpmn_pt.png                              # Demo flow BPMN (PT)
 ├── teste/
 │   └── ROTEIRO_DEMO.md   # Demo script (4 acts, checklist, plan B)
 ├── manifest-rpt.yml      # CF deploy for RPT app
@@ -461,17 +446,17 @@ Open **http://localhost:4004**
 | User | Password | Role | Service |
 |---|---|---|---|
 | `gestor` | `gestor` | Franqueadora_Gestor | `/franqueadora` |
-| `roberto` | `roberto` | Franchisee (Porto Alegre / u147 / STD cluster) | `/franqueado` |
+| `roberto` | `roberto` | Franchisee (STD unit) | `/franqueado` |
 
 ### Useful Endpoints
 ```bash
 # Inventory — Color×Size grid for a store
 GET /franqueadora/Estoque_Unidade?$filter=sku eq 'MR550053'
 
-# Deviations for Porto Alegre Store (u147)
-GET /franqueadora/Desvios?$filter=unidade_ID eq 'u147'
+# Deviations for a store
+GET /franqueadora/Desvios?$filter=unidade_ID eq 'u178'
 
-# KPIs Jan–Jun (Porto Alegre / u147)
+# KPIs Jan–Jun by store
 GET /franqueadora/KPI_Unidade?$filter=unidade_ID eq 'u147'&$orderby=periodo
 
 # Category KPIs (Beauty/Fashion/Accessories sub-categories)
@@ -523,7 +508,7 @@ The `mta.yaml` publishes the backend and MCP Server modules, the db-deployer, th
 
 ## Production Notes
 
-- **Franchisee JWT Attributes:** The IdP (IAS) does not send `unidade_ID`/`cluster` in the assertion. `srv/server.js` injects the defaults `u147`/`STD` via CAP middleware. For real production, map via IAS assertion attributes.
+- **Franchisee JWT Attributes:** The IdP (IAS) does not send `unidade_ID`/`cluster` in the assertion. `srv/server.js` injects the default `u147`/`STD` via CAP middleware. For real production, map via IAS assertion attributes.
 - **HANA/AI Core cold start:** Run 1 warm-up request before the demo (HANA and AI Core have a cold start of several seconds).
 - **LR→OP navigation:** requires `contextPath` (not `entitySet`) + explicit `navigation` + `ResponsiveTable` in the manifest, and UI5 runtime at a **pinned version** (not `/resources/latest`). Version `1.136.7` has been validated.
 - **AEM Basic Auth:** The SAP Advanced Event Mesh Developer 100 plan does not support OAuth on `createSession`. The `PatchedAEM` wrapper (`srv/aem-patched.js`) forces Basic Auth for that call.
