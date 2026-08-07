@@ -7,8 +7,8 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "title": "Stock Management",
-    "description": "Stock levels and coverage days by store",
+    "title": "Network Stock Monitor",
+    "description": "Stock coverage and risk across all franchise stores",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
@@ -23,8 +23,8 @@
         "Inventory-manage": {
           "semanticObject": "Inventory",
           "action": "manage",
-          "title": "Stock Management",
-          "subTitle": "Stock levels and coverage days by store",
+          "title": "Network Stock Monitor",
+          "subTitle": "Stock coverage and risk across all franchise stores",
           "icon": "sap-icon://retail-store",
           "numberUnit": "in stockout",
           "numberState": "Negative",

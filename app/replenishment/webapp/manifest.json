@@ -7,8 +7,8 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "title": "Replenishment Orders",
-    "description": "Approve or reject AI-generated replenishment orders",
+    "title": "Replenishment Approvals",
+    "description": "Approve or reject AI-generated replenishment orders across the network",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
@@ -23,8 +23,8 @@
         "Replenishment-manage": {
           "semanticObject": "Replenishment",
           "action": "manage",
-          "title": "Replenishment Orders",
-          "subTitle": "Approve or reject AI-generated replenishment orders",
+          "title": "Replenishment Approvals",
+          "subTitle": "Approve or reject AI-generated replenishment orders across the network",
           "icon": "sap-icon://product",
           "numberUnit": "pending",
           "numberState": "Negative",
