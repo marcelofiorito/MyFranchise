@@ -1,20 +1,20 @@
-ID,unidade_ID,sku,nomeProduto,categoria,saldoAtual,estoqueMinimo,giroMedioDiario,leadTimeDias,status_code,dataAtualizacao
-es001,u178,MR550053,Sandália Feminina (coleção A),Sandálias,38,60,6.80,10,ATENCAO,2026-07-01T08:00:00Z
-es002,u156,MR550053,Sandália Feminina (coleção A),Sandálias,22,60,6.50,10,RUPTURA,2026-07-01T08:00:00Z
-es003,u189,MR550053,Sandália Feminina (coleção A),Sandálias,15,50,5.80,12,RUPTURA,2026-07-01T08:00:00Z
-es004,u163,MR550053,Sandália Feminina (coleção A),Sandálias,18,50,6.20,12,RUPTURA,2026-07-01T08:00:00Z
-es005,u114,MR550053,Sandália Feminina (coleção A),Sandálias,42,50,4.50,12,ATENCAO,2026-07-01T08:00:00Z
-es006,u289,MR550053,Sandália Feminina (coleção A),Sandálias,48,50,4.20,12,ATENCAO,2026-07-01T08:00:00Z
-es007,u147,MR550053,Sandália Feminina (coleção A),Sandálias,82,40,2.80,10,OK,2026-07-01T08:00:00Z
-es008,u134,MR550053,Sandália Feminina (coleção A),Sandálias,74,40,2.50,10,OK,2026-07-01T08:00:00Z
-es009,u178,MR550153,Sandália Feminina (coleção C),Sandálias,30,50,5.50,10,ATENCAO,2026-07-01T08:00:00Z
-es010,u156,MR550153,Sandália Feminina (coleção C),Sandálias,20,50,5.00,10,RUPTURA,2026-07-01T08:00:00Z
-es011,u163,MR550153,Sandália Feminina (coleção C),Sandálias,12,45,5.30,12,RUPTURA,2026-07-01T08:00:00Z
-es012,u147,MR550061,Calça Jeans Masculina Stone Wash,Calças,55,40,3.50,14,OK,2026-07-01T08:00:00Z
-es013,u134,MR550061,Calça Jeans Masculina Stone Wash,Calças,62,40,3.20,14,OK,2026-07-01T08:00:00Z
-es014,u115,MR550061,Calça Jeans Masculina Stone Wash,Calças,48,35,2.80,14,OK,2026-07-01T08:00:00Z
-es015,u178,MR571000,Biquíni Poá,Vestuário Praia,95,50,7.00,8,OK,2026-07-01T08:00:00Z
-es016,u163,MR571000,Biquíni Poá,Vestuário Praia,88,50,6.50,8,OK,2026-07-01T08:00:00Z
-es017,u114,MR571000,Biquíni Poá,Vestuário Praia,44,40,5.20,8,ATENCAO,2026-07-01T08:00:00Z
-es018,u023,MR550050,Blusa Feminina Decote V,Blusas,110,60,4.00,10,OK,2026-07-01T08:00:00Z
-es019,u045,MR550050,Blusa Feminina Decote V,Blusas,95,60,3.80,10,OK,2026-07-01T08:00:00Z
+ID,unidade_ID,sku,nomeProduto,categoria,saldoAtual,estoqueMinimo,giroMedioDiario,leadTimeDias,status_code,dataAtualizacao,centroDistribuicao,valorImpactoStockout
+es001,u178,MR550053,Sandália Feminina (coleção A),Sandálias,38,60,6.80,10,ATENCAO,2026-07-01T08:00:00Z,DC-REC,37400.0
+es002,u156,MR550053,Sandália Feminina (coleção A),Sandálias,22,60,6.50,10,RUPTURA,2026-07-01T08:00:00Z,DC-REC,97500.0
+es003,u189,MR550053,Sandália Feminina (coleção A),Sandálias,15,50,5.80,12,RUPTURA,2026-07-01T08:00:00Z,DC-REC,72500.0
+es004,u163,MR550053,Sandália Feminina (coleção A),Sandálias,18,50,6.20,12,RUPTURA,2026-07-01T08:00:00Z,DC-REC,77500.0
+es005,u114,MR550053,Sandália Feminina (coleção A),Sandálias,42,50,4.50,12,ATENCAO,2026-07-01T08:00:00Z,DC-REC,9000.0
+es006,u289,MR550053,Sandália Feminina (coleção A),Sandálias,48,50,4.20,12,ATENCAO,2026-07-01T08:00:00Z,DC-REC,2100.0
+es007,u147,MR550053,Sandália Feminina (coleção A),Sandálias,82,40,2.80,10,OK,2026-07-01T08:00:00Z,DC-CWB,0
+es008,u134,MR550053,Sandália Feminina (coleção A),Sandálias,74,40,2.50,10,OK,2026-07-01T08:00:00Z,DC-CWB,0
+es009,u178,MR550153,Sandália Feminina (coleção C),Sandálias,30,50,5.50,10,ATENCAO,2026-07-01T08:00:00Z,DC-REC,27500.0
+es010,u156,MR550153,Sandália Feminina (coleção C),Sandálias,20,50,5.00,10,RUPTURA,2026-07-01T08:00:00Z,DC-REC,62500.0
+es011,u163,MR550153,Sandália Feminina (coleção C),Sandálias,12,45,5.30,12,RUPTURA,2026-07-01T08:00:00Z,DC-REC,59625.0
+es012,u147,MR550061,Calça Jeans Masculina Stone Wash,Calças,55,40,3.50,14,OK,2026-07-01T08:00:00Z,DC-CWB,0
+es013,u134,MR550061,Calça Jeans Masculina Stone Wash,Calças,62,40,3.20,14,OK,2026-07-01T08:00:00Z,DC-CWB,0
+es014,u115,MR550061,Calça Jeans Masculina Stone Wash,Calças,48,35,2.80,14,OK,2026-07-01T08:00:00Z,DC-CWB,0
+es015,u178,MR571000,Biquíni Poá,Vestuário Praia,95,50,7.00,8,OK,2026-07-01T08:00:00Z,DC-REC,0
+es016,u163,MR571000,Biquíni Poá,Vestuário Praia,88,50,6.50,8,OK,2026-07-01T08:00:00Z,DC-REC,0
+es017,u114,MR571000,Biquíni Poá,Vestuário Praia,44,40,5.20,8,ATENCAO,2026-07-01T08:00:00Z,DC-REC,0
+es018,u023,MR550050,Blusa Feminina Decote V,Blusas,110,60,4.00,10,OK,2026-07-01T08:00:00Z,DC-SP,0
+es019,u045,MR550050,Blusa Feminina Decote V,Blusas,95,60,3.80,10,OK,2026-07-01T08:00:00Z,DC-SP,0

@@ -79,19 +79,26 @@ entity Unidades : cuid, managed {
  * Alimenta o Executive Home (D1) — faturamento, clientes, NPS, margem.
  */
 entity KPI_Rede : cuid, managed {
-  periodo          : String(6)     @title : 'Period';          // ex: 202601
-  periodoLabel     : String(10)    @title : 'Period Label';    // ex: Q1 2026
-  totalRevenue     : Decimal(15,2) @title : 'Total Revenue';
-  netNewRevenue    : Decimal(15,2) @title : 'Net-New Revenue';
-  retentionRevenue : Decimal(15,2) @title : 'Retention Revenue';
-  totalCustomers   : Integer       @title : 'Total Customers';
-  qoqGrowth        : Decimal(5,2)  @title : 'QoQ Growth %';
-  yoyGrowth        : Decimal(5,2)  @title : 'YoY Growth %';
-  avgNPS           : Decimal(4,1)  @title : 'Avg NPS';
-  avgMargemBruta   : Decimal(5,2)  @title : 'Avg Gross Margin %';
-  totalLojas       : Integer       @title : 'Active Stores';
-  lojasNovas       : Integer       @title : 'New Stores';
-  lojasEmReforma   : Integer       @title : 'Stores in Renovation';
+  periodo              : String(6)     @title : 'Period';
+  periodoLabel         : String(10)    @title : 'Period Label';
+  totalRevenue         : Decimal(15,2) @title : 'Total Revenue';
+  netNewRevenue        : Decimal(15,2) @title : 'Net-New Revenue';
+  retentionRevenue     : Decimal(15,2) @title : 'Retention Revenue';
+  totalCustomers       : Integer       @title : 'Total Customers';
+  qoqGrowth            : Decimal(5,2)  @title : 'QoQ Growth %';
+  yoyGrowth            : Decimal(5,2)  @title : 'YoY Growth %';
+  avgNPS               : Decimal(4,1)  @title : 'Avg NPS';
+  avgMargemBruta       : Decimal(5,2)  @title : 'Avg Gross Margin %';
+  totalLojas           : Integer       @title : 'Active Stores';
+  lojasNovas           : Integer       @title : 'New Stores';
+  lojasEmReforma       : Integer       @title : 'Stores in Renovation';
+  // Revenue breakdown by category — for D1 bar chart
+  revBeauty            : Decimal(15,2) @title : 'Beauty & Wellness Revenue';
+  revFashion           : Decimal(15,2) @title : 'Fashion & Apparel Revenue';
+  revAccessories       : Decimal(15,2) @title : 'Accessories & Jewelry Revenue';
+  revOther             : Decimal(15,2) @title : 'Other Revenue';
+  newCustomersPct      : Decimal(5,2)  @title : 'New Customers %';
+  returningCustomersPct: Decimal(5,2)  @title : 'Returning Customers %';
 }
 
 /**
@@ -389,14 +396,18 @@ entity Contratos_Franquia : cuid, managed {
  * Alimenta D3 (drill-down Beleza) e D6 (tabela Margem por Categoria).
  */
 entity KPI_Categoria : cuid, managed {
-  unidade      : Association to Unidades @title : '{i18n>Unidades}';
-  periodo      : String(6)     @title : '{i18n>KPI_Unidade_periodo}';
-  categoria    : String(100)   @title : '{i18n>ItensCatalogo_categoria}';
-  faturamento  : Decimal(15,2) @title : '{i18n>KPI_Unidade_faturamento}';
-  margemBruta  : Decimal(5,2)  @title : '{i18n>KPI_Unidade_margemBruta}';   // % margem desta categoria
-  qtdProdutos  : Integer       @title : '{i18n>KPI_Categoria_qtdProdutos}';  // SKUs vendidos
-  participacao : Decimal(5,2)  @title : '{i18n>KPI_Categoria_participacao}'; // % do faturamento total
-  meta         : Decimal(5,2)  @title : '{i18n>KPI_Categoria_meta}';         // margem meta %
+  unidade              : Association to Unidades @title : '{i18n>Unidades}';
+  periodo              : String(6)     @title : 'Period';
+  categoria            : String(100)   @title : 'Category';
+  subCategoria         : String(100)   @title : 'Sub-Category';
+  faturamento          : Decimal(15,2) @title : 'Revenue';
+  margemBruta          : Decimal(5,2)  @title : 'Gross Margin %';
+  qtdProdutos          : Integer       @title : 'SKUs Sold';
+  participacao         : Decimal(5,2)  @title : 'Revenue Share %';
+  meta                 : Decimal(5,2)  @title : 'Margin Target %';
+  repeatPurchaseRate   : Decimal(5,2)  @title : 'Repeat Purchase Rate %';
+  loyaltyParticipation : Decimal(5,2)  @title : 'Loyalty Participation %';
+  conversionRate       : Decimal(5,2)  @title : 'Conversion Rate %';
 }
 
 /**
@@ -435,24 +446,22 @@ entity Ativacao_Campanha_Unidade : cuid, managed {
  */
 entity Estoque_Unidade : cuid, managed {
   unidade          : Association to Unidades @title : '{i18n>Unidades}';
-  sku              : String(50)   @title : '{i18n>ItensCatalogo_sku}';
-  nomeProduto      : String(150)  @title : '{i18n>ItensCatalogo_nomeProduto}';
-  categoria        : String(100)  @title : '{i18n>ItensCatalogo_categoria}';
-  saldoAtual       : Integer      @title : '{i18n>Estoque_saldoAtual}';        // unidades em estoque
-  estoqueMinimo    : Integer      @title : '{i18n>Estoque_estoqueMinimo}';      // ponto de reposição
-  giroMedioDiario  : Decimal(8,2) @title : '{i18n>Estoque_giroMedioDiario}';    // unidades vendidas/dia (base)
-  leadTimeDias     : Integer      @title : '{i18n>Estoque_leadTimeDias}';       // dias até repor
-  // coberturaDias = saldoAtual / (giroMedioDiario ajustado pela sazonalidade regional)
-  // é @Core.Computed: calculado no service handler considerando a região da unidade
-  coberturaDias    : Decimal(6,1) @title : '{i18n>Estoque_coberturaDias}'    @Core.Computed: true;
-  status           : Association to StatusEstoque @title : '{i18n>Estoque_status}';
-  // 1=vermelho (RUPTURA/risco), 2=amarelo (ATENCAO), 3=verde (OK)
-  estoqueCriticality : Integer    @title : '{i18n>Estoque_criticality}'      @Core.Computed: true;
-  dataAtualizacao  : DateTime     @title : '{i18n>Estoque_dataAtualizacao}';
-  // Navegação para pedidos de reposição do mesmo SKU nesta unidade
-  pedidos          : Association to many Pedidos_Reposicao
-                       on  pedidos.unidade = unidade
-                       and pedidos.sku     = sku;
+  sku                  : String(50)   @title : 'SKU';
+  nomeProduto          : String(150)  @title : 'Product';
+  categoria            : String(100)  @title : 'Category';
+  saldoAtual           : Integer      @title : 'On Hand';
+  estoqueMinimo        : Integer      @title : 'Reorder Point';
+  giroMedioDiario      : Decimal(8,2) @title : 'Daily Sales Rate';
+  leadTimeDias         : Integer      @title : 'Lead Time (days)';
+  coberturaDias        : Decimal(6,1) @title : 'Days Cover'           @Core.Computed: true;
+  status               : Association to StatusEstoque @title : 'Status';
+  estoqueCriticality   : Integer      @title : 'Criticality'          @Core.Computed: true;
+  dataAtualizacao      : DateTime     @title : 'Last Updated';
+  centroDistribuicao   : String(20)   @title : 'Distribution Center'; // DC-SP, DC-CWB, DC-REC, etc.
+  valorImpactoStockout : Decimal(15,2)@title : 'Stockout Impact (R$)';
+  pedidos              : Association to many Pedidos_Reposicao
+                           on  pedidos.unidade = unidade
+                           and pedidos.sku     = sku;
 }
 
 /**
