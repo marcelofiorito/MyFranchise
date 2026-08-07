@@ -1,5 +1,5 @@
 {
-  "name": "myfranchise-recommendations",
+  "name": "myfranchise-categories",
   "version": "1.0.0",
   "private": true,
   "main": "webapp/index.html",
