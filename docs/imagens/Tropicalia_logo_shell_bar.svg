@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 200 50" width="200" height="50">
+
+  <!-- ░░ FUNDO EMBUTIDO — garante aparência mesmo em hover branco ░░ -->
+  <rect x="0" y="0" width="200" height="50"
+        fill="#1F7A4D" rx="6"/>
+
+  <!-- Sol: raios amarelos -->
+  <polygon points="26.00,6.00 28.80,13.00 23.20,13.00" fill="#FFCC2E"/>
+  <polygon points="39.44,11.56 36.47,18.49 32.51,14.53" fill="#FFCC2E"/>
+  <polygon points="45.00,25.00 38.00,27.80 38.00,22.20" fill="#FFCC2E"/>
+  <polygon points="39.44,38.44 32.51,35.47 36.47,31.51" fill="#FFCC2E"/>
+  <polygon points="26.00,44.00 23.20,37.00 28.80,37.00" fill="#FFCC2E"/>
+  <polygon points="12.56,38.44 15.53,31.51 19.49,35.47" fill="#FFCC2E"/>
+  <polygon points="7.00,25.00 14.00,22.20 14.00,27.80" fill="#FFCC2E"/>
+  <polygon points="12.56,11.56 19.49,14.53 15.53,18.49" fill="#FFCC2E"/>
+
+  <!-- Sol: anel escuro -->
+  <circle cx="26" cy="25" r="10.5" fill="#0B3D2E"/>
+
+  <!-- Sol: círculo coral -->
+  <circle cx="26" cy="25" r="7" fill="#FF5A3C"/>
+
+  <!-- Sol: ponto creme central -->
+  <circle cx="26" cy="25" r="2.2" fill="#FDF6EC"/>
+
+  <!-- ── WORDMARK ────────────────────────────────────────── -->
+  <!-- TROPICALIA -->
+  <text x="52" y="20"
+    font-family="'Trebuchet MS','Arial Black',sans-serif"
+    font-size="14" font-weight="800"
+    fill="#FDF6EC" letter-spacing="1.8">TROPICALIA</text>
+
+  <!-- Linha accent amarela -->
+  <rect x="52" y="23.5" width="138" height="1.5"
+        fill="#FFCC2E" rx="0.75"/>
+
+  <!-- CO. -->
+  <text x="52" y="37"
+    font-family="'Trebuchet MS','Arial',sans-serif"
+    font-size="10" font-weight="700"
+    fill="#FF5A3C" letter-spacing="3.5">CO.</text>
+
+  <!-- Tagline -->
+  <text x="75" y="37"
+    font-family="'Arial',sans-serif"
+    font-size="6.5" font-weight="400"
+    fill="#FDF6EC" letter-spacing="1.6"
+    opacity="0.75">SUMMER HAS A HOMELAND</text>
+
+</svg>
