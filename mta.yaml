@@ -13,6 +13,7 @@ build-parameters:
       commands:
         - npm ci
         - npx -p @sap/cds-dk cds build --production
+        - node scripts/patch-hdbtabledata.js
 
 modules:
   # --------------------- SERVER MODULE ------------------------
