@@ -443,6 +443,46 @@ entity Ativacao_Campanha_Unidade : cuid, managed {
 
 
 // ═══════════════════════════════════════════════════════════
+// PILAR 3 — Financeiro Preditivo
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Previsão de receita por unidade para 14 e 30 dias.
+ * Calcula baseado em histórico KPI_Unidade + campanhas ativas + NPS.
+ * Alimenta o card Previsão de Receita no Franchisee Portal (Pilar 3).
+ */
+entity Previsao_Receita : cuid, managed {
+  unidade           : Association to Unidades @title : 'Store';
+  periodoPrevisao   : String(10)    @title : 'Forecast Period';   // '14d', '30d'
+  receitaPrevista   : Decimal(15,2) @title : 'Forecasted Revenue';
+  receitaAnterior   : Decimal(15,2) @title : 'Same Period Last Year';
+  variacaoEsperada  : Decimal(5,2)  @title : 'Expected Variation %';
+  cenarioOtimista   : Decimal(15,2) @title : 'Optimistic Scenario';
+  cenarioRealista   : Decimal(15,2) @title : 'Realistic Scenario';
+  cenarioPessimista : Decimal(15,2) @title : 'Pessimistic Scenario';
+  driversJson       : LargeString   @title : 'Impact Drivers (JSON)'; // [{driver,impactoPct}]
+  dataGeracao       : DateTime      @title : 'Generated At';
+}
+
+// ═══════════════════════════════════════════════════════════
+// PILAR 6 — Feed de Novidades
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Feed de novidades, tendências e dicas da rede para o franqueado.
+ * Alimenta o card Feed de Novidades no Franchisee Portal (Pilar 6).
+ */
+entity Feed_Franqueado : cuid, managed {
+  titulo           : String(200)  @title : 'Title';
+  tipo             : String(30)   @title : 'Type';           // LANCAMENTO, TENDENCIA, CAMPANHA, DICA
+  conteudo         : String(2000) @title : 'Content';
+  dataPublicacao   : Date         @title : 'Published On';
+  skusRelacionados : String(500)  @title : 'Related SKUs';   // comma-separated SKU list
+  ativo            : Boolean default true;
+}
+
+
+// ═══════════════════════════════════════════════════════════
 // ESTOQUE & REPOSIÇÃO — evitar ruptura na loja do franqueado
 // Considera sazonalidade regional + calendário promocional.
 // ═══════════════════════════════════════════════════════════

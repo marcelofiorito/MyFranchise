@@ -168,6 +168,29 @@
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Benchmark",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod"
         }
+      },
+      "card08_forecast": {
+        "template": "sap.ovp.cards.v4.table",
+        "settings": {
+          "title": "Revenue Forecast",
+          "subTitle": "14-day prediction · drivers of impact",
+          "entitySet": "MinhaPrevisaoReceita",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Forecast",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Periodo14d"
+        }
+      },
+      "card09_feed": {
+        "template": "sap.ovp.cards.v4.list",
+        "settings": {
+          "title": "Tropicália Co. — What's New",
+          "subTitle": "Launches · Trends · Campaigns · Tips",
+          "entitySet": "MeuFeed",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Feed",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ativos",
+          "sortBy": "dataPublicacao",
+          "sortOrder": "descending",
+          "listType": "extended"
+        }
       }
     }
   },

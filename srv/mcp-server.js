@@ -481,6 +481,63 @@ You CAN approve orders. You CAN reject orders. Always use the tools provided.`
     }
   );
 
+  server.tool('get_previsao_receita',
+    'Returns revenue forecast for a store for the next 14 or 30 days, with impact drivers (campaigns, heat wave, NPS, seasonality). Use when asked about revenue prediction, sales forecast, or expected income.',
+    {
+      unidade_ID:      z.string().describe('Store ID or name (e.g. "u163", "Maceió", "SP Jardins")'),
+      periodoPrevisao: z.enum(['14d','30d']).default('14d').describe('Forecast horizon: 14d or 30d'),
+    },
+    async ({ unidade_ID, periodoPrevisao }) => {
+      try {
+        const resolvedId = await resolveUnidade(unidade_ID);
+        const rows = await dbq(
+          SELECT.from('myfranchise.Previsao_Receita')
+            .where({ unidade_ID: resolvedId, periodoPrevisao })
+        );
+        if (!rows.length) return err(`No forecast found for ${unidade_ID} (${periodoPrevisao})`);
+        const r = rows[0];
+        let drivers = [];
+        try { drivers = JSON.parse(r.driversjson || r.driversJson || '[]'); } catch {}
+        const variacao = Number(r.variacaoesperada || r.variacaoEsperada || 0);
+        return ok({
+          loja: unidade_ID, periodo: periodoPrevisao,
+          receitaPrevista:   `R$ ${Number(r.receitaprevista || r.receitaPrevista || 0).toLocaleString('pt-BR', {minimumFractionDigits:0})}`,
+          receitaAnterior:   `R$ ${Number(r.receitaanterior || r.receitaAnterior || 0).toLocaleString('pt-BR', {minimumFractionDigits:0})}`,
+          variacaoEsperada:  `${variacao > 0 ? '+' : ''}${variacao}%`,
+          cenarioOtimista:   `R$ ${Number(r.cenariootimista || r.cenarioOtimista || 0).toLocaleString('pt-BR', {minimumFractionDigits:0})}`,
+          cenarioPessimista: `R$ ${Number(r.cenariopessimista || r.cenarioPessimista || 0).toLocaleString('pt-BR', {minimumFractionDigits:0})}`,
+          driversDeImpacto: drivers,
+          mensagem: `Forecast for ${periodoPrevisao}: expected ${variacao > 0 ? '+' : ''}${variacao}% vs. same period last year. ${drivers.length ? 'Key drivers: ' + drivers.slice(0,2).map(d => `${d.driver} (${d.impactoPct > 0 ? '+' : ''}${d.impactoPct}%)`).join(', ') : ''}`
+        });
+      } catch (e) { LOG.error('get_previsao_receita', e); return err(e.message); }
+    }
+  );
+
+  server.tool('get_feed_novidades',
+    'Returns the latest news feed items for franchisees: product launches, trends, campaigns, and operational tips from the Tropicália Co. network. Use when asked about news, launches, trends, campaigns, or what is new in the network.',
+    {
+      tipo: z.enum(['LANCAMENTO','TENDENCIA','CAMPANHA','DICA','ALL']).default('ALL').describe('Filter by type. Use ALL for everything.'),
+    },
+    async ({ tipo }) => {
+      try {
+        let q = SELECT.from('myfranchise.Feed_Franqueado').where({ ativo: true }).orderBy('dataPublicacao desc').limit(10);
+        const rows = await dbq(q);
+        let filtered = rows;
+        if (tipo !== 'ALL') filtered = rows.filter(r => (r.tipo||r.TIPO) === tipo);
+        return ok({
+          total: filtered.length,
+          feed: filtered.map(r => ({
+            titulo:        r.titulo || r.TITULO,
+            tipo:          r.tipo   || r.TIPO,
+            conteudo:      r.conteudo || r.CONTEUDO,
+            data:          r.datapublicacao || r.dataPublicacao,
+            skus:          r.skusrelacionados || r.skusRelacionados
+          }))
+        });
+      } catch (e) { LOG.error('get_feed_novidades', e); return err(e.message); }
+    }
+  );
+
   return server;
 }
 
@@ -492,7 +549,7 @@ app.get('/health', (_req, res) => res.json({
   status: 'UP', service: 'runmyfranchise-mcp', version: '1.0.0',
   tools: ['get_lojas_em_risco','get_cobertura_estoque','get_pedidos_pendentes',
           'get_recomendacoes','get_score_rede','acionar_reposicao',
-          'get_substitutos','get_grade_ruptura',
+          'get_substitutos','get_grade_ruptura','get_previsao_receita','get_feed_novidades',
           'process_replenishment_orders','confirm_single_order','reject_order'],
   mes_referencia: MES_REF, timestamp: new Date().toISOString(),
 }));

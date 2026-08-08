@@ -127,6 +127,39 @@ sap.ui.define([
       const log = this._m.getProperty("/log");
       log.unshift({ icon, msg, ts: new Date().toLocaleTimeString("pt-BR") });
       this._m.setProperty("/log", log.slice(0, 20));
+    },
+
+    // ── Scenario Simulator — Pilar 2 ─────────────────────────────────────────
+    onSimularOndaDeCalor: function() {
+      const m = this._m;
+      sap.m.MessageBox.confirm(
+        "Simulate Heat Wave: increase 14-day demand forecast by 15% across all stores?\n\nThis recalculates stockout risk on the full Color×Size grid and emits AEM events.",
+        {
+          title: "Heat Wave +15% Demand",
+          onClose: async action => {
+            if (action !== "OK") return;
+            const ctx = this.getView().getModel().bindContext("/simularOndaDeCalor(...)");
+            ctx.setParameter("fator", 1.15);
+            await ctx.execute();
+            const r = ctx.getBoundContext().getObject();
+            const msg = `Heat Wave: ${r.itens} items updated, ${r.rupturas} new stockouts.`;
+            sap.m.MessageToast.show(msg);
+            this._log("sap-icon://weather-sunny", msg);
+            this.onRefresh();
+          }
+        }
+      );
+    },
+
+    // ── Scenario Simulator — Pilar 5 ─────────────────────────────────────────
+    onSincronizarSubstitutos: function() {
+      const ctx = this.getView().getModel().bindContext("/sincronizarSubstitutos(...)");
+      ctx.execute().then(() => {
+        const r = ctx.getBoundContext().getObject();
+        const msg = `Substitutes synced: ${r.atualizados} mappings updated with current stock.`;
+        sap.m.MessageToast.show(msg);
+        this._log("sap-icon://product", msg);
+      }).catch(e => sap.m.MessageBox.error("Error: " + (e.message || String(e))));
     }
   });
 });

@@ -27,6 +27,18 @@ service FranqueadoraService {
   entity KPI_Rede         as projection on mf.KPI_Rede;
 
   @readonly
+  entity Previsao_Receita as projection on mf.Previsao_Receita {
+    *,
+    unidade.nome        as unidadeNome   : String,
+    unidade.cidade      as unidadeCidade : String,
+    unidade.regiao.code as regiaoCode    : String,
+    unidade.tipoLoja    as tipoLoja      : String
+  };
+
+  @readonly
+  entity Feed_Franqueado  as projection on mf.Feed_Franqueado;
+
+  @readonly
   entity Atividades_Rede  as projection on mf.Atividades_Rede {
     *,
     case status
@@ -162,7 +174,7 @@ service FranqueadoraService {
     mensagem : String;
   };
 
-  // Simula uma enxurrada de vendas que leva os estoques a ruptura
+  // Simula uma enxurrada de vendas que leva os estoques a ruptura (grade Cor×Tamanho)
   action simularVendas() returns {
     rupturas : Integer;
     mensagem : String;
@@ -172,6 +184,19 @@ service FranqueadoraService {
   action simularRecebimento() returns {
     pedidos  : Integer;
     mensagem : String;
+  };
+
+  // Pilar 2 — Simula onda de calor: aumenta previsão de demanda 14d em todas as lojas
+  action simularOndaDeCalor(fator : Decimal) returns {
+    itens    : Integer;
+    rupturas : Integer;
+    mensagem : String;
+  };
+
+  // Pilar 5 — Sincroniza estoqueDisponivel na entidade Substitutos com saldo atual
+  action sincronizarSubstitutos() returns {
+    atualizados : Integer;
+    mensagem    : String;
   };
 
   // KPI para tiles do Work Zone
@@ -286,6 +311,20 @@ service FranqueadoService {
     *,
     unidade.nome          as unidadeNome : String
   };
+
+  // ── Previsão de Receita ───────────────────────────────────
+  @readonly
+  @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
+  entity MinhaPrevisaoReceita as projection on mf.Previsao_Receita {
+    *,
+    unidade.nome   as unidadeNome   : String,
+    unidade.cidade as unidadeCidade : String
+  };
+
+  // ── Feed de Novidades ─────────────────────────────────────
+  @readonly
+  entity MeuFeed             as projection on mf.Feed_Franqueado
+    where ativo = true;
 
   @(restrict: [{ grant: ['READ','WRITE'], where: 'unidade_ID = $user.unidade_ID' }])
   entity MinhasReposicoes    as projection on mf.Pedidos_Reposicao {

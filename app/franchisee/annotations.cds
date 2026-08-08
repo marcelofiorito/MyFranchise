@@ -314,3 +314,60 @@ annotate service.BenchmarkMeuCluster with @(
     { Value: npsMedio,         Label: 'Avg NPS'     }
   ]
 );
+
+// ── Card 8: Revenue Forecast ──────────────────────────────────
+annotate service.MinhaPrevisaoReceita with {
+  receitaPrevista   @Measures.ISOCurrency: 'BRL';
+  receitaAnterior   @Measures.ISOCurrency: 'BRL';
+  cenarioOtimista   @Measures.ISOCurrency: 'BRL';
+  cenarioPessimista @Measures.ISOCurrency: 'BRL';
+}
+annotate service.MinhaPrevisaoReceita with @(
+
+  UI.HeaderInfo: {
+    TypeName      : 'Forecast',
+    TypeNamePlural: 'Revenue Forecast',
+    Title         : { Value: periodoPrevisao },
+    Description   : { Value: unidadeNome }
+  },
+
+  UI.DataPoint #Variacao: {
+    Value : variacaoEsperada,
+    Title : 'Expected Variation %'
+  },
+
+  UI.LineItem #Forecast: [
+    { Value: periodoPrevisao,   Label: 'Period'                                        },
+    { Value: receitaPrevista,   Label: 'Forecasted Revenue',  ![@UI.Importance]: #High },
+    { Value: variacaoEsperada,  Label: 'vs. Last Year %',     ![@UI.Importance]: #High },
+    { Value: cenarioOtimista,   Label: 'Optimistic'                                    },
+    { Value: cenarioPessimista, Label: 'Pessimistic'                                   }
+  ],
+
+  UI.SelectionVariant #Periodo14d: {
+    Text         : '14 days',
+    SelectOptions: [{ PropertyName: periodoPrevisao, Ranges: [{ Sign: #I, Option: #EQ, Low: '14d' }] }]
+  }
+);
+
+// ── Card 9: Feed de Novidades ─────────────────────────────────
+annotate service.MeuFeed with @(
+
+  UI.HeaderInfo: {
+    TypeName      : 'News',
+    TypeNamePlural: 'Tropicália Co. Feed',
+    Title         : { Value: titulo },
+    Description   : { Value: tipo }
+  },
+
+  UI.LineItem #Feed: [
+    { Value: tipo,            Label: 'Type',    ![@UI.Importance]: #High },
+    { Value: titulo,          Label: 'Title',   ![@UI.Importance]: #High },
+    { Value: conteudo,        Label: 'Content', ![@UI.Importance]: #Low  },
+    { Value: dataPublicacao,  Label: 'Date'                              }
+  ],
+
+  UI.SelectionVariant #Ativos: {
+    Text: 'Active news'
+  }
+);

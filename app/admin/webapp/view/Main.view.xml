@@ -7,26 +7,26 @@
   displayBlock="true">
 
   <App>
-    <Page title="RunMyFranchise — Admin Demo" showNavButton="false">
+    <Page title="Tropicália Co. — Demo Control Panel" showNavButton="false">
       <content>
         <layout:VerticalLayout width="100%" class="sapUiMediumMargin">
 
           <!-- KPIs ao vivo -->
-          <Panel headerText="Estado Atual" expandable="false">
+          <Panel headerText="Live Status" expandable="false">
             <content>
               <HBox wrap="Wrap" alignItems="Center" class="sapUiSmallMargin">
                 <ObjectStatus
-                  title="Pedidos PENDENTE"
+                  title="Pending Orders"
                   text="{admin>/pendentes}"
                   state="{admin>/pendentesState}"
                   class="sapUiMediumMarginEnd"/>
                 <ObjectStatus
-                  title="Itens em RUPTURA"
+                  title="Items in STOCKOUT"
                   text="{admin>/ruptura}"
                   state="Error"
                   class="sapUiMediumMarginEnd"/>
                 <Button
-                  text="Atualizar"
+                  text="Refresh"
                   icon="sap-icon://refresh"
                   press=".onRefresh"
                   class="sapUiSmallMarginEnd"/>
@@ -34,8 +34,8 @@
             </content>
           </Panel>
 
-          <!-- Ações da demo -->
-          <Panel headerText="Demo Actions" expandable="false">
+          <!-- Demo Flow Actions -->
+          <Panel headerText="Demo Flow — Stockout Rupture" expandable="false">
             <content>
               <VBox class="sapUiSmallMargin">
 
@@ -52,7 +52,7 @@
                 <Title text="Step 2 — Simulate Sales Rush" class="sapUiSmallMarginBottom sapUiMediumMarginTop" level="H4"/>
                 <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
                   <Button
-                    text="Simulate Sales Rush (triggers AEM → Agent)"
+                    text="Simulate Sales Rush (Grade Cor×Tamanho → AEM → Agent)"
                     type="Critical"
                     icon="sap-icon://sales-order"
                     press=".onSimularVendas"
@@ -93,13 +93,50 @@
             </content>
           </Panel>
 
+          <!-- Scenario Simulator — Pilar 2 (Estoque Inteligente) + Pilar 5 (Substitutos) -->
+          <Panel headerText="Scenario Simulator — Pillar 2: Smart Stock + Pillar 5: Substitutes" expandable="true" expanded="true">
+            <content>
+              <VBox class="sapUiSmallMargin">
+
+                <MessageStrip
+                  text="These scenarios simulate real-world demand shifts to demonstrate AI-driven stockout prediction and product substitution."
+                  type="Information"
+                  showIcon="true"
+                  class="sapUiSmallMarginBottom"/>
+
+                <Title text="Pillar 2 — Smart Stock (Color×Size Grade)" class="sapUiSmallMarginBottom" level="H4"/>
+                <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+                  <Button
+                    text="Heat Wave +15% Demand (São Paulo / Sudeste)"
+                    type="Critical"
+                    icon="sap-icon://weather-sunny"
+                    press=".onSimularOndaDeCalor"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                    tooltip="Increases 14d demand forecast by 15% — simulates extreme heat wave increasing sandal/beachwear demand. Recalculates stockout risk across the full Color×Size grid."/>
+                </HBox>
+
+                <Title text="Pillar 5 — Product Substitutes" class="sapUiSmallMarginBottom sapUiMediumMarginTop" level="H4"/>
+                <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+                  <Button
+                    text="Sync Substitute Stock Availability"
+                    type="Default"
+                    icon="sap-icon://product"
+                    press=".onSincronizarSubstitutos"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                    tooltip="Recalculates estoqueDisponivel for each substitute product based on current network stock. Ensures Joule get_substitutos returns accurate availability."/>
+                </HBox>
+
+              </VBox>
+            </content>
+          </Panel>
+
           <!-- Log de operações -->
-          <Panel headerText="Log" expandable="true" expanded="true">
+          <Panel headerText="Operations Log" expandable="true" expanded="true">
             <content>
               <List
                 id="logList"
                 items="{admin>/log}"
-                noDataText="Nenhuma operação realizada."
+                noDataText="No operations performed yet."
                 class="sapUiSmallMargin">
                 <StandardListItem
                   title="{admin>msg}"

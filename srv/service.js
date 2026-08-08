@@ -129,88 +129,99 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
     });
 
     this.on('resetarDemo', async () => {
-      const { Pedidos_Reposicao, Estoque_Unidade } = this.entities;
+      const { Pedidos_Reposicao, Estoque_Unidade, KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade } = this.entities;
 
-      // 1. Remove todos os pedidos (agente recriará automaticamente)
+      // 1. Remove todos os pedidos
       await DELETE.from(Pedidos_Reposicao);
 
-      // 2. Seed inicial: TODOS os estoques em situação saudável (OK)
-      // Cenário de demo começa perfeito — simularVendas vai causar rupturas
-      const seedOK = [
-        { ID: 'es001', saldoAtual: 180, status_code: 'OK' },
-        { ID: 'es002', saldoAtual: 200, status_code: 'OK' },
-        { ID: 'es003', saldoAtual: 160, status_code: 'OK' },
-        { ID: 'es004', saldoAtual: 175, status_code: 'OK' },
-        { ID: 'es005', saldoAtual: 190, status_code: 'OK' },
-        { ID: 'es006', saldoAtual: 210, status_code: 'OK' },
-        { ID: 'es007', saldoAtual: 185, status_code: 'OK' },
-        { ID: 'es008', saldoAtual: 170, status_code: 'OK' },
-        { ID: 'es009', saldoAtual: 165, status_code: 'OK' },
-        { ID: 'es010', saldoAtual: 195, status_code: 'OK' },
-        { ID: 'es011', saldoAtual: 220, status_code: 'OK' },
-        { ID: 'es012', saldoAtual: 200, status_code: 'OK' },
-        { ID: 'es013', saldoAtual: 180, status_code: 'OK' },
-      ];
-      for (const item of seedOK) {
+      // 2. Repõe TODOS os itens da grade: saldo = estoqueMinimo * 4, status = OK
+      // Usa query dinâmica — IDs variam com o novo schema Cor×Tamanho
+      const todosItens = await SELECT.from(Estoque_Unidade);
+      for (const item of todosItens) {
+        const saldoReset = Math.round((item.estoqueMinimo || 5) * 4);
+        const prevReset  = Math.round((item.giroMedioDiario || 1) * 14);
         await UPDATE(Estoque_Unidade)
-          .set({ saldoAtual: item.saldoAtual, status_code: item.status_code })
+          .set({
+            saldoAtual:          saldoReset,
+            status_code:         'OK',
+            previsaoDemanda14d:  prevReset,
+            saldoProjetado14d:   saldoReset - prevReset,
+            rupturaEm:           item.giroMedioDiario > 0 ? Math.round(saldoReset / item.giroMedioDiario) : 99,
+            valorImpactoStockout: 0
+          })
           .where({ ID: item.ID });
       }
 
       // 3. Recalcula score de saúde para todas as unidades ativas
-      const { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade } = this.entities;
       const unidades = await SELECT.from(Unidades).where({ status_code: 'ATIVA' });
       for (const u of unidades) {
         await this._recalcularSaude(u.ID, { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade }).catch(() => {});
       }
 
-      return { pedidos: 0, mensagem: `Demo resetada — todos os estoques saudáveis (OK), scores recalculados. Use "Simulate Sales Rush" para acionar o cenário.` };
+      return { pedidos: 0, mensagem: `Demo resetada — ${todosItens.length} itens da grade restaurados (OK), scores recalculados. Use "Simulate Sales Rush" para acionar o cenário.` };
     });
 
     this.on('simularVendas', async () => {
-      const { Estoque_Unidade } = this.entities;
+      const { Estoque_Unidade, KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade } = this.entities;
 
-      // Simula uma enxurrada de vendas — reduz estoques abaixo do mínimo em algumas unidades
-      // Cada item tem estoqueMinimo definido no seed (~60). Baixamos para causar RUPTURA/ATENCAO.
-      const vendas = [
-        { ID: 'es001', saldoAtual: 45,  status_code: 'ATENCAO' }, // u178 - Loja Recife
-        { ID: 'es002', saldoAtual: 18,  status_code: 'RUPTURA' }, // u156 - Loja Salvador
-        { ID: 'es003', saldoAtual: 12,  status_code: 'RUPTURA' }, // u189 - Loja Natal
-        { ID: 'es004', saldoAtual: 52,  status_code: 'ATENCAO' }, // u289 - Loja Fortaleza
-        { ID: 'es007', saldoAtual: 35,  status_code: 'ATENCAO' }, // u178 - SKU-101
-        { ID: 'es008', saldoAtual: 20,  status_code: 'RUPTURA' }, // u156 - Bota Inverno
-        { ID: 'es009', saldoAtual: 15,  status_code: 'RUPTURA' }, // u147 - Porto Alegre
-        { ID: 'es010', saldoAtual: 18,  status_code: 'RUPTURA' }, // u134 - Floripa
-      ];
+      // Pega os 40 itens com menor saldo atual (foco em lojas já em risco: cores promocionais)
+      // Prioriza SKUs de cores promocionais (Azul Ipanema, Amarelo Tropical) nas lojas NE
+      const candidatos = await SELECT.from(Estoque_Unidade)
+        .where({ status_code: { '!=': 'RUPTURA' } })
+        .orderBy('saldoAtual asc')
+        .limit(40);
 
-      for (const item of vendas) {
+      if (!candidatos.length) return { rupturas: 0, mensagem: 'Nenhum item disponível para simular. Execute Reset Demo primeiro.' };
+
+      // Reduz saldo de forma realista: simula vendas de 2–5 dias em 1 hora
+      let rupturas = 0, atencao = 0;
+      const afetados = [];
+
+      for (const item of candidatos) {
+        const giro = Number(item.giroMedioDiario || 1);
+        const vendidos = Math.round(giro * (2 + Math.random() * 3));  // 2–5 dias de venda
+        const novoSaldo = Math.max(0, (item.saldoAtual || 0) - vendidos);
+        const minimo = item.estoqueMinimo || 5;
+        const novoStatus = novoSaldo <= 0 ? 'RUPTURA' : novoSaldo < minimo ? 'ATENCAO' : 'OK';
+        const prevista = Math.round(giro * 14);
+        const saldoProj = novoSaldo - prevista;
+        const rupturaEmDias = giro > 0 ? Math.round(novoSaldo / giro) : 99;
+        const impacto = novoStatus !== 'OK' ? Math.round(Math.max(0, prevista - novoSaldo) * 219) : 0;
+
         await UPDATE(Estoque_Unidade)
-          .set({ saldoAtual: item.saldoAtual, status_code: item.status_code })
+          .set({
+            saldoAtual:           novoSaldo,
+            status_code:          novoStatus,
+            previsaoDemanda14d:   prevista,
+            saldoProjetado14d:    saldoProj,
+            rupturaEm:            rupturaEmDias,
+            valorImpactoStockout: impacto
+          })
           .where({ ID: item.ID });
+
+        if (novoStatus === 'RUPTURA') rupturas++;
+        else if (novoStatus === 'ATENCAO') atencao++;
+
+        if (novoStatus !== 'OK') {
+          afetados.push({ ...item, saldoAtual: novoSaldo, status_code: novoStatus });
+        }
       }
 
-      // Emite eventos para o broker — agentes criam pedidos automaticamente
-      const itemsDb = await SELECT.from(Estoque_Unidade).where({ ID: { in: vendas.map(v => v.ID) } });
-      for (const item of itemsDb) {
+      // Emite eventos AEM para itens em risco → agente cria pedidos
+      for (const item of afetados) {
         if (this.emitEstoqueChanged)
           await this.emitEstoqueChanged(item).catch(() => {});
       }
 
-      // Recalcula score das unidades afetadas — dashboard piora em tempo real
-      const { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade } = this.entities;
-      const unidadesAfetadas = [...new Set(vendas.map(v => {
-        const item = itemsDb.find(i => i.ID === v.ID);
-        return item?.unidade_ID;
-      }).filter(Boolean))];
+      // Recalcula score das unidades afetadas
+      const unidadesAfetadas = [...new Set(afetados.map(i => i.unidade_ID).filter(Boolean))];
       for (const uid of unidadesAfetadas) {
         await this._recalcularSaude(uid, { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade }).catch(() => {});
       }
 
-      const rupturas = vendas.filter(v => v.status_code === 'RUPTURA').length;
-      const atencao  = vendas.filter(v => v.status_code === 'ATENCAO').length;
       return {
         rupturas: rupturas + atencao,
-        mensagem: `${rupturas} rupturas e ${atencao} alertas simulados — Agente de Reposição acionado via AEM.`
+        mensagem: `${rupturas} rupturas e ${atencao} alertas na grade Cor×Tamanho — ${unidadesAfetadas.length} lojas afetadas. Agente de Reposição acionado via AEM.`
       };
     });
 
@@ -253,6 +264,85 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       }
 
       return { pedidos: pedidos.length, mensagem: `${pedidos.length} pedidos RECEBIDOS e estoque reposto.` };
+    });
+
+    // ── Pilar 2 — Simular Onda de Calor ──────────────────────────────────────
+    this.on('simularOndaDeCalor', async (req) => {
+      const { Estoque_Unidade, KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade } = this.entities;
+      const fator = Number(req.data?.fator ?? 1.15);
+
+      const todosItens = await SELECT.from(Estoque_Unidade);
+      let rupturas = 0;
+      const afetados = [];
+
+      for (const item of todosItens) {
+        const novaPrevisao = Math.round((item.previsaoDemanda14d || Math.round(item.giroMedioDiario * 14)) * fator);
+        const novoSaldo14d = (item.saldoAtual || 0) - novaPrevisao;
+        const minimo = item.estoqueMinimo || 5;
+        const novoRupturaEm = item.giroMedioDiario > 0
+          ? Math.round((item.saldoAtual || 0) / (item.giroMedioDiario * fator))
+          : 99;
+        const novoStatus = novoSaldo14d < 0 ? 'RUPTURA' : item.saldoAtual < minimo ? 'ATENCAO' : item.status_code;
+        const impacto = novoStatus !== 'OK'
+          ? Math.round(Math.max(0, novaPrevisao - (item.saldoAtual || 0)) * 219) : 0;
+
+        await UPDATE(Estoque_Unidade)
+          .set({
+            previsaoDemanda14d:   novaPrevisao,
+            saldoProjetado14d:    novoSaldo14d,
+            rupturaEm:            Math.max(0, novoRupturaEm),
+            status_code:          novoStatus,
+            valorImpactoStockout: impacto
+          })
+          .where({ ID: item.ID });
+
+        if (novoStatus === 'RUPTURA') rupturas++;
+        if (novoStatus !== 'OK') {
+          afetados.push({ ...item, status_code: novoStatus });
+        }
+      }
+
+      // Emite eventos AEM para novos itens em ruptura
+      for (const item of afetados) {
+        if (this.emitEstoqueChanged)
+          await this.emitEstoqueChanged(item).catch(() => {});
+      }
+
+      // Recalcula scores
+      const unidadesAfetadas = [...new Set(afetados.map(i => i.unidade_ID).filter(Boolean))];
+      for (const uid of unidadesAfetadas) {
+        await this._recalcularSaude(uid, { KPI_Unidade, Desvios, Unidades, Contratos_Franquia, Saude_Unidade }).catch(() => {});
+      }
+
+      return {
+        itens:    todosItens.length,
+        rupturas,
+        mensagem: `Onda de calor simulada (fator ${fator}x) — previsão de demanda 14d atualizada em ${todosItens.length} itens da grade. ${rupturas} novas rupturas detectadas.`
+      };
+    });
+
+    // ── Pilar 5 — Sincronizar Substitutos ────────────────────────────────────
+    this.on('sincronizarSubstitutos', async () => {
+      const { Estoque_Unidade, Substitutos } = this.entities;
+      const subs = await SELECT.from(Substitutos).where({ ativo: true });
+      let atualizados = 0;
+
+      for (const sub of subs) {
+        // Busca saldo total disponível do skuSubstituto na rede
+        const estoqueItens = await SELECT.from(Estoque_Unidade)
+          .where({ sku: sub.skuSubstituto, status_code: 'OK' });
+        const totalDisponivel = estoqueItens.reduce((s, i) => s + (i.saldoAtual || 0), 0);
+
+        await UPDATE(Substitutos)
+          .set({ estoqueDisponivel: totalDisponivel })
+          .where({ ID: sub.ID });
+        atualizados++;
+      }
+
+      return {
+        atualizados,
+        mensagem: `${atualizados} substitutos sincronizados com estoque atual da rede.`
+      };
     });
 
     const { Pedidos_Reposicao } = this.entities;
