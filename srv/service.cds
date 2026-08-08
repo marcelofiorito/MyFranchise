@@ -48,8 +48,6 @@ service FranqueadoraService {
     end as statusCriticality : Integer
   };
 
-  entity Alertas          as projection on mf.Alertas;
-
   @readonly
   entity Benchmark_Cluster as projection on mf.Benchmark_Cluster;
 
@@ -209,16 +207,19 @@ service FranqueadoraService {
   @readonly entity Regiao             as projection on mf.Regiao;
   @readonly entity Cluster            as projection on mf.Cluster;
   @readonly entity StatusKPI          as projection on mf.StatusKPI;
-  @readonly entity TipoAlerta         as projection on mf.TipoAlerta;
   @readonly entity Severidade         as projection on mf.Severidade;
-  @readonly entity StatusAlerta       as projection on mf.StatusAlerta;
+  @readonly entity StatusCatalogo     as projection on mf.StatusCatalogo;
   @readonly entity TipoDesvio         as projection on mf.TipoDesvio;
   @readonly entity StatusDesvio       as projection on mf.StatusDesvio;
+  @readonly entity StatusNotificacao  as projection on mf.StatusNotificacao;
   @readonly entity TipoRecomendacao   as projection on mf.TipoRecomendacao;
   @readonly entity Prioridade         as projection on mf.Prioridade;
+  @readonly entity StatusRecomendacao as projection on mf.StatusRecomendacao;
   @readonly entity StatusOnboarding   as projection on mf.StatusOnboarding;
   @readonly entity StatusTarefa       as projection on mf.StatusTarefa;
   @readonly entity TipoDocumento      as projection on mf.TipoDocumento;
+  @readonly entity StatusDocumento    as projection on mf.StatusDocumento;
+  @readonly entity StatusAprovacao    as projection on mf.StatusAprovacao;
   @readonly entity StatusContrato     as projection on mf.StatusContrato;
   @readonly entity StatusEstoque      as projection on mf.StatusEstoque;
   @readonly entity StatusPedidoRep    as projection on mf.StatusPedidoRep;
@@ -401,11 +402,6 @@ service FranqueadoService {
   @readonly
   @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
   entity MeuContrato         as projection on mf.Contratos_Franquia;
-
-  // ── Alertas ──────────────────────────────────────────────
-  @readonly
-  @(restrict: [{ grant: 'READ', where: 'unidade_ID = $user.unidade_ID' }])
-  entity MeusAlertas         as projection on mf.Alertas;
 
   // ── Code Lists necessários ───────────────────────────────
   @readonly entity Severidade         as projection on mf.Severidade;

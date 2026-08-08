@@ -11,9 +11,7 @@ entity StatusUnidade      : CodeList { key code : String(20); }
 entity Regiao             : CodeList { key code : String(20); }
 entity Cluster            : CodeList { key code : String(20); }
 entity StatusKPI          : CodeList { key code : String(20); }
-entity TipoAlerta         : CodeList { key code : String(20); }
 entity Severidade         : CodeList { key code : String(20); }
-entity StatusAlerta       : CodeList { key code : String(20); }
 entity StatusCatalogo     : CodeList { key code : String(20); }
 entity TipoDesvio         : CodeList { key code : String(20); }
 entity StatusDesvio       : CodeList { key code : String(20); }
@@ -94,13 +92,6 @@ entity KPI_Rede : cuid, managed {
   totalLojas           : Integer       @title : 'Active Stores';
   lojasNovas           : Integer       @title : 'New Stores';
   lojasEmReforma       : Integer       @title : 'Stores in Renovation';
-  // Revenue breakdown by category — for D1 bar chart
-  revBeauty            : Decimal(15,2) @title : 'Beauty & Wellness Revenue';
-  revFashion           : Decimal(15,2) @title : 'Fashion & Apparel Revenue';
-  revAccessories       : Decimal(15,2) @title : 'Accessories & Jewelry Revenue';
-  revOther             : Decimal(15,2) @title : 'Other Revenue';
-  newCustomersPct      : Decimal(5,2)  @title : 'New Customers %';
-  returningCustomersPct: Decimal(5,2)  @title : 'Returning Customers %';
 }
 
 /**
@@ -133,11 +124,6 @@ entity KPI_Unidade : cuid, managed {
   inadimplencia  : Decimal(5,2)   @title : '{i18n>KPI_Unidade_inadimplencia}';    // % receita em atraso
   fluxoClientes        : Integer        @title : 'Customer Entrances';
   conversao            : Decimal(5,2)   @title : 'Conversion Rate %';
-  // Customer acquisition breakdown — for D1 acquisition sources chart
-  pctAIChatTool        : Decimal(5,2)   @title : 'AI Chat Tool %';
-  pctLoyaltyProgram    : Decimal(5,2)   @title : 'Loyalty Program %';
-  pctMarketingCampaign : Decimal(5,2)   @title : 'Marketing Campaign %';
-  pctOther             : Decimal(5,2)   @title : 'Other %';
 }
 
 /**
@@ -200,19 +186,6 @@ view Saude_Dashboard as select from Saude_Unidade {
 };
 
 
-entity Alertas : cuid, managed {
-  unidade       : Association to Unidades @title : '{i18n>Unidades}';
-  tipo          : Association to TipoAlerta @title : '{i18n>Alertas_tipo}';
-  severidade    : Association to Severidade @title : '{i18n>Alertas_severidade}';
-  descricao     : String(500) @title : '{i18n>Alertas_descricao}';
-  status        : Association to StatusAlerta @title : '{i18n>Alertas_status}';
-  dataGeracao   : DateTime    @title : '{i18n>Alertas_dataGeracao}';
-  dataResolucao : DateTime    @title : '{i18n>Alertas_dataResolucao}';
-}
-
-/**
- * Médias anonimizadas da rede por cluster e período.
- */
 entity Benchmark_Cluster : cuid, managed {
   cluster          : Association to Cluster @title : '{i18n>Unidades_cluster}';
   periodo          : String(6)     @title : '{i18n>KPI_Unidade_periodo}';
