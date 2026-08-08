@@ -22,7 +22,6 @@
   },
   "sap.card": {
     "type": "Table",
-    "designtime": "dt/configuration",
     "configuration": {
       "destinations": {
         "myfranchise-srv-wz": {
