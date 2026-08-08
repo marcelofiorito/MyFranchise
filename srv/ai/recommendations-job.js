@@ -17,7 +17,7 @@ const LOG = cds.log('ai-recommendations');
  * A escolha do modo é automática — não precisa configurar nada em dev.
  */
 
-const TIPOS = ['ESTOQUE', 'PRECIFICACAO', 'OPERACIONAL', 'TREINAMENTO', 'CAMPANHA'];
+const TIPOS = ['ESTOQUE', 'PRECIFICACAO', 'OPERACIONAL', 'TREINAMENTO', 'CAMPANHA', 'NPS_BAIXO'];
 const PRIORIDADES = ['ALTA', 'MEDIA', 'BAIXA'];
 
 /**
@@ -130,12 +130,20 @@ function gerarViaRegras(ctx) {
     });
   }
 
-  // Regra 4: NPS abaixo da média → treinamento (MEDIA)
-  if (kpi?.nps && benchmark?.npsMedio && kpi.nps < benchmark.npsMedio) {
+  // Regra 4: NPS crítico (< 30) → ação urgente de experiência (ALTA)
+  if (kpi?.nps != null && kpi.nps < 30) {
     recs.push({
-      tipo: 'TREINAMENTO',
-      titulo: 'NPS abaixo da média do cluster',
-      descricao: `O NPS da unidade (${kpi.nps}) está abaixo da média do cluster (${benchmark.npsMedio}). Recomenda-se treinamento de atendimento e experiência do cliente para a equipe.`,
+      tipo: 'NPS_BAIXO',
+      titulo: `NPS crítico (${kpi.nps}) — intervenção imediata necessária`,
+      descricao: `O NPS da unidade está em ${kpi.nps}, bem abaixo do mínimo aceitável de 30. O baixo NPS está impactando o score de saúde da loja em 20%. Acione o plano de recuperação de experiência do cliente: reunião de equipe, avaliação de atendimento e campanha de reconquista de clientes insatisfeitos.`,
+      prioridade: 'ALTA'
+    });
+  } else if (kpi?.nps && benchmark?.npsMedio && kpi.nps < benchmark.npsMedio) {
+    // NPS abaixo da média do cluster (mas não crítico) → treinamento (MEDIA)
+    recs.push({
+      tipo: 'NPS_BAIXO',
+      titulo: `NPS (${kpi.nps}) abaixo da média do cluster (${benchmark.npsMedio})`,
+      descricao: `O NPS da unidade está abaixo da média do cluster. Isso reduz o score de saúde via fator de performance. Recomenda-se treinamento de atendimento e programas de fidelização para elevar a satisfação dos clientes.`,
       prioridade: 'MEDIA'
     });
   }

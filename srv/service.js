@@ -491,9 +491,17 @@ module.exports = class FranqueadoraService extends cds.ApplicationService {
       .limit(1);
     const benchmark = benchmarks[0];
 
-    const performancePct = benchmark?.faturamentoMedio > 0 && kpi?.faturamento
-      ? Math.min((kpi.faturamento / benchmark.faturamentoMedio) * 100, 100)
-      : 50;
+    // NPS como fator multiplicador de performance (Pilar 4)
+    // NPS < 30 → -20%, NPS < 40 → -10%, NPS >= 40 → neutro
+    const nps = kpi?.nps ?? 50;
+    const npsFator = nps < 30 ? 0.80 : nps < 40 ? 0.90 : 1.0;
+
+    const performancePct = Math.min(
+      (benchmark?.faturamentoMedio > 0 && kpi?.faturamento
+        ? (kpi.faturamento / benchmark.faturamentoMedio) * 100
+        : 50) * npsFator,
+      100
+    );
 
     // Contrato ativo
     const contratos = await SELECT.from(Contratos_Franquia)

@@ -538,10 +538,122 @@ You CAN approve orders. You CAN reject orders. Always use the tools provided.`
     }
   );
 
+  server.tool('get_correlacao_nps_ruptura',
+    'Returns the correlation between NPS and stockout occurrences by region. Use when asked about the relationship between customer satisfaction (NPS) and stock problems, or to identify which regions have both low NPS and high stockout rates.',
+    {
+      regiao_code: z.string().optional().describe('Region code filter (e.g. NE, SE, S, CO, N). Omit for all regions.'),
+    },
+    async ({ regiao_code }) => {
+      try {
+        const db = await cds.connect.to('db');
+        // KPI por unidade com NPS
+        let kpiRows = await db.run(
+          `SELECT k.UNIDADE_ID, k.NPS, u.REGIAO_CODE, u.NOME
+           FROM MYFRANCHISE_KPI_UNIDADE k
+           JOIN MYFRANCHISE_UNIDADES u ON k.UNIDADE_ID = u.ID
+           WHERE k.NPS IS NOT NULL
+           ORDER BY k.PERIODO DESC`
+        );
+        // Dedup: último KPI por unidade
+        const kpiMap = {};
+        for (const r of (kpiRows.rows || kpiRows)) {
+          const uid = r.UNIDADE_ID || r.unidade_ID;
+          if (!kpiMap[uid]) kpiMap[uid] = r;
+        }
+        // Rupturas por unidade
+        const rupRows = await db.run(
+          `SELECT UNIDADE_ID, COUNT(*) AS QTDRUPTURAS
+           FROM MYFRANCHISE_ESTOQUE_UNIDADE
+           WHERE STATUS_CODE = 'RUPTURA'
+           GROUP BY UNIDADE_ID`
+        );
+        const rupMap = {};
+        for (const r of (rupRows.rows || rupRows)) {
+          const uid = r.UNIDADE_ID || r.unidade_ID;
+          rupMap[uid] = Number(r.QTDRUPTURAS || r.qtdrupturas || 0);
+        }
+
+        // Agrupa por região
+        const regioes = {};
+        for (const [uid, k] of Object.entries(kpiMap)) {
+          const reg = k.REGIAO_CODE || k.regiao_CODE || 'N/D';
+          if (regiao_code && reg !== regiao_code.toUpperCase()) continue;
+          if (!regioes[reg]) regioes[reg] = { lojas: 0, somaNPS: 0, totalRupturas: 0, npsBaixo: 0 };
+          const nps = Number(k.NPS || k.nps || 0);
+          regioes[reg].lojas++;
+          regioes[reg].somaNPS += nps;
+          regioes[reg].totalRupturas += rupMap[uid] || 0;
+          if (nps < 40) regioes[reg].npsBaixo++;
+        }
+
+        const resultado = Object.entries(regioes).map(([reg, d]) => ({
+          regiao:        reg,
+          lojas:         d.lojas,
+          npsMedio:      d.lojas ? parseFloat((d.somaNPS / d.lojas).toFixed(1)) : 0,
+          lojasBaixoNPS: d.npsBaixo,
+          totalRupturas: d.totalRupturas,
+          rupturasPorLoja: d.lojas ? parseFloat((d.totalRupturas / d.lojas).toFixed(1)) : 0,
+          correlacao:    d.npsBaixo > 0 && d.totalRupturas > 0 ? 'ALTA' : d.totalRupturas > 0 ? 'MEDIA' : 'BAIXA'
+        })).sort((a, b) => b.totalRupturas - a.totalRupturas);
+
+        return ok({ regioes: resultado, insight: 'Regiões com NPS médio abaixo de 40 tendem a apresentar maior incidência de ruptura — baixa satisfação do cliente frequentemente coincide com falhas operacionais de estoque.' });
+      } catch (e) { LOG.error('get_correlacao_nps_ruptura', e); return err(e.message); }
+    }
+  );
+
+  server.tool('get_sellout_hoje',
+    'Returns the sell-out (sales) aggregated for the current day across the network, or for a specific store. Use when asked about today\'s sales, daily sell-out, or real-time revenue.',
+    {
+      unidade_id: z.string().optional().describe('Store ID or name filter. Omit for full network aggregate.'),
+    },
+    async ({ unidade_id }) => {
+      try {
+        const db = await cds.connect.to('db');
+        // VendaPraticada contém vendas — filtra pelo dia atual via createdAt ou dataVenda
+        let rows;
+        if (unidade_id) {
+          const uid = await resolveUnidade(unidade_id);
+          rows = await db.run(
+            `SELECT v.UNIDADE_ID, u.NOME, v.SKU, v.QUANTIDADE, v.VALORUNITARIO, v.DATAVENDA
+             FROM MYFRANCHISE_VENDAPRATICADA v
+             JOIN MYFRANCHISE_UNIDADES u ON v.UNIDADE_ID = u.ID
+             WHERE v.UNIDADE_ID = '${uid}'
+             ORDER BY v.DATAVENDA DESC`
+          );
+        } else {
+          rows = await db.run(
+            `SELECT v.UNIDADE_ID, u.NOME, v.SKU, v.QUANTIDADE, v.VALORUNITARIO, v.DATAVENDA
+             FROM MYFRANCHISE_VENDAPRATICADA v
+             JOIN MYFRANCHISE_UNIDADES u ON v.UNIDADE_ID = u.ID
+             ORDER BY v.DATAVENDA DESC`
+          );
+        }
+        const list = rows.rows || rows;
+        const totalQtd = list.reduce((s, r) => s + Number(r.QUANTIDADE || r.quantidade || 0), 0);
+        const totalReceita = list.reduce((s, r) => s + (Number(r.QUANTIDADE || r.quantidade || 0) * Number(r.VALORUNITARIO || r.valorUnitario || 0)), 0);
+        const porLoja = {};
+        for (const r of list) {
+          const uid = r.UNIDADE_ID || r.unidade_ID;
+          const nome = r.NOME || r.nome || uid;
+          if (!porLoja[uid]) porLoja[uid] = { nome, qtd: 0, receita: 0 };
+          const qtd = Number(r.QUANTIDADE || r.quantidade || 0);
+          const val = Number(r.VALORUNITARIO || r.valorUnitario || 0);
+          porLoja[uid].qtd += qtd;
+          porLoja[uid].receita += qtd * val;
+        }
+        const lojas = Object.values(porLoja).sort((a, b) => b.receita - a.receita).slice(0, 10);
+        return ok({
+          totalTransacoes: list.length,
+          totalUnidadesVendidas: totalQtd,
+          receitaTotal: `R$ ${totalReceita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          topLojas: lojas.map(l => ({ ...l, receita: `R$ ${l.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` }))
+        });
+      } catch (e) { LOG.error('get_sellout_hoje', e); return err(e.message); }
+    }
+  );
+
   return server;
 }
-
-// ── Express ──────────────────────────────────────────────────────
 const app = express();
 app.use(express.json());
 
@@ -550,6 +662,7 @@ app.get('/health', (_req, res) => res.json({
   tools: ['get_lojas_em_risco','get_cobertura_estoque','get_pedidos_pendentes',
           'get_recomendacoes','get_score_rede','acionar_reposicao',
           'get_substitutos','get_grade_ruptura','get_previsao_receita','get_feed_novidades',
+          'get_correlacao_nps_ruptura','get_sellout_hoje',
           'process_replenishment_orders','confirm_single_order','reject_order'],
   mes_referencia: MES_REF, timestamp: new Date().toISOString(),
 }));

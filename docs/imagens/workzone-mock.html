@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tropicália Co. — Work Zone (Mock)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --brand:    #FF5A3C;
+    --green:    #1F7A4D;
+    --green-dk: #0B3D2E;
+    --yellow:   #FFCC2E;
+    --cream:    #FDF6EC;
+    --cream-dk: #F5EDD8;
+    --card-bg:  #FFFDF8;
+    --text:     #12241D;
+    --text-lt:  #5C7A6B;
+    --ok:       #1F7A4D;
+    --warn:     #F59E0B;
+    --err:      #D0360D;
+    --border:   #E8DFC8;
+    --shadow:   0 2px 8px rgba(11,61,46,.10);
+  }
+
+  body { font-family: '72','72full',Arial,sans-serif; background: var(--cream); color: var(--text); }
+
+  /* ── SHELL BAR ─────────────────────────────────────────── */
+  .shell { background: var(--green); height: 48px; display: flex; align-items: center; padding: 0 20px; gap: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.25); position: sticky; top:0; z-index:100; }
+  .shell-logo { display:flex; align-items:center; gap:10px; }
+  .shell-logo svg { height:36px; width:auto; }
+  .shell-divider { width:1px; height:28px; background: rgba(255,255,255,.2); margin:0 8px; }
+  .shell-nav { display:flex; gap:4px; flex:1; }
+  .shell-nav a { color: rgba(255,255,255,.8); text-decoration:none; font-size:13px; padding: 6px 14px; border-radius:4px; transition:.15s; }
+  .shell-nav a:hover { background: rgba(255,255,255,.12); color:#fff; }
+  .shell-nav a.active { background: rgba(255,255,255,.18); color:#fff; font-weight:600; border-bottom: 2px solid var(--yellow); border-radius:4px 4px 0 0; }
+  .shell-right { display:flex; align-items:center; gap:12px; margin-left:auto; }
+  .shell-search { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:5px 14px; color:#fff; font-size:13px; width:200px; outline:none; }
+  .shell-search::placeholder { color:rgba(255,255,255,.6); }
+  .shell-avatar { width:32px; height:32px; border-radius:50%; background: var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
+  .shell-icon { color:rgba(255,255,255,.8); font-size:18px; cursor:pointer; padding:4px; }
+
+  /* ── WORKSPACE HEADER ───────────────────────────────────── */
+  .ws-header { background: var(--green-dk); color:#fff; padding: 16px 24px 0; }
+  .ws-title { font-size:20px; font-weight:700; letter-spacing:.5px; }
+  .ws-subtitle { font-size:12px; color: rgba(255,255,255,.65); margin-top:2px; }
+  .ws-tabs { display:flex; gap:0; margin-top:14px; }
+  .ws-tab { padding: 8px 20px; font-size:13px; color:rgba(255,255,255,.7); cursor:pointer; border-bottom:3px solid transparent; transition:.15s; }
+  .ws-tab.active { color:#fff; border-bottom-color: var(--yellow); font-weight:600; }
+  .ws-tab:hover { color:#fff; }
+
+  /* ── MAIN LAYOUT ────────────────────────────────────────── */
+  .page { max-width: 1320px; margin: 0 auto; padding: 20px 24px; }
+
+  /* KPI strip */
+  .kpi-strip { display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .kpi-card { background: var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:16px 20px; box-shadow: var(--shadow); display:flex; flex-direction:column; gap:4px; }
+  .kpi-label { font-size:11px; color: var(--text-lt); text-transform:uppercase; letter-spacing:.8px; }
+  .kpi-value { font-size:28px; font-weight:700; line-height:1; }
+  .kpi-delta { font-size:11px; display:flex; align-items:center; gap:4px; margin-top:2px; }
+  .kpi-delta.up { color: var(--ok); }
+  .kpi-delta.down { color: var(--err); }
+  .kpi-delta.warn { color: var(--warn); }
+
+  /* Card grid */
+  .grid { display:grid; grid-template-columns: 1fr 1.8fr 1.2fr; gap:16px; margin-bottom:20px; }
+  .grid-bottom { display:grid; grid-template-columns: 1.3fr 1fr 1fr; gap:16px; }
+
+  .card { background: var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:20px; box-shadow: var(--shadow); }
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+  .card-title { font-size:13px; font-weight:700; color: var(--text); }
+  .card-subtitle { font-size:11px; color: var(--text-lt); margin-top:2px; }
+  .card-menu { color: var(--text-lt); cursor:pointer; font-size:18px; }
+  .card-body { margin-top:16px; }
+  .chart-wrap { position:relative; }
+
+  /* Donut center label */
+  .donut-wrap { position:relative; width:170px; height:170px; margin:0 auto; }
+  .donut-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; }
+  .donut-center-val { font-size:22px; font-weight:700; color:var(--text); }
+  .donut-center-lbl { font-size:10px; color:var(--text-lt); }
+  .donut-legend { display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+  .donut-leg-item { display:flex; align-items:center; gap:8px; font-size:12px; }
+  .donut-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  thead tr { border-bottom:2px solid var(--border); }
+  thead th { text-align:left; padding:6px 8px; font-size:11px; color:var(--text-lt); text-transform:uppercase; letter-spacing:.6px; font-weight:600; }
+  tbody tr { border-bottom:1px solid var(--border); transition:.1s; }
+  tbody tr:hover { background: var(--cream-dk); }
+  tbody td { padding:8px 8px; vertical-align:middle; }
+  .badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+  .badge-pend { background:#FFF3CC; color:#92660A; }
+  .badge-ok   { background:#D6F0E3; color:#155C36; }
+  .badge-err  { background:#FDDDD6; color:#8C2011; }
+  .badge-info { background:#D6EEF8; color:#0A5070; }
+
+  /* Grade de ruptura */
+  .grade-grid { display:grid; gap:3px; }
+  .grade-cell { border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; height:36px; }
+  .grade-ok   { background: #1F7A4D; }
+  .grade-warn { background: #F59E0B; }
+  .grade-rup  { background: #D0360D; }
+  .grade-hdr  { background:transparent; color:var(--text-lt); font-size:10px; font-weight:600; }
+  .grade-size-lbl { display:flex; align-items:center; justify-content:flex-end; padding-right:6px; font-size:10px; color:var(--text-lt); font-weight:600; }
+
+  /* Feed */
+  .feed-item { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+  .feed-item:last-child { border-bottom:none; }
+  .feed-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .feed-icon.lancamento { background:#FFF0D6; }
+  .feed-icon.tendencia  { background:#D6EEF8; }
+  .feed-icon.campanha   { background:#FDDDD6; }
+  .feed-icon.dica       { background:#D6F0E3; }
+  .feed-content h4 { font-size:12px; font-weight:700; margin-bottom:2px; }
+  .feed-content p  { font-size:11px; color:var(--text-lt); line-height:1.4; }
+  .feed-date { font-size:10px; color:var(--text-lt); margin-top:4px; }
+
+  /* Joule panel */
+  .joule-panel { background: linear-gradient(135deg, var(--green-dk) 0%, #1F7A4D 100%); border-radius:10px; padding:20px; color:#fff; display:flex; flex-direction:column; gap:12px; }
+  .joule-header { display:flex; align-items:center; gap:10px; }
+  .joule-logo { width:36px; height:36px; border-radius:50%; background: var(--brand); display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .joule-title { font-size:14px; font-weight:700; }
+  .joule-subtitle { font-size:11px; opacity:.7; }
+  .joule-chip { display:inline-flex; align-items:center; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); border-radius:16px; padding:5px 12px; font-size:11px; cursor:pointer; transition:.15s; gap:6px; }
+  .joule-chip:hover { background:rgba(255,255,255,.2); }
+  .joule-chips { display:flex; flex-direction:column; gap:6px; }
+  .joule-input { display:flex; gap:8px; margin-top:4px; }
+  .joule-input input { flex:1; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:8px 14px; color:#fff; font-size:12px; outline:none; }
+  .joule-input input::placeholder { color:rgba(255,255,255,.5); }
+  .joule-input button { background: var(--brand); border:none; border-radius:50%; width:34px; height:34px; cursor:pointer; color:#fff; font-size:16px; display:flex; align-items:center; justify-content:center; }
+
+  /* Previsão receita big number */
+  .prev-scenarios { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+  .prev-scen { border-radius:8px; padding:10px; text-align:center; }
+  .prev-scen.otim  { background:#D6F0E3; }
+  .prev-scen.real  { background:#FFF3CC; }
+  .prev-scen.pess  { background:#FDDDD6; }
+  .prev-scen-lbl   { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; opacity:.75; }
+  .prev-scen-val   { font-size:16px; font-weight:800; margin-top:2px; }
+  .prev-scen.otim .prev-scen-val  { color: #155C36; }
+  .prev-scen.real .prev-scen-val  { color: #92660A; }
+  .prev-scen.pess .prev-scen-val  { color: #8C2011; }
+
+  /* Responsive */
+  @media(max-width:1100px) {
+    .grid { grid-template-columns:1fr 1fr; }
+    .grid-bottom { grid-template-columns:1fr 1fr; }
+    .kpi-strip { grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- SHELL BAR -->
+<div class="shell">
+  <div class="shell-logo">
+    <svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="26,6 28.8,13 23.2,13" fill="#FFCC2E"/>
+      <polygon points="39.44,11.56 36.47,18.49 32.51,14.53" fill="#FFCC2E"/>
+      <polygon points="45,25 38,27.8 38,22.2" fill="#FFCC2E"/>
+      <polygon points="39.44,38.44 32.51,35.47 36.47,31.51" fill="#FFCC2E"/>
+      <polygon points="26,44 23.2,37 28.8,37" fill="#FFCC2E"/>
+      <polygon points="12.56,38.44 15.53,31.51 19.49,35.47" fill="#FFCC2E"/>
+      <polygon points="7,25 14,22.2 14,27.8" fill="#FFCC2E"/>
+      <polygon points="12.56,11.56 19.49,14.53 15.53,18.49" fill="#FFCC2E"/>
+      <circle cx="26" cy="25" r="10.5" fill="#0B3D2E"/>
+      <circle cx="26" cy="25" r="7" fill="#FF5A3C"/>
+      <circle cx="26" cy="25" r="2.2" fill="#FDF6EC"/>
+      <text x="52" y="20" font-family="'Trebuchet MS',Arial,sans-serif" font-size="14" font-weight="800" fill="#FDF6EC" letter-spacing="1.8">TROPICALIA</text>
+      <rect x="52" y="23.5" width="138" height="1.5" fill="#FFCC2E"/>
+      <text x="52" y="37" font-family="'Trebuchet MS',Arial,sans-serif" font-size="10" font-weight="700" fill="#FF5A3C" letter-spacing="3.5">CO.</text>
+      <text x="75" y="37" font-family="Arial,sans-serif" font-size="6.5" font-weight="400" fill="#FDF6EC" letter-spacing="1.6" opacity="0.75">SUMMER HAS A HOMELAND</text>
+    </svg>
+  </div>
+  <div class="shell-divider"></div>
+  <nav class="shell-nav">
+    <a href="#" class="active">Home</a>
+    <a href="#">Workspaces ▾</a>
+    <a href="#">Aplicações</a>
+    <a href="#">Relatórios</a>
+  </nav>
+  <div class="shell-right">
+    <input class="shell-search" type="text" placeholder="🔍  Pesquisar…">
+    <span class="shell-icon">🔔</span>
+    <div class="shell-avatar">MF</div>
+  </div>
+</div>
+
+<!-- WORKSPACE HEADER -->
+<div class="ws-header">
+  <div style="max-width:1320px;margin:0 auto;padding:0 24px;">
+    <div class="ws-title">Portal Franqueado — Loja Recife</div>
+    <div class="ws-subtitle">Tropicália Co. · Região NE · Agosto 2026</div>
+    <div class="ws-tabs">
+      <div class="ws-tab active">Visão Geral</div>
+      <div class="ws-tab">Estoque</div>
+      <div class="ws-tab">Pedidos</div>
+      <div class="ws-tab">Financeiro</div>
+      <div class="ws-tab">Comunicados</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="page">
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-label">Score de Saúde</div>
+      <div class="kpi-value" style="color:#1F7A4D">72</div>
+      <div class="kpi-delta up">▲ 4 pts vs mês anterior</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Itens em Ruptura</div>
+      <div class="kpi-value" style="color:#D0360D">14</div>
+      <div class="kpi-delta down">▲ 3 vs semana passada</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Pedidos Pendentes</div>
+      <div class="kpi-value" style="color:#F59E0B">7</div>
+      <div class="kpi-delta warn">Aguardando aprovação</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Receita Prevista (30d)</div>
+      <div class="kpi-value" style="color:#0B3D2E">R$184k</div>
+      <div class="kpi-delta up">▲ 8% vs mês anterior</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Donut + Linha + Grade Ruptura -->
+  <div class="grid">
+
+    <!-- Card 1: Donut Status Estoque -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Status do Estoque</div>
+          <div class="card-subtitle">136 itens na grade (Cor × Tamanho)</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="card-body">
+        <div class="donut-wrap">
+          <canvas id="donutChart" width="170" height="170"></canvas>
+          <div class="donut-center">
+            <div class="donut-center-val">136</div>
+            <div class="donut-center-lbl">itens</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="donut-leg-item"><div class="donut-dot" style="background:#1F7A4D"></div><span style="flex:1">OK</span><b>89</b></div>
+          <div class="donut-leg-item"><div class="donut-dot" style="background:#F59E0B"></div><span style="flex:1">Atenção</span><b>33</b></div>
+          <div class="donut-leg-item"><div class="donut-dot" style="background:#D0360D"></div><span style="flex:1">Ruptura</span><b>14</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Previsão Receita (linha) -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Previsão de Receita</div>
+          <div class="card-subtitle">Tendência 6 meses · R$ · Loja Recife</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="card-body">
+        <div class="prev-scenarios">
+          <div class="prev-scen otim"><div class="prev-scen-lbl">Otimista</div><div class="prev-scen-val">R$212k</div></div>
+          <div class="prev-scen real"><div class="prev-scen-lbl">Realista</div><div class="prev-scen-val">R$184k</div></div>
+          <div class="prev-scen pess"><div class="prev-scen-lbl">Pessimista</div><div class="prev-scen-val">R$151k</div></div>
+        </div>
+        <div class="chart-wrap" style="height:160px">
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Grade Ruptura Cor × Tamanho -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Grade de Ruptura</div>
+          <div class="card-subtitle">MR550053 · Sandália Feminina</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="card-body">
+        <div style="font-size:10px;color:var(--text-lt);margin-bottom:10px;display:flex;gap:10px;">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#1F7A4D;border-radius:2px;display:inline-block;"></span>OK</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#F59E0B;border-radius:2px;display:inline-block;"></span>Atenção</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#D0360D;border-radius:2px;display:inline-block;"></span>Ruptura</span>
+        </div>
+        <!-- Grade: linhas=cor, colunas=tamanho -->
+        <div style="display:grid;grid-template-columns:60px repeat(5,1fr);gap:3px;">
+          <!-- header -->
+          <div></div>
+          <div class="grade-hdr" style="text-align:center">34/35</div>
+          <div class="grade-hdr" style="text-align:center">36/37</div>
+          <div class="grade-hdr" style="text-align:center">37/38</div>
+          <div class="grade-hdr" style="text-align:center">39/40</div>
+          <div class="grade-hdr" style="text-align:center">41/42</div>
+          <!-- Coral -->
+          <div class="grade-size-lbl">Coral</div>
+          <div class="grade-cell grade-ok">12</div>
+          <div class="grade-cell grade-ok">8</div>
+          <div class="grade-cell grade-rup">0</div>
+          <div class="grade-cell grade-warn">3</div>
+          <div class="grade-cell grade-ok">9</div>
+          <!-- Azul -->
+          <div class="grade-size-lbl">Az. Ipanema</div>
+          <div class="grade-cell grade-warn">4</div>
+          <div class="grade-cell grade-rup">0</div>
+          <div class="grade-cell grade-rup">1</div>
+          <div class="grade-cell grade-ok">11</div>
+          <div class="grade-cell grade-warn">2</div>
+          <!-- Verde -->
+          <div class="grade-size-lbl">Verde Lima</div>
+          <div class="grade-cell grade-ok">7</div>
+          <div class="grade-cell grade-ok">6</div>
+          <div class="grade-cell grade-ok">9</div>
+          <div class="grade-cell grade-rup">0</div>
+          <div class="grade-cell grade-ok">5</div>
+          <!-- Branco -->
+          <div class="grade-size-lbl">Branco</div>
+          <div class="grade-cell grade-rup">0</div>
+          <div class="grade-cell grade-warn">3</div>
+          <div class="grade-cell grade-ok">8</div>
+          <div class="grade-cell grade-ok">10</div>
+          <div class="grade-cell grade-rup">0</div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--err);font-weight:600;">⚠ 7 combinações em ruptura · R$ 787.524 em risco</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Saúde por Região + Pedidos Pendentes + Feed + Joule -->
+  <div class="grid-bottom">
+
+    <!-- Card 4: Saúde por região (barras) + Cobertura SKU (barras horiz) -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Saúde da Rede por Região</div>
+          <div class="card-subtitle">Score médio · Agosto 2026</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap" style="height:160px">
+          <canvas id="barChart"></canvas>
+        </div>
+        <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+        <div class="card-title" style="margin-bottom:12px;">Cobertura por SKU Top 5</div>
+        <div class="chart-wrap" style="height:130px">
+          <canvas id="horizBar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 5: Pedidos Pendentes -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Pedidos de Reposição</div>
+          <div class="card-subtitle">7 pendentes · Loja Recife</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Produto</th>
+              <th>Qtd</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><b>REP-0412</b></td><td>Sandália Coral 37/38</td><td>24</td><td><span class="badge badge-pend">Pendente</span></td></tr>
+            <tr><td><b>REP-0411</b></td><td>Sandália Az. 36/37</td><td>18</td><td><span class="badge badge-pend">Pendente</span></td></tr>
+            <tr><td><b>REP-0410</b></td><td>Chinelo Branco 41/42</td><td>30</td><td><span class="badge badge-pend">Pendente</span></td></tr>
+            <tr><td><b>REP-0409</b></td><td>Sandália Verde 39/40</td><td>12</td><td><span class="badge badge-pend">Pendente</span></td></tr>
+            <tr><td><b>REP-0405</b></td><td>Bolsa Palha Areia</td><td>8</td><td><span class="badge badge-ok">Aprovado</span></td></tr>
+            <tr><td><b>REP-0403</b></td><td>Óculos Sol Coral</td><td>15</td><td><span class="badge badge-ok">Aprovado</span></td></tr>
+            <tr><td><b>REP-0398</b></td><td>Sandália Az. 34/35</td><td>20</td><td><span class="badge badge-info">Recebido</span></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;display:flex;gap:8px;">
+          <button style="flex:1;background:var(--brand);color:#fff;border:none;border-radius:6px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">✓ Aprovar Todos</button>
+          <button style="background:transparent;color:var(--text-lt);border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:12px;cursor:pointer;">Ver Todos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 6: Feed + Joule -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Feed de Novidades -->
+      <div class="card" style="flex:1">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Feed de Novidades</div>
+            <div class="card-subtitle">Da franqueadora para você</div>
+          </div>
+          <span class="card-menu">⋯</span>
+        </div>
+        <div class="card-body">
+          <div class="feed-item">
+            <div class="feed-icon lancamento">🌊</div>
+            <div class="feed-content">
+              <h4>Coleção Outono Tropical 2026</h4>
+              <p>Nova linha de sandálias com palha trançada. Pré-venda disponível.</p>
+              <div class="feed-date">06 ago 2026</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-icon campanha">🏷️</div>
+            <div class="feed-content">
+              <h4>Campanha Verão Antecipado</h4>
+              <p>Desconto de 15% em toda linha Azul Ipanema até 31/08.</p>
+              <div class="feed-date">04 ago 2026</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-icon tendencia">📈</div>
+            <div class="feed-content">
+              <h4>Tendência: Bolsas de Palha +38%</h4>
+              <p>Região NE lidera alta. Reforce o estoque antes do verão.</p>
+              <div class="feed-date">01 ago 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Joule Panel -->
+      <div class="joule-panel">
+        <div class="joule-header">
+          <div class="joule-logo">✦</div>
+          <div>
+            <div class="joule-title">Joule — IA Tropicália</div>
+            <div class="joule-subtitle">Pergunte sobre sua loja</div>
+          </div>
+        </div>
+        <div class="joule-chips">
+          <div class="joule-chip">📦 Grade de ruptura da minha loja</div>
+          <div class="joule-chip">🔄 Acionar reposição automática</div>
+          <div class="joule-chip">📊 Previsão de receita 30 dias</div>
+        </div>
+        <div class="joule-input">
+          <input type="text" placeholder="Pergunte ao Joule…">
+          <button>➤</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Donut ─────────────────────────────────────────────────────
+new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['OK','Atenção','Ruptura'],
+    datasets: [{
+      data: [89, 33, 14],
+      backgroundColor: ['#1F7A4D','#F59E0B','#D0360D'],
+      borderWidth: 2, borderColor: '#FFFDF8',
+      hoverOffset: 4
+    }]
+  },
+  options: {
+    cutout: '68%',
+    plugins: { legend: { display:false }, tooltip: { callbacks: {
+      label: ctx => ` ${ctx.label}: ${ctx.parsed} itens`
+    }}},
+    animation: { duration: 800 }
+  }
+});
+
+// ── Line ──────────────────────────────────────────────────────
+new Chart(document.getElementById('lineChart'), {
+  type: 'line',
+  data: {
+    labels: ['Mar','Abr','Mai','Jun','Jul','Ago*'],
+    datasets: [
+      { label:'Realista', data:[142,155,163,171,179,184], borderColor:'#F59E0B', backgroundColor:'rgba(245,158,11,.08)', tension:.4, fill:true, pointRadius:4, pointBackgroundColor:'#F59E0B' },
+      { label:'Otimista', data:[158,172,182,195,205,212], borderColor:'#1F7A4D', borderDash:[5,4], backgroundColor:'transparent', tension:.4, pointRadius:3, pointBackgroundColor:'#1F7A4D' },
+      { label:'Pessimista', data:[128,138,144,150,156,151], borderColor:'#D0360D', borderDash:[5,4], backgroundColor:'transparent', tension:.4, pointRadius:3, pointBackgroundColor:'#D0360D' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels:{ font:{size:10}, boxWidth:16 } } },
+    scales: {
+      x: { grid:{color:'rgba(0,0,0,.04)'}, ticks:{font:{size:10}} },
+      y: { grid:{color:'rgba(0,0,0,.04)'}, ticks:{ font:{size:10}, callback: v => 'R$'+v+'k' } }
+    }
+  }
+});
+
+// ── Bar (saúde por região) ────────────────────────────────────
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: {
+    labels: ['NE','SE','S','CO','N'],
+    datasets: [{
+      label: 'Score',
+      data: [72, 81, 68, 75, 63],
+      backgroundColor: ['#1F7A4D','#1F7A4D','#F59E0B','#1F7A4D','#D0360D'],
+      borderRadius: 5, barThickness: 28
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{display:false} },
+    scales: {
+      x: { grid:{display:false}, ticks:{font:{size:11}} },
+      y: { min:0, max:100, grid:{color:'rgba(0,0,0,.05)'}, ticks:{font:{size:10}} }
+    }
+  }
+});
+
+// ── Horiz Bar (cobertura SKU) ─────────────────────────────────
+new Chart(document.getElementById('horizBar'), {
+  type: 'bar',
+  data: {
+    labels: ['MR550053','MR550071','MR550042','MR550019','MR550088'],
+    datasets: [{
+      label: 'Cobertura (dias)',
+      data: [5.4, 12.1, 3.2, 8.7, 6.9],
+      backgroundColor: ctx => ctx.raw < 5 ? '#D0360D' : ctx.raw < 8 ? '#F59E0B' : '#1F7A4D',
+      borderRadius: 4, barThickness: 14
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{display:false} },
+    scales: {
+      x: { grid:{color:'rgba(0,0,0,.05)'}, ticks:{font:{size:10}, callback: v=>v+'d'} },
+      y: { grid:{display:false}, ticks:{font:{size:10}} }
+    }
+  }
+});
+</script>
+</body>
+</html>
