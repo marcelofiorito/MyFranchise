@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 160 160" width="160" height="160">
+
+  <!-- Fundo redondo -->
+  <circle cx="80" cy="80" r="78" fill="#0B3D2E"/>
+
+  <!-- Raios amarelos -->
+  <polygon points="80.00,8.00 86.00,36.00 74.00,36.00" fill="#FFCC2E"/>
+  <polygon points="116.00,17.65 107.20,44.89 96.80,38.89" fill="#FFCC2E"/>
+  <polygon points="142.35,44.00 121.11,63.20 115.11,52.80" fill="#FFCC2E"/>
+  <polygon points="152.00,80.00 124.00,86.00 124.00,74.00" fill="#FFCC2E"/>
+  <polygon points="142.35,116.00 115.11,107.20 121.11,96.80" fill="#FFCC2E"/>
+  <polygon points="116.00,142.35 96.80,121.11 107.20,115.11" fill="#FFCC2E"/>
+  <polygon points="80.00,152.00 74.00,124.00 86.00,124.00" fill="#FFCC2E"/>
+  <polygon points="44.00,142.35 52.80,115.11 63.20,121.11" fill="#FFCC2E"/>
+  <polygon points="17.65,116.00 38.89,96.80 44.89,107.20" fill="#FFCC2E"/>
+  <polygon points="8.00,80.00 36.00,74.00 36.00,86.00" fill="#FFCC2E"/>
+  <polygon points="17.65,44.00 44.89,52.80 38.89,63.20" fill="#FFCC2E"/>
+  <polygon points="44.00,17.65 63.20,38.89 52.80,44.89" fill="#FFCC2E"/>
+
+  <!-- Anel verde escuro -->
+  <circle cx="80" cy="80" r="38" fill="#0B3D2E"/>
+
+  <!-- Círculo coral central -->
+  <circle cx="80" cy="80" r="30" fill="#FF5A3C"/>
+
+  <!-- Letra T estilizada -->
+  <text
+    x="80" y="96"
+    font-family="'Trebuchet MS', 'Arial', sans-serif"
+    font-size="38"
+    font-weight="900"
+    fill="#FDF6EC"
+    text-anchor="middle"
+    letter-spacing="-1"
+  >T</text>
+
+</svg>

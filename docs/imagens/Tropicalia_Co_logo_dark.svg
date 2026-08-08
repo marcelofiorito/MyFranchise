@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 480 160" width="480" height="160">
+
+  <!-- Fundo escuro -->
+  <rect width="480" height="160" fill="#0B3D2E" rx="12"/>
+
+  <!-- Raios amarelos -->
+  <polygon points="80.00,12.00 86.00,36.00 74.00,36.00" fill="#FFCC2E"/>
+  <polygon points="114.00,21.11 107.20,44.89 96.80,38.89" fill="#FFCC2E"/>
+  <polygon points="138.89,46.00 121.11,63.20 115.11,52.80" fill="#FFCC2E"/>
+  <polygon points="148.00,80.00 124.00,86.00 124.00,74.00" fill="#FFCC2E"/>
+  <polygon points="138.89,114.00 115.11,107.20 121.11,96.80" fill="#FFCC2E"/>
+  <polygon points="114.00,138.89 96.80,121.11 107.20,115.11" fill="#FFCC2E"/>
+  <polygon points="80.00,148.00 74.00,124.00 86.00,124.00" fill="#FFCC2E"/>
+  <polygon points="46.00,138.89 52.80,115.11 63.20,121.11" fill="#FFCC2E"/>
+  <polygon points="21.11,114.00 38.89,96.80 44.89,107.20" fill="#FFCC2E"/>
+  <polygon points="12.00,80.00 36.00,74.00 36.00,86.00" fill="#FFCC2E"/>
+  <polygon points="21.11,46.00 44.89,52.80 38.89,63.20" fill="#FFCC2E"/>
+  <polygon points="46.00,21.11 63.20,38.89 52.80,44.89" fill="#FFCC2E"/>
+
+  <!-- Raios coral menores -->
+  <polygon points="80.00,22.00 83.00,36.00 77.00,36.00" fill="#FF5A3C"/>
+  <polygon points="109.00,29.77 104.60,43.39 99.40,40.39" fill="#FF5A3C"/>
+  <polygon points="130.23,51.00 119.61,60.60 116.61,55.40" fill="#FF5A3C"/>
+  <polygon points="138.00,80.00 124.00,83.00 124.00,77.00" fill="#FF5A3C"/>
+  <polygon points="130.23,109.00 116.61,104.60 119.61,99.40" fill="#FF5A3C"/>
+  <polygon points="109.00,130.23 99.40,119.61 104.60,116.61" fill="#FF5A3C"/>
+  <polygon points="80.00,138.00 77.00,124.00 83.00,124.00" fill="#FF5A3C"/>
+  <polygon points="51.00,130.23 55.40,116.61 60.60,119.61" fill="#FF5A3C"/>
+  <polygon points="29.77,109.00 40.39,99.40 43.39,104.60" fill="#FF5A3C"/>
+  <polygon points="22.00,80.00 36.00,77.00 36.00,83.00" fill="#FF5A3C"/>
+  <polygon points="29.77,51.00 43.39,55.40 40.39,60.60" fill="#FF5A3C"/>
+  <polygon points="51.00,29.77 60.60,40.39 55.40,43.39" fill="#FF5A3C"/>
+
+  <!-- Círculo coral central -->
+  <circle cx="80" cy="80" r="28" fill="#FF5A3C"/>
+
+  <!-- Ponto creme central -->
+  <circle cx="80" cy="80" r="8" fill="#FDF6EC" opacity="0.9"/>
+
+  <!-- TROPICÁLIA -->
+  <text
+    x="165" y="74"
+    font-family="'Trebuchet MS', 'Arial', sans-serif"
+    font-size="42"
+    font-weight="800"
+    fill="#FDF6EC"
+    letter-spacing="2"
+  >TROPICÁLIA</text>
+
+  <!-- Linha amarela -->
+  <rect x="165" y="82" width="300" height="3" fill="#FFCC2E" rx="1.5"/>
+
+  <!-- CO. em amarelo -->
+  <text
+    x="165" y="112"
+    font-family="'Trebuchet MS', 'Arial', sans-serif"
+    font-size="22"
+    font-weight="700"
+    fill="#FFCC2E"
+    letter-spacing="8"
+  >CO.</text>
+
+  <!-- Tagline em creme -->
+  <text
+    x="220" y="112"
+    font-family="'Trebuchet MS', 'Arial', sans-serif"
+    font-size="11"
+    font-weight="400"
+    fill="#FDF6EC"
+    letter-spacing="3"
+    opacity="0.8"
+  >SUMMER HAS A HOMELAND</text>
+
+</svg>
