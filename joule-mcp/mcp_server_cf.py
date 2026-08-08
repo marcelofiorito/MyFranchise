@@ -595,7 +595,109 @@ def acionar_reposicao(unidade: str = "") -> str:
         return json.dumps({"erro": str(e)})
 
 
-# ─── TOOL 12: correlação NPS × ruptura por região ─────────────────
+# ─── TOOL 12: previsão de receita ─────────────────────────────────
+@mcp.tool()
+def get_previsao_receita(unidade_id: str, periodo: str = "14d") -> str:
+    """
+    Returns revenue forecast for a store for the next 14 or 30 days, with impact drivers
+    (campaigns, heat wave, NPS, seasonality). Use when asked about revenue prediction,
+    sales forecast, or expected income.
+    unidade_id: store ID or name (e.g. 'u163', 'Maceió', 'SP Jardins').
+    periodo: forecast horizon — '14d' or '30d'. Default: '14d'.
+    Example: get_previsao_receita(unidade_id='Recife', periodo='30d')
+    """
+    try:
+        # Resolve nome → ID
+        resolved_id = unidade_id
+        if not (unidade_id.startswith("u") and unidade_id[1:].isdigit()):
+            search = unidade_id.lower().replace("loja ", "").strip()
+            all_units = odata("Unidades", {"$select": "ID,nome,cidade", "$top": "100"}).get("value", [])
+            found = next((u for u in all_units
+                if search in (u.get("nome") or "").lower()
+                or search in (u.get("cidade") or "").lower()), None)
+            if found:
+                resolved_id = found["ID"]
+
+        periodo_val = "30d" if "30" in periodo else "14d"
+        params = {
+            "$filter": f"unidade_ID eq '{resolved_id}' and periodoPrevisao eq '{periodo_val}'",
+            "$top": "1"
+        }
+        rows = odata("Previsao_Receita", params).get("value", [])
+        if not rows:
+            return json.dumps({"erro": f"Nenhuma previsão encontrada para {unidade_id} ({periodo_val})"})
+
+        r = rows[0]
+        import json as _json
+        drivers = []
+        try:
+            drivers = _json.loads(r.get("driversJson") or r.get("driversjson") or "[]")
+        except Exception:
+            pass
+
+        variacao = float(r.get("variacaoEsperada") or r.get("variacaesperada") or 0)
+        sinal = "+" if variacao > 0 else ""
+
+        def fmt(val):
+            try:
+                return f"R$ {float(val or 0):,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            except Exception:
+                return "R$ 0"
+
+        drivers_msg = ""
+        if drivers:
+            drivers_msg = "Principais drivers: " + ", ".join(
+                f"{d.get('driver')} ({'+' if float(d.get('impactoPct',0))>0 else ''}{d.get('impactoPct')}%)"
+                for d in drivers[:2]
+            )
+
+        return json.dumps({
+            "loja": unidade_id,
+            "periodo": periodo_val,
+            "receitaPrevista":   fmt(r.get("receitaPrevista") or r.get("receitaprevista")),
+            "receitaAnterior":   fmt(r.get("receitaAnterior") or r.get("receitaanterior")),
+            "variacaoEsperada":  f"{sinal}{variacao}%",
+            "cenarioOtimista":   fmt(r.get("cenarioOtimista")   or r.get("cenariootimista")),
+            "cenarioPessimista": fmt(r.get("cenarioPessimista") or r.get("cenariopessimista")),
+            "driversDeImpacto":  drivers,
+            "mensagem": f"Previsão {periodo_val}: variação esperada de {sinal}{variacao}% vs. período anterior. {drivers_msg}"
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"erro": str(e)})
+
+
+# ─── TOOL 13: feed de novidades ───────────────────────────────────
+@mcp.tool()
+def get_feed_novidades(tipo: str = "ALL") -> str:
+    """
+    Returns the latest news feed items for franchisees: product launches, trends,
+    campaigns, and operational tips from the Tropicália Co. network.
+    Use when asked about news, launches, trends, campaigns, or what is new in the network.
+    tipo: filter by type — LANCAMENTO, TENDENCIA, CAMPANHA, DICA, or ALL. Default: ALL.
+    Example: get_feed_novidades() — all items.
+    Example: get_feed_novidades(tipo='LANCAMENTO') — launches only.
+    """
+    try:
+        params = {"$filter": "ativo eq true", "$orderby": "dataPublicacao desc", "$top": "10"}
+        rows = odata("Feed_Franqueado", params).get("value", [])
+
+        if tipo != "ALL":
+            rows = [r for r in rows if (r.get("tipo") or r.get("TIPO") or "") == tipo.upper()]
+
+        feed = [{
+            "titulo":   r.get("titulo")   or r.get("TITULO"),
+            "tipo":     r.get("tipo")     or r.get("TIPO"),
+            "conteudo": r.get("conteudo") or r.get("CONTEUDO"),
+            "data":     r.get("dataPublicacao") or r.get("datapublicacao"),
+            "skus":     r.get("skusRelacionados") or r.get("skusrelacionados")
+        } for r in rows]
+
+        return json.dumps({"total": len(feed), "feed": feed}, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"erro": str(e)})
+
+
+# ─── TOOL 14: correlação NPS × ruptura por região ─────────────────
 @mcp.tool()
 def get_correlacao_nps_ruptura(regiao: str = "") -> str:
     """
@@ -677,7 +779,7 @@ def get_correlacao_nps_ruptura(regiao: str = "") -> str:
         return json.dumps({"erro": str(e)})
 
 
-# ─── TOOL 13: sell-out agregado da rede ───────────────────────────
+# ─── TOOL 15: sell-out agregado da rede ───────────────────────────
 @mcp.tool()
 def get_sellout_hoje(unidade_id: str = "") -> str:
     """
@@ -752,7 +854,7 @@ if __name__ == "__main__":
             if request.url.path in ("/health", "/"):
                 return JSONResponse({
                     "status": "UP", "service": "joule-myfranchise-mcp", "version": "1.0.0",
-                    "tools": ["get_lojas_em_risco","get_cobertura_estoque","get_pedidos_pendentes","get_recomendacoes","get_score_rede","aprovar_pedido","recusar_pedido","aprovar_pedidos","get_grade_ruptura","get_substitutos","acionar_reposicao","get_correlacao_nps_ruptura","get_sellout_hoje"],
+                    "tools": ["get_lojas_em_risco","get_cobertura_estoque","get_pedidos_pendentes","get_recomendacoes","get_score_rede","aprovar_pedido","recusar_pedido","aprovar_pedidos","get_grade_ruptura","get_substitutos","acionar_reposicao","get_previsao_receita","get_feed_novidades","get_correlacao_nps_ruptura","get_sellout_hoje"],
                     "mes_referencia": MES_REF,
                 })
             return await call_next(request)
