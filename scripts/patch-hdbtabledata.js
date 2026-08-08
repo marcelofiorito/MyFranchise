@@ -51,9 +51,8 @@ for (const file of fs.readdirSync(dataDir)) {
   const obj = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   for (const imp of obj.imports || []) {
     if (!imp.import_settings) imp.import_settings = {};
-    imp.import_settings.delete_existing_data = true;
-    // remove upsert flag if present from a previous run
-    delete imp.import_settings.upsert_existing_records;
+    imp.import_settings.upsert_existing_records = true;
+    delete imp.import_settings.delete_existing_data;
   }
   fs.writeFileSync(filePath, JSON.stringify(obj, null, 2));
   patched++;
