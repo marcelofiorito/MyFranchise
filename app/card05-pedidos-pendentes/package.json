@@ -1,0 +1,7 @@
+{
+  "name": "card05-pedidos-pendentes",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "zip -r card05-pedidos-pendentes.zip manifest.json"
+  }
+}

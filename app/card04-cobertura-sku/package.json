@@ -1,0 +1,7 @@
+{
+  "name": "card04-cobertura-sku",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "zip -r card04-cobertura-sku.zip manifest.json"
+  }
+}

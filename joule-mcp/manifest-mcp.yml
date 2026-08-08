@@ -1,6 +1,7 @@
 ---
 applications:
   - name: joule-myfranchise-mcp
+    path: .
     memory: 256M
     disk_quota: 512M
     instances: 1

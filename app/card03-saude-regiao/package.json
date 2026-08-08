@@ -1,0 +1,7 @@
+{
+  "name": "card03-saude-regiao",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "zip -r card03-saude-regiao.zip manifest.json"
+  }
+}

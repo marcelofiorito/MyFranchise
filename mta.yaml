@@ -120,6 +120,21 @@ modules:
         - name: sac-overview
           artifacts: [sac-overview.zip]
           target-path: app/
+        - name: card01-estoque-status
+          artifacts: [card01-estoque-status.zip]
+          target-path: app/
+        - name: card02-previsao-receita
+          artifacts: [card02-previsao-receita.zip]
+          target-path: app/
+        - name: card03-saude-regiao
+          artifacts: [card03-saude-regiao.zip]
+          target-path: app/
+        - name: card04-cobertura-sku
+          artifacts: [card04-cobertura-sku.zip]
+          target-path: app/
+        - name: card05-pedidos-pendentes
+          artifacts: [card05-pedidos-pendentes.zip]
+          target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
   - name: home
@@ -210,6 +225,52 @@ modules:
       build-result: dist
       builder: custom
       commands: [npm install, npm run build]
+      supported-platforms: []
+
+  # ------------- UI INTEGRATION CARDS (zip direto) -------------
+  - name: card01-estoque-status
+    type: html5
+    path: app/card01-estoque-status
+    build-parameters:
+      build-result: .
+      builder: custom
+      commands: [zip -r card01-estoque-status.zip manifest.json]
+      supported-platforms: []
+
+  - name: card02-previsao-receita
+    type: html5
+    path: app/card02-previsao-receita
+    build-parameters:
+      build-result: .
+      builder: custom
+      commands: [zip -r card02-previsao-receita.zip manifest.json]
+      supported-platforms: []
+
+  - name: card03-saude-regiao
+    type: html5
+    path: app/card03-saude-regiao
+    build-parameters:
+      build-result: .
+      builder: custom
+      commands: [zip -r card03-saude-regiao.zip manifest.json]
+      supported-platforms: []
+
+  - name: card04-cobertura-sku
+    type: html5
+    path: app/card04-cobertura-sku
+    build-parameters:
+      build-result: .
+      builder: custom
+      commands: [zip -r card04-cobertura-sku.zip manifest.json]
+      supported-platforms: []
+
+  - name: card05-pedidos-pendentes
+    type: html5
+    path: app/card05-pedidos-pendentes
+    build-parameters:
+      build-result: .
+      builder: custom
+      commands: [zip -r card05-pedidos-pendentes.zip manifest.json]
       supported-platforms: []
 
   # ------------------ DESTINATION CONTENT ---------------------

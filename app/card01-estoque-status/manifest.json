@@ -1,0 +1,83 @@
+{
+  "_version": "1.15.0",
+  "sap.app": {
+    "id": "tropicalia.card01.estoque.status",
+    "type": "card",
+    "title": "Status do Estoque",
+    "subTitle": "Grade Cor×Tamanho — minha loja",
+    "applicationVersion": { "version": "1.0.0" },
+    "dataSources": {
+      "estoque": {
+        "uri": "/franqueado/MeuEstoque",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    }
+  },
+  "sap.card": {
+    "type": "Analytical",
+    "header": {
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.myfranchise-srv}}/franqueado/MeuEstoque/$count",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        }
+      },
+      "title": "Status do Estoque",
+      "subTitle": "Itens na grade Cor×Tamanho",
+      "unitOfMeasurement": "itens",
+      "mainIndicator": {
+        "number": "{/}",
+        "state": "None"
+      }
+    },
+    "content": {
+      "chartType": "Donut",
+      "legend": {
+        "visible": true,
+        "position": "Bottom",
+        "alignment": "Center"
+      },
+      "plotArea": {
+        "dataLabel": {
+          "visible": true,
+          "formatter": "{= ${value} + ' itens'}"
+        }
+      },
+      "title": {
+        "text": "Por status",
+        "visible": true,
+        "alignment": "Center"
+      },
+      "measureAxis": "size",
+      "dimensionAxis": "color",
+      "data": {
+        "request": {
+          "url": "{{destinations.myfranchise-srv}}/franqueado/MeuEstoque?$apply=groupby((status_code),aggregate($count as total))&$orderby=total desc",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        },
+        "path": "/value"
+      },
+      "dimensions": [
+        {
+          "label": "Status",
+          "value": "{status_code}"
+        }
+      ],
+      "measures": [
+        {
+          "label": "Itens",
+          "value": "{total}"
+        }
+      ],
+      "colorScheme": {
+        "OK": "Good",
+        "ATENCAO": "Critical",
+        "RUPTURA": "Error"
+      }
+    }
+  }
+}

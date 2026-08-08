@@ -1,0 +1,66 @@
+{
+  "_version": "1.15.0",
+  "sap.app": {
+    "id": "tropicalia.card02.previsao.receita",
+    "type": "card",
+    "title": "Previsão de Receita",
+    "subTitle": "Cenários 14d e 30d",
+    "applicationVersion": { "version": "1.0.0" }
+  },
+  "sap.card": {
+    "type": "List",
+    "header": {
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.myfranchise-srv}}/franqueado/MinhaPrevisaoReceita?$filter=periodoPrevisao eq '30d'&$top=1",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        },
+        "path": "/value/0"
+      },
+      "title": "Previsão de Receita (30d)",
+      "subTitle": "Variação esperada vs. período anterior",
+      "unitOfMeasurement": "R$",
+      "mainIndicator": {
+        "number": "{receitaPrevista}",
+        "state": "{= ${variacaoEsperada} >= 0 ? 'Good' : 'Error'}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Otimista",
+          "number": "{cenarioOtimista}",
+          "unit": "R$"
+        },
+        {
+          "title": "Pessimista",
+          "number": "{cenarioPessimista}",
+          "unit": "R$"
+        }
+      ]
+    },
+    "content": {
+      "data": {
+        "request": {
+          "url": "{{destinations.myfranchise-srv}}/franqueado/MinhaPrevisaoReceita?$orderby=periodoPrevisao asc",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        },
+        "path": "/value"
+      },
+      "item": {
+        "title": {
+          "value": "{= ${periodoPrevisao} === '14d' ? 'Previsão 14 dias' : 'Previsão 30 dias'}"
+        },
+        "description": {
+          "value": "Variação esperada: {variacaoEsperada}%"
+        },
+        "info": {
+          "value": "R$ {receitaPrevista}",
+          "state": "{= ${variacaoEsperada} >= 0 ? 'Success' : 'Error'}"
+        },
+        "highlight": "{= ${variacaoEsperada} >= 10 ? 'Success' : ${variacaoEsperada} >= 0 ? 'Warning' : 'Error'}"
+      }
+    }
+  }
+}
