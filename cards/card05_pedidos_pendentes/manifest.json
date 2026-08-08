@@ -5,21 +5,30 @@
     "type": "card",
     "title": "Pedidos de Reposição",
     "subTitle": "Aguardando aprovação",
-    "applicationVersion": { "version": "1.0.3" }
+    "applicationVersion": {
+      "version": "1.0.3"
+    }
   },
   "sap.ui": {
     "technology": "UI5",
-    "deviceTypes": { "desktop": true, "phone": true, "tablet": true },
-    "icons": { "icon": "sap-icon://order-status" }
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://order-status"
+    }
   },
   "sap.card": {
     "type": "Table",
     "designtime": "dt/configuration",
     "configuration": {
       "destinations": {
-        "myfranchise-srv": {
-          "name": "myfranchise-srv",
-          "label": "MyFranchise API"
+        "myfranchise-srv-wz": {
+          "name": "myfranchise-srv-wz",
+          "label": "MyFranchise API",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com"
         }
       }
     },
@@ -27,9 +36,11 @@
       "type": "Numeric",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv}}/franqueado/MinhasReposicoes/$count?$filter=status_code eq 'PENDENTE'",
+          "url": "{{destinations.myfranchise-srv-wz}}/franqueado/MinhasReposicoes/$count?$filter=status_code eq 'PENDENTE'",
           "method": "GET",
-          "headers": { "Accept": "application/json" }
+          "headers": {
+            "Accept": "application/json"
+          }
         }
       },
       "title": "Pedidos Pendentes",
@@ -43,20 +54,38 @@
     "content": {
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv}}/franqueado/MinhasReposicoes?$filter=status_code eq 'PENDENTE'&$orderby=dataPedido desc&$top=8&$select=ID,sku,qtdSugerida,status_code,dataPedido,prazoDesejado",
+          "url": "{{destinations.myfranchise-srv-wz}}/franqueado/MinhasReposicoes?$filter=status_code eq 'PENDENTE'&$orderby=dataPedido desc&$top=8&$select=ID,sku,qtdSugerida,status_code,dataPedido,prazoDesejado",
           "method": "GET",
-          "headers": { "Accept": "application/json" }
+          "headers": {
+            "Accept": "application/json"
+          }
         },
         "path": "/value"
       },
       "row": {
         "highlight": "{= ${status_code} === 'PENDENTE' ? 'Warning' : ${status_code} === 'APROVADO' ? 'Success' : 'Error'}",
         "columns": [
-          { "title": "SKU",    "value": "{sku}",           "width": "28%", "identifier": true },
-          { "title": "Qtd",    "value": "{qtdSugerida}",   "hAlign": "End", "width": "12%" },
-          { "title": "Prazo",  "value": "{prazoDesejado}", "width": "28%" },
           {
-            "title": "Status", "value": "{status_code}", "width": "32%",
+            "title": "SKU",
+            "value": "{sku}",
+            "width": "28%",
+            "identifier": true
+          },
+          {
+            "title": "Qtd",
+            "value": "{qtdSugerida}",
+            "hAlign": "End",
+            "width": "12%"
+          },
+          {
+            "title": "Prazo",
+            "value": "{prazoDesejado}",
+            "width": "28%"
+          },
+          {
+            "title": "Status",
+            "value": "{status_code}",
+            "width": "32%",
             "state": "{= ${status_code} === 'PENDENTE' ? 'Warning' : ${status_code} === 'APROVADO' ? 'Success' : 'Error'}"
           }
         ]
@@ -67,15 +96,27 @@
         {
           "text": "Aprovar Pedidos",
           "type": "Navigation",
-          "parameters": { "ibnTarget": { "semanticObject": "AprovacaoPedidos", "action": "display" } }
+          "parameters": {
+            "ibnTarget": {
+              "semanticObject": "AprovacaoPedidos",
+              "action": "display"
+            }
+          }
         },
         {
           "text": "Novo Pedido",
           "type": "Navigation",
-          "parameters": { "ibnTarget": { "semanticObject": "ReplenishmentPortal", "action": "display" } }
+          "parameters": {
+            "ibnTarget": {
+              "semanticObject": "ReplenishmentPortal",
+              "action": "display"
+            }
+          }
         }
       ]
     }
   },
-  "sap.platform.mobilecards": { "compatible": false }
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
 }

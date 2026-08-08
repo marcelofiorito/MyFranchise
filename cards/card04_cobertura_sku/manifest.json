@@ -5,21 +5,30 @@
     "type": "card",
     "title": "Cobertura por SKU",
     "subTitle": "Dias de estoque disponível — minha loja",
-    "applicationVersion": { "version": "1.0.3" }
+    "applicationVersion": {
+      "version": "1.0.3"
+    }
   },
   "sap.ui": {
     "technology": "UI5",
-    "deviceTypes": { "desktop": true, "phone": true, "tablet": true },
-    "icons": { "icon": "sap-icon://horizontal-bar-chart" }
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://horizontal-bar-chart"
+    }
   },
   "sap.card": {
     "type": "Analytical",
     "designtime": "dt/configuration",
     "configuration": {
       "destinations": {
-        "myfranchise-srv": {
-          "name": "myfranchise-srv",
-          "label": "MyFranchise API"
+        "myfranchise-srv-wz": {
+          "name": "myfranchise-srv-wz",
+          "label": "MyFranchise API",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com"
         }
       }
     },
@@ -27,9 +36,11 @@
       "type": "Numeric",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv}}/franqueado/MeuEstoque?$apply=aggregate(coberturaDias with average as mediaCobertura)&$top=1",
+          "url": "{{destinations.myfranchise-srv-wz}}/franqueado/MeuEstoque?$apply=aggregate(coberturaDias with average as mediaCobertura)&$top=1",
           "method": "GET",
-          "headers": { "Accept": "application/json" }
+          "headers": {
+            "Accept": "application/json"
+          }
         },
         "path": "/value/0"
       },
@@ -43,34 +54,68 @@
     },
     "content": {
       "chartType": "HorizontalBar",
-      "legend": { "visible": false },
-      "plotArea": {
-        "dataLabel": { "visible": true },
-        "colorPalette": ["#FF5A3C", "#FF8C42", "#FFCC2E", "#2A9D5C", "#1F7A4D", "#0B3D2E"]
+      "legend": {
+        "visible": false
       },
-      "title": { "text": "SKUs com menor cobertura (dias)", "visible": true, "alignment": "Center" },
+      "plotArea": {
+        "dataLabel": {
+          "visible": true
+        },
+        "colorPalette": [
+          "#FF5A3C",
+          "#FF8C42",
+          "#FFCC2E",
+          "#2A9D5C",
+          "#1F7A4D",
+          "#0B3D2E"
+        ]
+      },
+      "title": {
+        "text": "SKUs com menor cobertura (dias)",
+        "visible": true,
+        "alignment": "Center"
+      },
       "measureAxis": "valueAxis",
       "dimensionAxis": "categoryAxis",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv}}/franqueado/MeuEstoque?$apply=groupby((sku),aggregate(coberturaDias with average as mediaCobertura))&$orderby=mediaCobertura asc&$top=6",
+          "url": "{{destinations.myfranchise-srv-wz}}/franqueado/MeuEstoque?$apply=groupby((sku),aggregate(coberturaDias with average as mediaCobertura))&$orderby=mediaCobertura asc&$top=6",
           "method": "GET",
-          "headers": { "Accept": "application/json" }
+          "headers": {
+            "Accept": "application/json"
+          }
         },
         "path": "/value"
       },
-      "dimensions": [{ "label": "SKU", "value": "{sku}" }],
-      "measures": [{ "label": "Cobertura (dias)", "value": "{mediaCobertura}" }]
+      "dimensions": [
+        {
+          "label": "SKU",
+          "value": "{sku}"
+        }
+      ],
+      "measures": [
+        {
+          "label": "Cobertura (dias)",
+          "value": "{mediaCobertura}"
+        }
+      ]
     },
     "footer": {
       "actionsStrip": [
         {
           "text": "Solicitar Reposição",
           "type": "Navigation",
-          "parameters": { "ibnTarget": { "semanticObject": "ReplenishmentPortal", "action": "display" } }
+          "parameters": {
+            "ibnTarget": {
+              "semanticObject": "ReplenishmentPortal",
+              "action": "display"
+            }
+          }
         }
       ]
     }
   },
-  "sap.platform.mobilecards": { "compatible": false }
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
 }

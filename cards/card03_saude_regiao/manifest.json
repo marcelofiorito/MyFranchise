@@ -5,21 +5,30 @@
     "type": "card",
     "title": "Saúde da Rede por Região",
     "subTitle": "Score médio de saúde",
-    "applicationVersion": { "version": "1.0.3" }
+    "applicationVersion": {
+      "version": "1.0.3"
+    }
   },
   "sap.ui": {
     "technology": "UI5",
-    "deviceTypes": { "desktop": true, "phone": true, "tablet": true },
-    "icons": { "icon": "sap-icon://bar-chart" }
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://bar-chart"
+    }
   },
   "sap.card": {
     "type": "Analytical",
     "designtime": "dt/configuration",
     "configuration": {
       "destinations": {
-        "myfranchise-srv": {
-          "name": "myfranchise-srv",
-          "label": "MyFranchise API"
+        "myfranchise-srv-wz": {
+          "name": "myfranchise-srv-wz",
+          "label": "MyFranchise API",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com"
         }
       }
     },
@@ -27,9 +36,11 @@
       "type": "Numeric",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv}}/franqueador/Saude_Dashboard?$apply=aggregate(scoreSaude with average as mediaScore)&$top=1",
+          "url": "{{destinations.myfranchise-srv-wz}}/franqueador/Saude_Dashboard?$apply=aggregate(scoreSaude with average as mediaScore)&$top=1",
           "method": "GET",
-          "headers": { "Accept": "application/json" }
+          "headers": {
+            "Accept": "application/json"
+          }
         },
         "path": "/value/0"
       },
@@ -43,34 +54,67 @@
     },
     "content": {
       "chartType": "Bar",
-      "legend": { "visible": false },
-      "plotArea": {
-        "dataLabel": { "visible": true },
-        "colorPalette": ["#1F7A4D", "#2A9D5C", "#FFCC2E", "#FF8C42", "#FF5A3C"]
+      "legend": {
+        "visible": false
       },
-      "title": { "text": "Score por Região (Top 5)", "visible": true, "alignment": "Center" },
+      "plotArea": {
+        "dataLabel": {
+          "visible": true
+        },
+        "colorPalette": [
+          "#1F7A4D",
+          "#2A9D5C",
+          "#FFCC2E",
+          "#FF8C42",
+          "#FF5A3C"
+        ]
+      },
+      "title": {
+        "text": "Score por Região (Top 5)",
+        "visible": true,
+        "alignment": "Center"
+      },
       "measureAxis": "valueAxis",
       "dimensionAxis": "categoryAxis",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv}}/franqueador/Saude_Dashboard?$apply=groupby((regiao_code),aggregate(scoreSaude with average as mediaScore))&$orderby=mediaScore desc&$top=5",
+          "url": "{{destinations.myfranchise-srv-wz}}/franqueador/Saude_Dashboard?$apply=groupby((regiao_code),aggregate(scoreSaude with average as mediaScore))&$orderby=mediaScore desc&$top=5",
           "method": "GET",
-          "headers": { "Accept": "application/json" }
+          "headers": {
+            "Accept": "application/json"
+          }
         },
         "path": "/value"
       },
-      "dimensions": [{ "label": "Região", "value": "{regiao_code}" }],
-      "measures": [{ "label": "Score Médio", "value": "{mediaScore}" }]
+      "dimensions": [
+        {
+          "label": "Região",
+          "value": "{regiao_code}"
+        }
+      ],
+      "measures": [
+        {
+          "label": "Score Médio",
+          "value": "{mediaScore}"
+        }
+      ]
     },
     "footer": {
       "actionsStrip": [
         {
           "text": "Ver Painel Admin",
           "type": "Navigation",
-          "parameters": { "ibnTarget": { "semanticObject": "ControlPanel", "action": "display" } }
+          "parameters": {
+            "ibnTarget": {
+              "semanticObject": "ControlPanel",
+              "action": "display"
+            }
+          }
         }
       ]
     }
   },
-  "sap.platform.mobilecards": { "compatible": false }
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
 }
