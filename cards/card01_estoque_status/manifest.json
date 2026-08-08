@@ -1,99 +1,75 @@
 {
-	"_version": "1.14.0",
-	"sap.app": {
-		"id": "tropicalia.card01_estoque_status",
-		"type": "card",
-		"title": "Status do Estoque",
-		"subTitle": "Grade Cor×Tamanho — minha loja",
-		"applicationVersion": {
-			"version": "1.0.0"
-		}
-	},
-	"sap.ui": {
-		"technology": "UI5",
-        "deviceTypes": {"desktop": true, "phone": true, "tablet": true},
-		"icons": {
-			"icon": "sap-icon://donut-chart"
-		}
-	},
-	"sap.card": {
-		"type": "Analytical",
-        "designtime": "dt/configuration",
-		"header": {
-			"title": "January"
-		},
-		"content": {
-			"chartType": "Donut",
-			"legend": {
-				"visible": false,
-				"position": "Top",
-				"alignment": "Center"
-			},
-			"plotArea": {
-				"dataLabel": {
-					"visible": true,
-					"showTotal": true
-				}
-			},
-			"title": {
-				"text": "Donut chart",
-				"visible": false,
-				"alignment": "Left"
-			},
-			"measureAxis": "size",
-			"dimensionAxis": "color",
-			"data": {
-				"json": {
-					"milk": [
-						{
-							"Store Name": "24-Seven",
-							"Revenue": 345292.06,
-							"Fat Percentage": "2 Percent"
-						},
-						{
-							"Store Name": "A&A",
-							"Revenue": 1564235.29,
-							"Fat Percentage": "2 Percent"
-						},
-						{
-							"Store Name": "Alexei's Specialities",
-							"Revenue": 1085567.22,
-							"Fat Percentage": "2 Percent"
-						},
-						{
-							"Store Name": "24-Seven",
-							"Revenue": 82922.07,
-							"Fat Percentage": "1 Percent"
-						},
-						{
-							"Store Name": "A&A",
-							"Revenue": 157913.07,
-							"Fat Percentage": "1 Percent"
-						},
-						{
-							"Store Name": "Alexei's Specialities",
-							"Revenue": 245609.486884,
-							"Fat Percentage": "1 Percent"
-						}
-					]
-				},
-				"path": "/milk"
-			},
-			"dimensions": [
-				{
-					"label": "Store Name",
-					"value": "{Store Name}"
-				}
-			],
-			"measures": [
-				{
-					"label": "Revenue",
-					"value": "{Revenue}"
-				}
-			]
-		}
-	},
-    "sap.platform.mobilecards": {
-        "compatible": false
+  "_version": "1.58.0",
+  "sap.app": {
+    "id": "tropicalia.card01.estoque.status",
+    "type": "card",
+    "title": "Status do Estoque",
+    "subTitle": "Grade Cor×Tamanho — minha loja",
+    "applicationVersion": { "version": "1.0.3" }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": { "desktop": true, "phone": true, "tablet": true },
+    "icons": { "icon": "sap-icon://donut-chart" }
+  },
+  "sap.card": {
+    "type": "Analytical",
+    "designtime": "dt/configuration",
+    "configuration": {
+      "destinations": {
+        "myfranchise-srv": {
+          "name": "myfranchise-srv",
+          "label": "MyFranchise API"
+        }
+      }
+    },
+    "header": {
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.myfranchise-srv}}/franqueado/MeuEstoque/$count?$filter=status_code eq 'RUPTURA'",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        }
+      },
+      "title": "Rupturas na Grade",
+      "subTitle": "Itens sem estoque disponível",
+      "unitOfMeasurement": "SKUs",
+      "mainIndicator": {
+        "number": "{/}",
+        "state": "{= parseInt(${/}) > 10 ? 'Error' : parseInt(${/}) > 0 ? 'Critical' : 'Good'}"
+      }
+    },
+    "content": {
+      "chartType": "Donut",
+      "legend": { "visible": true, "position": "Bottom", "alignment": "Center" },
+      "plotArea": {
+        "dataLabel": { "visible": true },
+        "colorPalette": ["#1F7A4D", "#FFCC2E", "#FF5A3C"]
+      },
+      "title": { "text": "Distribuição por Status", "visible": true, "alignment": "Center" },
+      "measureAxis": "size",
+      "dimensionAxis": "color",
+      "data": {
+        "request": {
+          "url": "{{destinations.myfranchise-srv}}/franqueado/MeuEstoque?$apply=groupby((status_code),aggregate($count as total))&$orderby=status_code asc",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        },
+        "path": "/value"
+      },
+      "dimensions": [{ "label": "Status", "value": "{status_code}" }],
+      "measures": [{ "label": "Itens", "value": "{total}" }]
+    },
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "Abrir Grade Completa",
+          "type": "Navigation",
+          "parameters": { "ibnTarget": { "semanticObject": "GradeRuptura", "action": "display" } }
+        }
+      ]
     }
+  },
+  "sap.platform.mobilecards": { "compatible": false }
 }
