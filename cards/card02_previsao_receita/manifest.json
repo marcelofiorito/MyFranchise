@@ -1,0 +1,83 @@
+{
+  "_version": "1.58.0",
+  "sap.app": {
+    "id": "tropicalia.card02.previsao.receita",
+    "type": "card",
+    "title": "Previsão de Receita",
+    "subTitle": "Cenários 14d e 30d",
+    "applicationVersion": { "version": "1.0.3" }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": { "desktop": true, "phone": true, "tablet": true },
+    "icons": { "icon": "sap-icon://trend-up" }
+  },
+  "sap.card": {
+    "type": "List",
+    "designtime": "dt/configuration",
+    "configuration": {
+      "destinations": {
+        "myfranchise-srv": {
+          "name": "myfranchise-srv",
+          "label": "MyFranchise API"
+        }
+      }
+    },
+    "header": {
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.myfranchise-srv}}/franqueado/MinhaPrevisaoReceita?$filter=periodoPrevisao eq '30d'&$top=1",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        },
+        "path": "/value/0"
+      },
+      "title": "Receita Prevista (30d)",
+      "subTitle": "Variação esperada vs. período anterior",
+      "unitOfMeasurement": "R$",
+      "mainIndicator": {
+        "number": "{receitaPrevista}",
+        "trend": "{= parseFloat(${variacaoEsperada}) >= 0 ? 'Up' : 'Down'}",
+        "state": "{= parseFloat(${variacaoEsperada}) >= 5 ? 'Good' : parseFloat(${variacaoEsperada}) >= 0 ? 'None' : 'Error'}"
+      },
+      "sideIndicators": [
+        { "title": "Otimista",   "number": "{cenarioOtimista}",   "unit": "R$" },
+        { "title": "Pessimista", "number": "{cenarioPessimista}", "unit": "R$" }
+      ]
+    },
+    "content": {
+      "data": {
+        "request": {
+          "url": "{{destinations.myfranchise-srv}}/franqueado/MinhaPrevisaoReceita?$orderby=periodoPrevisao asc",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        },
+        "path": "/value"
+      },
+      "item": {
+        "icon": {
+          "src": "{= parseFloat(${variacaoEsperada}) >= 0 ? 'sap-icon://trending-up' : 'sap-icon://trending-down'}",
+          "backgroundColor": "{= parseFloat(${variacaoEsperada}) >= 0 ? '#1F7A4D' : '#FF5A3C'}"
+        },
+        "title": { "value": "{= ${periodoPrevisao} === '14d' ? 'Previsão 14 dias' : 'Previsão 30 dias'}" },
+        "description": { "value": "{= 'Realista: R$ ' + ${receitaPrevista}}" },
+        "info": {
+          "value": "{= (parseFloat(${variacaoEsperada}) >= 0 ? '+' : '') + ${variacaoEsperada} + '%'}",
+          "state": "{= parseFloat(${variacaoEsperada}) >= 5 ? 'Success' : parseFloat(${variacaoEsperada}) >= 0 ? 'Warning' : 'Error'}"
+        },
+        "highlight": "{= parseFloat(${variacaoEsperada}) >= 10 ? 'Success' : parseFloat(${variacaoEsperada}) >= 0 ? 'Information' : 'Error'}"
+      }
+    },
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "Ver Painel Financeiro",
+          "type": "Navigation",
+          "parameters": { "ibnTarget": { "semanticObject": "FranchiseePortal", "action": "display" } }
+        }
+      ]
+    }
+  },
+  "sap.platform.mobilecards": { "compatible": false }
+}
