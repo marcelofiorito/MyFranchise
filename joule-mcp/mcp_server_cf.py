@@ -68,7 +68,11 @@ def odata(path: str, params: dict = None) -> dict:
     if token:
         headers["Authorization"] = f"Bearer {token}"
     url = f"{SRV_URL}/franqueadora/{path}"
-    resp = requests.get(url, headers=headers, params=params, timeout=30)
+    # Build query string manually to avoid %24 encoding of $ params
+    if params:
+        qs = "&".join(f"{k}={requests.utils.quote(str(v), safe='(),: ')}" for k, v in params.items())
+        url = f"{url}?{qs}"
+    resp = requests.get(url, headers=headers, timeout=30)
     resp.raise_for_status()
     return resp.json()
 
@@ -122,7 +126,7 @@ if _has_transport_security:
         allowed_hosts=[CF_HOST, "localhost:*", "127.0.0.1:*", "*.cfapps.us10.hana.ondemand.com"],
     )
 
-mcp = FastMCP("RunMyFranchise Joule", **_mcp_kwargs)
+mcp = FastMCP("RunMyFranchise Joule", stateless_http=True, **_mcp_kwargs)
 
 # ─── TOOL 1: lojas em risco de ruptura ───────────────────────────
 @mcp.tool()
@@ -439,7 +443,115 @@ def aprovar_pedidos(unidade: str = "", observacao: str = "") -> str:
     except Exception as e:
         return json.dumps({"erro": str(e)})
 
-# ─── TOOL 9: acionar agente de reposição ─────────────────────────
+# ─── TOOL 9: grade de ruptura (cor × tamanho) ────────────────────
+@mcp.tool()
+def get_grade_ruptura(unidade_id: str, sku: str = "", status_code: str = "") -> str:
+    """
+    Returns the full Color × Size (Cor × Tamanho) grid for a store showing stockout risk per variant.
+    Use when asked about which sizes/colors are in stockout, the grade matrix, or detailed inventory breakdown.
+    unidade_id: store name/city or ID (e.g. 'Recife', 'u178', 'SP Jardins'). REQUIRED.
+    sku: optional SKU filter (e.g. 'MR550053').
+    status_code: optional filter — RUPTURA, ATENCAO, or OK.
+    Example: get_grade_ruptura(unidade_id='Recife')
+    Example: get_grade_ruptura(unidade_id='Recife', status_code='RUPTURA')
+    """
+    try:
+        # Resolve name → ID
+        resolved_id = unidade_id
+        if unidade_id and (not unidade_id.startswith("u") or not unidade_id[1:].isdigit()):
+            search = unidade_id.lower().replace("loja ", "").strip()
+            all_units = odata("Unidades", {"$select": "ID,nome,cidade", "$top": "100"}).get("value", [])
+            found = next((u for u in all_units
+                if search in (u.get("nome") or "").lower()
+                or search in (u.get("cidade") or "").lower()), None)
+            if found:
+                resolved_id = found["ID"]
+
+        params = {"$filter": f"unidade_ID eq '{resolved_id}'", "$top": "500"}
+        if sku:
+            params["$filter"] += f" and sku eq '{sku}'"
+        items = odata("Estoque_Unidade", params).get("value", [])
+        if status_code:
+            items = [i for i in items if i.get("status_code") == status_code]
+        if not items:
+            return json.dumps({"erro": f"No stock data found for {unidade_id}"})
+
+        # Group by product
+        by_product = {}
+        for i in items:
+            nome = i.get("nomeProduto", i.get("sku", ""))
+            if nome not in by_product:
+                by_product[nome] = {"sku": i.get("sku"), "grade": [], "totalRuptura": 0, "receitaRisco": 0.0}
+            st = i.get("status_code", "OK")
+            by_product[nome]["grade"].append({
+                "cor": i.get("cor"), "tamanho": i.get("tamanho"),
+                "saldo": i.get("saldoAtual"), "rupturaEm": i.get("rupturaEm"),
+                "impacto": i.get("valorImpactoStockout"), "status": st
+            })
+            if st == "RUPTURA":
+                by_product[nome]["totalRuptura"] += 1
+                by_product[nome]["receitaRisco"] += float(i.get("valorImpactoStockout") or 0)
+
+        total_impacto = sum(float(i.get("valorImpactoStockout") or 0) for i in items)
+        return json.dumps({
+            "loja": resolved_id,
+            "totalItens": len(items),
+            "rupturas": sum(1 for i in items if i.get("status_code") == "RUPTURA"),
+            "receitaTotalRisco": f"R$ {total_impacto:,.0f}",
+            "produtos": [
+                {"produto": nome, "sku": d["sku"],
+                 "gradeItems": len(d["grade"]), "rupturaItems": d["totalRuptura"],
+                 "receitaRisco": f"R$ {d['receitaRisco']:,.0f}",
+                 "grade": d["grade"]}
+                for nome, d in by_product.items()
+            ]
+        }, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return json.dumps({"erro": str(e)})
+
+
+# ─── TOOL 10: substitutos ─────────────────────────────────────────
+@mcp.tool()
+def get_substitutos(sku: str = "", cor: str = "", tamanho: str = "", unidade_id: str = "") -> str:
+    """
+    Returns available substitute products for a SKU or product in stockout/risk.
+    Use when asked about alternatives, substitutes, or 'what can I offer instead of X'.
+    sku: SKU code in stockout (e.g. 'MR550053').
+    cor: color of product in stockout (e.g. 'Azul Ipanema').
+    tamanho: size in stockout (e.g. '37/38').
+    Example: get_substitutos(sku='MR550053')
+    Example: get_substitutos(cor='Azul Ipanema', tamanho='37/38')
+    """
+    try:
+        params = {"$filter": "ativo eq true", "$top": "100"}
+        if sku:
+            params["$filter"] = f"skuOrigem eq '{sku}' and ativo eq true"
+        items = odata("Substitutos", params).get("value", [])
+        if cor:
+            items = [i for i in items if cor.lower() in (i.get("corOrigem") or "").lower()]
+        if tamanho:
+            items = [i for i in items if i.get("tamanhoOrigem") == tamanho]
+        items.sort(key=lambda i: float(i.get("similaridade") or 0), reverse=True)
+        if not items:
+            return json.dumps({"message": "No substitutes found for this product/color/size combination.", "total": 0})
+        top = items[0]
+        return json.dumps({
+            "total": len(items),
+            "message": f"Found {len(items)} substitute(s). Top: \"{top.get('nomeSubstituto')}\" in {top.get('corSubstituto')} size {top.get('tamanhoSubstituto')} ({top.get('similaridade')}% match).",
+            "substitutos": [{
+                "original": f"{i.get('nomeOrigem')} {i.get('corOrigem')} {i.get('tamanhoOrigem')}",
+                "substituto": f"{i.get('nomeSubstituto')} {i.get('corSubstituto')} {i.get('tamanhoSubstituto')}",
+                "similaridade": f"{i.get('similaridade')}%",
+                "tipo": i.get("tipoSimilaridade"),
+                "estoqueDisponivel": i.get("estoqueDisponivel"),
+                "acaoRecomendada": f"Se cliente pedir {i.get('corOrigem')} {i.get('tamanhoOrigem')} → Ofereça {i.get('corSubstituto')} {i.get('tamanhoSubstituto')}"
+            } for i in items]
+        }, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return json.dumps({"erro": str(e)})
+
+
+# ─── TOOL 11: acionar agente de reposição ─────────────────────────
 @mcp.tool()
 def acionar_reposicao(unidade: str = "") -> str:
     """
@@ -482,6 +594,147 @@ def acionar_reposicao(unidade: str = "") -> str:
     except Exception as e:
         return json.dumps({"erro": str(e)})
 
+
+# ─── TOOL 12: correlação NPS × ruptura por região ─────────────────
+@mcp.tool()
+def get_correlacao_nps_ruptura(regiao: str = "") -> str:
+    """
+    Returns correlation between NPS and stockout occurrences by region.
+    Use when asked about the relationship between customer satisfaction (NPS)
+    and stock problems, or to identify which regions have both low NPS and
+    high stockout rates.
+    regiao: optional region code filter (NE, SE, S, CO, N). Leave empty for all regions.
+    Example: get_correlacao_nps_ruptura() — all regions.
+    Example: get_correlacao_nps_ruptura(regiao='NE') — Northeast only.
+    """
+    try:
+        # Busca score de saúde + KPI por unidade (contém NPS e regiao)
+        params_saude = {"$select": "unidade_ID,scoreSaude,compliancePct,performancePct", "$top": "100"}
+        saude_rows = odata("Saude_Unidade", params_saude).get("value", [])
+
+        params_kpi = {"$select": "unidade_ID,nps,regiao_code", "$top": "200",
+                      "$orderby": "periodo desc"}
+        kpi_rows = odata("KPI_Unidade", params_kpi).get("value", [])
+
+        # Dedup: último KPI por unidade
+        kpi_map = {}
+        for k in kpi_rows:
+            uid = k.get("unidade_ID")
+            if uid and uid not in kpi_map:
+                kpi_map[uid] = k
+
+        # Estoque: conta rupturas por unidade
+        params_est = {"$select": "unidade_ID,status_code",
+                      "$filter": "status_code eq 'RUPTURA'", "$top": "2000"}
+        est_rows = odata("Estoque_Unidade", params_est).get("value", [])
+        rup_map = {}
+        for r in est_rows:
+            uid = r.get("unidade_ID")
+            if uid:
+                rup_map[uid] = rup_map.get(uid, 0) + 1
+
+        # Unidades para obter regiao_code
+        units = odata("Unidades", {"$select": "ID,nome,regiao_code", "$top": "100"}).get("value", [])
+        unit_map = {u["ID"]: u for u in units}
+
+        # Agrupa por região
+        regioes = {}
+        for uid, k in kpi_map.items():
+            reg = unit_map.get(uid, {}).get("regiao_code") or k.get("regiao_code") or "N/D"
+            if regiao and reg.upper() != regiao.upper():
+                continue
+            if reg not in regioes:
+                regioes[reg] = {"lojas": 0, "soma_nps": 0.0, "total_rupturas": 0, "nps_baixo": 0}
+            nps = float(k.get("nps") or 0)
+            regioes[reg]["lojas"] += 1
+            regioes[reg]["soma_nps"] += nps
+            regioes[reg]["total_rupturas"] += rup_map.get(uid, 0)
+            if nps < 40:
+                regioes[reg]["nps_baixo"] += 1
+
+        resultado = []
+        for reg, d in sorted(regioes.items(), key=lambda x: -x[1]["total_rupturas"]):
+            lojas = d["lojas"] or 1
+            nps_medio = round(d["soma_nps"] / lojas, 1)
+            rup_por_loja = round(d["total_rupturas"] / lojas, 1)
+            correlacao = "ALTA" if d["nps_baixo"] > 0 and d["total_rupturas"] > 0 else \
+                         "MEDIA" if d["total_rupturas"] > 0 else "BAIXA"
+            resultado.append({
+                "regiao": reg,
+                "lojas": d["lojas"],
+                "nps_medio": nps_medio,
+                "lojas_nps_baixo": d["nps_baixo"],
+                "total_rupturas": d["total_rupturas"],
+                "rupturas_por_loja": rup_por_loja,
+                "correlacao": correlacao
+            })
+
+        return json.dumps({
+            "regioes": resultado,
+            "insight": "Regiões com NPS médio abaixo de 40 tendem a apresentar maior incidência de ruptura — baixa satisfação do cliente frequentemente coincide com falhas operacionais de estoque."
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"erro": str(e)})
+
+
+# ─── TOOL 13: sell-out agregado da rede ───────────────────────────
+@mcp.tool()
+def get_sellout_hoje(unidade_id: str = "") -> str:
+    """
+    Returns sell-out (sales) aggregated for the network or a specific store.
+    Use when asked about sales volume, daily sell-out, or real-time revenue.
+    unidade_id: optional store name, city, or ID. Leave empty for full network.
+    Example: get_sellout_hoje() — all stores.
+    Example: get_sellout_hoje(unidade_id='Recife') — Recife store only.
+    """
+    try:
+        params = {"$select": "unidade_ID,sku,quantidade,valorUnitario,dataVenda",
+                  "$top": "500", "$orderby": "dataVenda desc"}
+        if unidade_id:
+            # Resolve nome → ID
+            if not (unidade_id.startswith("u") and unidade_id[1:].isdigit()):
+                search = unidade_id.lower().replace("loja ", "").strip()
+                all_units = odata("Unidades", {"$select": "ID,nome,cidade", "$top": "100"}).get("value", [])
+                found = next((u for u in all_units
+                    if search in (u.get("nome") or "").lower()
+                    or search in (u.get("cidade") or "").lower()), None)
+                if found:
+                    unidade_id = found["ID"]
+            params["$filter"] = f"unidade_ID eq '{unidade_id}'"
+
+        rows = odata("VendaPraticada", params).get("value", [])
+
+        total_qtd = sum(int(r.get("quantidade") or 0) for r in rows)
+        total_receita = sum(
+            int(r.get("quantidade") or 0) * float(r.get("valorUnitario") or 0)
+            for r in rows
+        )
+
+        # Agrupa por loja
+        por_loja = {}
+        for r in rows:
+            uid = r.get("unidade_ID")
+            if uid not in por_loja:
+                por_loja[uid] = {"unidade_ID": uid, "qtd": 0, "receita": 0.0}
+            qtd = int(r.get("quantidade") or 0)
+            val = float(r.get("valorUnitario") or 0)
+            por_loja[uid]["qtd"] += qtd
+            por_loja[uid]["receita"] += qtd * val
+
+        top_lojas = sorted(por_loja.values(), key=lambda x: -x["receita"])[:10]
+        for l in top_lojas:
+            l["receita_fmt"] = f"R$ {l['receita']:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+        return json.dumps({
+            "total_transacoes": len(rows),
+            "total_unidades_vendidas": total_qtd,
+            "receita_total": f"R$ {total_receita:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+            "top_lojas": top_lojas
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"erro": str(e)})
+
+
 # ─── Entrypoint HTTP para Cloud Foundry ──────────────────────────
 if __name__ == "__main__":
     import uvicorn
@@ -496,10 +749,10 @@ if __name__ == "__main__":
 
     class HealthMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request: StarletteRequest, call_next):
-            if request.url.path == "/health":
+            if request.url.path in ("/health", "/"):
                 return JSONResponse({
                     "status": "UP", "service": "joule-myfranchise-mcp", "version": "1.0.0",
-                    "tools": ["get_lojas_em_risco","get_cobertura_estoque","get_pedidos_pendentes","get_recomendacoes","get_score_rede","aprovar_pedido","recusar_pedido","aprovar_pedidos","acionar_reposicao"],
+                    "tools": ["get_lojas_em_risco","get_cobertura_estoque","get_pedidos_pendentes","get_recomendacoes","get_score_rede","aprovar_pedido","recusar_pedido","aprovar_pedidos","get_grade_ruptura","get_substitutos","acionar_reposicao","get_correlacao_nps_ruptura","get_sellout_hoje"],
                     "mes_referencia": MES_REF,
                 })
             return await call_next(request)
