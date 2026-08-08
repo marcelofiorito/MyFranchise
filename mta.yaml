@@ -14,7 +14,6 @@ build-parameters:
         - npm ci
         - npx -p @sap/cds-dk cds build --production
         - node scripts/patch-hdbtabledata.js
-        - cp db/undeploy.json gen/db/undeploy.json
 
 modules:
   # --------------------- SERVER MODULE ------------------------
