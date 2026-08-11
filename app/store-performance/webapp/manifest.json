@@ -1,0 +1,108 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "myfranchise.storePerformance",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "Performance por Loja",
+    "description": "NPS e saúde operacional por unidade franqueada",
+    "dataSources": {
+      "mainService": {
+        "uri": "franqueadora/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "StorePerformance-display": {
+          "semanticObject": "StorePerformance",
+          "action": "display",
+          "title": "Performance por Loja",
+          "subTitle": "NPS e saúde operacional",
+          "icon": "sap-icon://survey",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://survey" },
+    "fullWidth": true
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "myfranchise.storePerformance.i18n.i18n" }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "NpsResponsesList",
+          "target": "NpsResponsesList"
+        },
+        {
+          "pattern": "NpsResponses({key}):?query:",
+          "name": "NpsResponsesObjectPage",
+          "target": "NpsResponsesObjectPage"
+        }
+      ],
+      "targets": {
+        "NpsResponsesList": {
+          "type": "Component",
+          "id": "NpsResponsesList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "NpsResponses",
+              "variantManagement": "Page",
+              "initialLoad": true,
+              "navigation": {
+                "NpsResponses": {
+                  "detail": { "route": "NpsResponsesObjectPage" }
+                }
+              }
+            }
+          }
+        },
+        "NpsResponsesObjectPage": {
+          "type": "Component",
+          "id": "NpsResponsesObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "NpsResponses"
+            }
+          }
+        }
+      }
+    }
+  }
+}

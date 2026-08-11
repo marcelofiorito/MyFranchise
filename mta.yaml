@@ -13,7 +13,6 @@ build-parameters:
       commands:
         - npm ci
         - npx -p @sap/cds-dk cds build --production
-        - node scripts/patch-hdbtabledata.js
 
 modules:
   # --------------------- SERVER MODULE ------------------------
@@ -78,7 +77,6 @@ modules:
       ignore: ["node_modules/"]
 
   # ------------------ APPLICATION CONTENT ---------------------
-  # Publica os 4 apps HTML5 no repo (html5-repo-host)
   - name: myfranchise-appcontent
     type: com.sap.application.content
     path: gen
@@ -90,17 +88,23 @@ modules:
     build-parameters:
       build-result: app/
       requires:
-        - name: home
-          artifacts: [home.zip]
+        - name: network-ovp
+          artifacts: [network-ovp.zip]
           target-path: app/
-        - name: network
-          artifacts: [network.zip]
+        - name: stockout
+          artifacts: [stockout.zip]
+          target-path: app/
+        - name: store-performance
+          artifacts: [store-performance.zip]
+          target-path: app/
+        - name: franchisee-ovp
+          artifacts: [franchisee-ovp.zip]
+          target-path: app/
+        - name: orders
+          artifacts: [orders.zip]
           target-path: app/
         - name: compliance
           artifacts: [compliance.zip]
-          target-path: app/
-        - name: franchisee
-          artifacts: [franchisee.zip]
           target-path: app/
         - name: onboarding
           artifacts: [onboarding.zip]
@@ -108,47 +112,53 @@ modules:
         - name: categories
           artifacts: [categories.zip]
           target-path: app/
-        - name: inventory
-          artifacts: [inventory.zip]
-          target-path: app/
-        - name: replenishment
-          artifacts: [replenishment.zip]
-          target-path: app/
         - name: admin
           artifacts: [admin.zip]
           target-path: app/
         - name: sac-overview
           artifacts: [sac-overview.zip]
           target-path: app/
-        - name: card01-estoque-status
-          artifacts: [card01-estoque-status.zip]
-          target-path: app/
-        - name: card02-previsao-receita
-          artifacts: [card02-previsao-receita.zip]
-          target-path: app/
-        - name: card03-saude-regiao
-          artifacts: [card03-saude-regiao.zip]
-          target-path: app/
-        - name: card04-cobertura-sku
-          artifacts: [card04-cobertura-sku.zip]
-          target-path: app/
-        - name: card05-pedidos-pendentes
-          artifacts: [card05-pedidos-pendentes.zip]
-          target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
-  - name: home
+  - name: network-ovp
     type: html5
-    path: app/home
+    path: app/network-ovp
     build-parameters:
       build-result: dist
       builder: custom
       commands: [npm install, npm run build]
       supported-platforms: []
 
-  - name: network
+  - name: stockout
     type: html5
-    path: app/network
+    path: app/stockout
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: store-performance
+    type: html5
+    path: app/store-performance
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: franchisee-ovp
+    type: html5
+    path: app/franchisee-ovp
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands: [npm install, npm run build]
+      supported-platforms: []
+
+  - name: orders
+    type: html5
+    path: app/orders
     build-parameters:
       build-result: dist
       builder: custom
@@ -158,15 +168,6 @@ modules:
   - name: compliance
     type: html5
     path: app/compliance
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands: [npm install, npm run build]
-      supported-platforms: []
-
-  - name: franchisee
-    type: html5
-    path: app/franchisee
     build-parameters:
       build-result: dist
       builder: custom
@@ -191,24 +192,6 @@ modules:
       commands: [npm install, npm run build]
       supported-platforms: []
 
-  - name: inventory
-    type: html5
-    path: app/inventory
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands: [npm install, npm run build]
-      supported-platforms: []
-
-  - name: replenishment
-    type: html5
-    path: app/replenishment
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands: [npm install, npm run build]
-      supported-platforms: []
-
   - name: admin
     type: html5
     path: app/admin
@@ -227,54 +210,7 @@ modules:
       commands: [npm install, npm run build]
       supported-platforms: []
 
-  # ------------- UI INTEGRATION CARDS (zip direto) -------------
-  - name: card01-estoque-status
-    type: html5
-    path: app/card01-estoque-status
-    build-parameters:
-      build-result: .
-      builder: custom
-      commands: [zip -r card01-estoque-status.zip manifest.json]
-      supported-platforms: []
-
-  - name: card02-previsao-receita
-    type: html5
-    path: app/card02-previsao-receita
-    build-parameters:
-      build-result: .
-      builder: custom
-      commands: [zip -r card02-previsao-receita.zip manifest.json]
-      supported-platforms: []
-
-  - name: card03-saude-regiao
-    type: html5
-    path: app/card03-saude-regiao
-    build-parameters:
-      build-result: .
-      builder: custom
-      commands: [zip -r card03-saude-regiao.zip manifest.json]
-      supported-platforms: []
-
-  - name: card04-cobertura-sku
-    type: html5
-    path: app/card04-cobertura-sku
-    build-parameters:
-      build-result: .
-      builder: custom
-      commands: [zip -r card04-cobertura-sku.zip manifest.json]
-      supported-platforms: []
-
-  - name: card05-pedidos-pendentes
-    type: html5
-    path: app/card05-pedidos-pendentes
-    build-parameters:
-      build-result: .
-      builder: custom
-      commands: [zip -r card05-pedidos-pendentes.zip manifest.json]
-      supported-platforms: []
-
   # ------------------ DESTINATION CONTENT ---------------------
-  # Cria os destinations html5-repo + uaa no destination-service
   - name: myfranchise-destinationcontent
     type: com.sap.application.content
     build-parameters:
@@ -351,7 +287,6 @@ resources:
       service-plan: app-host
 
   # ------------------ Destination Service ---------------------
-  # Cria o destination srv-api (dinâmico) + habilita HTML5 runtime
   - name: myfranchise-destination-service
     type: org.cloudfoundry.managed-service
     requires:
@@ -374,18 +309,18 @@ resources:
                 HTML5.ForwardAuthToken: true
                 HTML5.DynamicDestination: true
 
-  # ------------- AEM managed (Event Mesh — aem-validation-service) -----
+  # ------------- AEM managed (Event Mesh) ----------------------
   - name: myfranchise-aem-managed
     type: org.cloudfoundry.managed-service
     parameters:
       service: aem-validation-service
       service-plan: aem-validation-service-plan
 
-  # ------------- Advanced Event Mesh user-provided (backup) -------------
+  # ------------- Advanced Event Mesh user-provided -------------
   - name: advanced-event-mesh
     type: org.cloudfoundry.user-provided-service
 
-  # ------------- AI Core (REUSA default_aicore) ---------------
+  # ------------- AI Core (REUSA default_aicore) ----------------
   - name: myfranchise-aicore
     type: org.cloudfoundry.existing-service
     parameters:

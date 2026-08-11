@@ -1,561 +1,245 @@
 namespace myfranchise;
 
-using { cuid, managed, sap.common.CodeList } from '@sap/cds/common';
-
 // ═══════════════════════════════════════════════════════════
-// CODE LISTS
-// ═══════════════════════════════════════════════════════════
-
-entity StatusFranqueado   : CodeList { key code : String(20); }
-entity StatusUnidade      : CodeList { key code : String(20); }
-entity Regiao             : CodeList { key code : String(20); }
-entity Cluster            : CodeList { key code : String(20); }
-entity StatusKPI          : CodeList { key code : String(20); }
-entity Severidade         : CodeList { key code : String(20); }
-entity StatusCatalogo     : CodeList { key code : String(20); }
-entity TipoDesvio         : CodeList { key code : String(20); }
-entity StatusDesvio       : CodeList { key code : String(20); }
-entity StatusNotificacao  : CodeList { key code : String(20); }
-entity TipoRecomendacao   : CodeList { key code : String(20); }
-entity Prioridade         : CodeList { key code : String(20); }
-entity StatusRecomendacao : CodeList { key code : String(20); }
-entity StatusOnboarding   : CodeList { key code : String(20); }
-entity StatusTarefa       : CodeList { key code : String(20); }
-entity TipoDocumento      : CodeList { key code : String(20); }
-entity StatusDocumento    : CodeList { key code : String(20); }
-entity StatusAprovacao    : CodeList { key code : String(20); }
-entity StatusContrato     : CodeList { key code : String(20); }
-
-// Estoque / Reposição
-entity StatusEstoque      : CodeList { key code : String(20); }  // OK, ATENCAO, RUPTURA
-entity StatusPedidoRep    : CodeList { key code : String(20); }  // PENDENTE, APROVADO, RECUSADO, ENVIADO, RECEBIDO
-entity OrigemPedido       : CodeList { key code : String(20); }  // AGENTE, MANUAL
-
-
-// ═══════════════════════════════════════════════════════════
-// CORE — Franqueados e Unidades (entidades raiz)
+// Base tables — mapped 1:1 to RUNMYFRANCHISE_MF via synonyms
+// CDS does not manage these tables; HANA owns them.
 // ═══════════════════════════════════════════════════════════
 
-entity Franqueados : cuid, managed {
-  razaoSocial : String(100) @title : '{i18n>Franqueados_razaoSocial}';
-  cnpj        : String(18)  @title : '{i18n>Franqueados_cnpj}';
-  responsavel : String(100) @title : '{i18n>Franqueados_responsavel}';
-  email       : String(255) @title : '{i18n>Franqueados_email}';
-  telefone    : String(20)  @title : '{i18n>Franqueados_telefone}';
-  status      : Association to StatusFranqueado @title : '{i18n>Franqueados_status}';
-  unidades    : Composition of many Unidades on unidades.franqueado = $self;
+@cds.persistence.exists
+@readonly
+entity Store {
+  key STORE_ID      : String(10);
+      STORE_NAME    : String(100);
+      FRANCHISEE_ID : String(10);
+      COUNTRY_CODE  : String(2);
+      CITY          : String(50);
+      REGION        : String(50);
+      ADDRESS       : String(200);
+      OPEN_DATE     : Date;
+      STATUS        : String(1);  // A=Active, I=Inactive
 }
 
-entity Unidades : cuid, managed {
-  codigo       : String(20)  @title : '{i18n>Unidades_codigo}';
-  nome         : String(100) @title : '{i18n>Unidades_nome}';
-  franqueado   : Association to Franqueados @title : '{i18n>Franqueados}';
-  endereco     : String(255) @title : '{i18n>Unidades_endereco}';
-  cidade       : String(100) @title : '{i18n>Unidades_cidade}';
-  estado       : String(2)   @title : '{i18n>Unidades_estado}';
-  regiao       : Association to Regiao @title : '{i18n>Unidades_regiao}';
-  cluster      : Association to Cluster @title : '{i18n>Unidades_cluster}';
-  dataAbertura : Date        @title : '{i18n>Unidades_dataAbertura}';
-  status       : Association to StatusUnidade @title : '{i18n>Unidades_status}';
-  // Geolocalização para mapa e D5
-  lat          : Decimal(9,6)  @title : 'Latitude';
-  lon          : Decimal(9,6)  @title : 'Longitude';
-  // Status operacional para D6
-  emReforma    : Boolean default false @title : 'In Renovation';
-  // Tipo de loja — para drill-down no slide D2
-  tipoLoja     : String(20)    @title : 'Store Type';  // Flagship, Tier1, Tier2, Online
-  // Navegação para entidades filhas via OData $expand — sem back-associations
-  // para evitar problemas de resolveView no CAP 10 durante o deploy.
-  // Use: /Unidades('u147')?$expand=saude,kpis,alertas,desvios
+@cds.persistence.exists
+@readonly
+entity InventorySnapshot {
+  key STORE_ID       : String(10);
+  key MATNR          : String(40);
+  key COLOR          : String(30);
+  key SIZE_VAL       : String(10);
+      SNAPSHOT_DATE  : Date;
+      QTY_ON_HAND    : Integer;
+      QTY_RESERVED   : Integer;
+      QTY_IN_TRANSIT : Integer;
+      STOCK_STATUS   : String(1);  // R=Critical, Y=Attention, G=OK
+}
+
+@cds.persistence.exists
+@readonly
+entity NpsResponse {
+  key NPS_ID      : String(20);
+      STORE_ID    : String(10);
+      SURVEY_DATE : Date;
+      SCORE       : Integer;
+      CATEGORY    : String(20);
+      VERBATIM    : String(500);
+}
+
+@cds.persistence.exists
+@readonly
+entity SellinHdr {
+  key ORDER_ID           : String(15);
+      STORE_ID           : String(10);
+      ORDER_DATE         : Date;
+      STATUS             : String(10);  // PENDING, DELIVERED, DRAFT
+      TOTAL_AMOUNT       : Decimal(15,2);
+      CURRENCY           : String(3);
+      EXPECTED_DELIVERY  : Date;
+      NOTES              : String(500);
+}
+
+@cds.persistence.exists
+@readonly
+entity SellinItm {
+  key ORDER_ID      : String(15);
+  key ITEM_NUM      : Integer;
+      MATNR         : String(40);
+      COLOR         : String(30);
+      SIZE_VAL      : String(10);
+      QTY_ORDERED   : Integer;
+      QTY_DELIVERED : Integer;
+      UNIT_PRICE    : Decimal(15,2);
+}
+
+@cds.persistence.exists
+@readonly
+entity DemandForecast {
+  key STORE_ID               : String(10);
+  key MATNR                  : String(40);
+  key COLOR                  : String(30);
+  key SIZE_VAL               : String(10);
+      FORECAST_DATE          : Date;
+      QTY_FORECAST           : Integer;
+      CONFIDENCE_SCORE       : Decimal(5,2);
+      WEATHER_IMPACT_PCT     : Decimal(5,2);
+      CAMPAIGN_IMPACT_PCT    : Decimal(5,2);
+      SEASONALITY_IMPACT_PCT : Decimal(5,2);
+      DAYS_TO_STOCKOUT       : Integer;
+}
+
+@cds.persistence.exists
+@readonly
+entity Material {
+  key MANDT          : String(3);
+  key MATNR          : String(40);
+      MATKL          : String(9);
+      MTART          : String(4);
+      MEINS          : String(3);
+      COST_PRICE     : Decimal(13,2);
+      RETAIL_PRICE   : Decimal(13,2);
+      PRICE_CURRENCY : String(5);
+      PROMO_PRICE    : Decimal(13,2);
+}
+
+@cds.persistence.exists
+@readonly
+entity MaterialDesc {
+  key MANDT  : String(3);
+  key MATNR  : String(40);
+  key SPRAS  : String(1);
+      MAKTX  : String(40);
+}
+
+@cds.persistence.exists
+@readonly
+entity Substitute {
+  key SOURCE_MATNR   : String(40);
+  key SOURCE_COLOR   : String(30);
+  key SOURCE_SIZE    : String(10);
+  key TARGET_MATNR   : String(40);
+      TARGET_COLOR   : String(30);
+      TARGET_SIZE    : String(10);
+      SIMILARITY_PCT : Decimal(5,2);
+      ACCEPTANCE_RATE: Decimal(5,2);
+      PRIORITY       : Integer;
+      SUGGEST_SCRIPT : String(500);
 }
 
 
 // ═══════════════════════════════════════════════════════════
-// NETWORK — KPIs, Saúde, Alertas, Benchmark
+// CDS Views — enriched projections deployed as HANA SQL views
 // ═══════════════════════════════════════════════════════════
 
-/**
- * KPIs agregados da rede inteira por trimestre.
- * Alimenta o Executive Home (D1) — faturamento, clientes, NPS, margem.
- */
-entity KPI_Rede : cuid, managed {
-  periodo              : String(6)     @title : 'Period';
-  periodoLabel         : String(10)    @title : 'Period Label';
-  totalRevenue         : Decimal(15,2) @title : 'Total Revenue';
-  netNewRevenue        : Decimal(15,2) @title : 'Net-New Revenue';
-  retentionRevenue     : Decimal(15,2) @title : 'Retention Revenue';
-  totalCustomers       : Integer       @title : 'Total Customers';
-  qoqGrowth            : Decimal(5,2)  @title : 'QoQ Growth %';
-  yoyGrowth            : Decimal(5,2)  @title : 'YoY Growth %';
-  avgNPS               : Decimal(4,1)  @title : 'Avg NPS';
-  avgMargemBruta       : Decimal(5,2)  @title : 'Avg Gross Margin %';
-  totalLojas           : Integer       @title : 'Active Stores';
-  lojasNovas           : Integer       @title : 'New Stores';
-  lojasEmReforma       : Integer       @title : 'Stores in Renovation';
-}
-
-/**
- * Atividades/destaques do dia — para o card "Today's Highlights" (D1).
- */
-entity Atividades_Rede : cuid, managed {
-  titulo      : String(200) @title : 'Title';
-  descricao   : String(500) @title : 'Description';
-  tipo        : String(50)  @title : 'Type';       // REUNIAO, ENTREGA, ALERTA
-  horario     : String(10)  @title : 'Time';
-  status      : String(20)  @title : 'Status';     // PENDENTE, APROVADO, ABERTO
-  data        : Date        @title : 'Date';
-}
-
-
-entity KPI_Unidade : cuid, managed {
-  unidade        : Association to Unidades;
-  periodo        : String(6)      @title : '{i18n>KPI_Unidade_periodo}';
-  faturamento    : Decimal(15,2)  @title : '{i18n>KPI_Unidade_faturamento}';
-  ticketMedio    : Decimal(10,2)  @title : '{i18n>KPI_Unidade_ticketMedio}';
-  qtdTransacoes  : Integer        @title : '{i18n>KPI_Unidade_qtdTransacoes}';
-  crescimentoMoM : Decimal(5,2)   @title : '{i18n>KPI_Unidade_crescimentoMoM}';
-  crescimentoYoY : Decimal(5,2)   @title : '{i18n>KPI_Unidade_crescimentoYoY}';
-  nps            : Decimal(4,1)   @title : '{i18n>KPI_Unidade_nps}';
-  statusKPI      : Association to StatusKPI @title : '{i18n>KPI_Unidade_statusKPI}';
-  // Financeiro por loja — para D3 (drill-down) e D6 (KPIs financeiros)
-  margemBruta    : Decimal(5,2)   @title : '{i18n>KPI_Unidade_margemBruta}';      // % margem bruta
-  cmv            : Decimal(5,2)   @title : '{i18n>KPI_Unidade_cmv}';              // custo mercadoria vendida %
-  royalties      : Decimal(15,2)  @title : '{i18n>KPI_Unidade_royalties}';        // valor R$ pago
-  inadimplencia  : Decimal(5,2)   @title : '{i18n>KPI_Unidade_inadimplencia}';    // % receita em atraso
-  fluxoClientes        : Integer        @title : 'Customer Entrances';
-  conversao            : Decimal(5,2)   @title : 'Conversion Rate %';
-}
-
-/**
- * Score de saúde consolidado por unidade.
- * scoreSaude = (performancePct * 0.4) + (compliancePct * 0.4) + (scoreContrato * 0.2)
- */
-entity Saude_Unidade : cuid, managed {
-  unidade           : Association to Unidades;
-  scoreSaude        : Decimal(5,2)  @title : '{i18n>Saude_Unidade_scoreSaude}';
-  compliancePct     : Decimal(5,2)  @title : '{i18n>Saude_Unidade_compliancePct}';
-  performancePct    : Decimal(5,2)  @title : '{i18n>Saude_Unidade_performancePct}';
-  qtdAlertasAlta    : Integer       @title : '{i18n>Saude_Unidade_qtdAlertasAlta}';
-  qtdAlertasMedia   : Integer       @title : '{i18n>Saude_Unidade_qtdAlertasMedia}';
-  dataAtualizacao   : DateTime      @title : '{i18n>Saude_Unidade_dataAtualizacao}';
-  // 1=vermelho (<45), 2=amarelo (45–69), 3=verde (>=70)
-  scoreCriticality  : Integer       @title : '{i18n>Saude_Unidade_scoreCriticality}' @Core.Computed: true;
-}
-
-/**
- * View analítica para o Painel da Rede (Analytical List Page).
- * Agregável por cluster/região/criticidade — permite chart de distribuição.
- */
+// Flat stockout alert — joins Inventory + Store + Material + Forecast
 @Aggregation.ApplySupported: {
   Transformations       : ['aggregate', 'groupby', 'filter'],
-  GroupableProperties   : [codigo, nome, cidade, cluster_code, regiao_code, scoreCriticality, emReforma],
+  GroupableProperties   : [STORE_ID, STORE_NAME, COUNTRY_CODE, REGION, MATNR, ARTICLE_NAME, COLOR, SIZE_VAL, STOCK_STATUS],
   AggregatableProperties: [
-    { Property: ID },
-    { Property: scoreSaude },
-    { Property: compliancePct },
-    { Property: performancePct },
-    { Property: qtdAlertasAlta },
-    { Property: qtdAlertasMedia }
+    { Property: QTY_ON_HAND },
+    { Property: QTY_FORECAST },
+    { Property: DAYS_TO_STOCKOUT },
+    { Property: REVENUE_AT_RISK }
   ]
 }
 @Analytics.entity: true
-view Saude_Dashboard as select from Saude_Unidade {
-  key ID,
-  unidade.codigo         as codigo,
-  unidade.nome           as nome,
-  unidade.cidade         as cidade,
-  unidade.estado         as estado,
-  unidade.cluster.code   as cluster_code,
-  unidade.regiao.code    as regiao_code,
-  unidade.lat            as lat,
-  unidade.lon            as lon,
-  unidade.emReforma      as emReforma,
-  scoreSaude,
-  compliancePct,
-  performancePct,
-  qtdAlertasAlta,
-  qtdAlertasMedia,
-  scoreCriticality,
-  // Texto da criticidade para o chart agrupar/rotular (padrão sflight: dimensão + texto)
-  case scoreCriticality
-    when 1 then 'Critical'
-    when 2 then 'Warning'
-    when 3 then 'Healthy'
-    else 'N/A'
-  end                    as criticalityText : String(20)
+view StockoutAlert as
+  select from InventorySnapshot as i
+  join Store as s on s.STORE_ID = i.STORE_ID
+  join Material as m on m.MATNR = i.MATNR and m.MANDT = '100'
+  left join MaterialDesc as d on d.MATNR = i.MATNR and d.MANDT = '100' and d.SPRAS = 'E'
+  left join DemandForecast as f
+         on f.STORE_ID = i.STORE_ID and f.MATNR = i.MATNR
+        and f.COLOR = i.COLOR and f.SIZE_VAL = i.SIZE_VAL
+{
+  key i.STORE_ID,
+  key i.MATNR,
+  key i.COLOR,
+  key i.SIZE_VAL,
+      s.STORE_NAME,
+      s.CITY,
+      s.COUNTRY_CODE,
+      s.REGION,
+      i.SNAPSHOT_DATE,
+      i.QTY_ON_HAND,
+      i.QTY_IN_TRANSIT,
+      i.STOCK_STATUS,
+      coalesce(d.MAKTX, i.MATNR)                                      as ARTICLE_NAME       : String(40),
+      m.RETAIL_PRICE,
+      coalesce(f.QTY_FORECAST, 0)                                      as QTY_FORECAST       : Integer,
+      coalesce(f.DAYS_TO_STOCKOUT, 0)                                  as DAYS_TO_STOCKOUT   : Integer,
+      coalesce(f.WEATHER_IMPACT_PCT, 0)                                as WEATHER_IMPACT_PCT : Decimal(5,2),
+      coalesce(f.CAMPAIGN_IMPACT_PCT, 0)                               as CAMPAIGN_IMPACT_PCT: Decimal(5,2),
+      round(coalesce(f.QTY_FORECAST, 0) * m.RETAIL_PRICE, 2)          as REVENUE_AT_RISK    : Decimal(15,2),
+      case i.STOCK_STATUS when 'R' then 1 when 'Y' then 2 else 3 end  as CRITICALITY        : Integer
+}
+where i.STOCK_STATUS in ('R', 'Y');
+
+
+// NPS enriched with store info
+view StoreNps as
+  select from NpsResponse as n
+  join Store as s on s.STORE_ID = n.STORE_ID
+{
+  key n.NPS_ID,
+      n.STORE_ID,
+      s.STORE_NAME,
+      s.CITY,
+      s.REGION,
+      s.COUNTRY_CODE,
+      n.SURVEY_DATE,
+      n.SCORE,
+      n.CATEGORY,
+      n.VERBATIM,
+      case
+        when n.SCORE >= 9 then 'Promoter'
+        when n.SCORE >= 7 then 'Passive'
+        else 'Detractor'
+      end                                                              as NPS_CATEGORY : String(10),
+      case
+        when n.SCORE >= 9 then 3
+        when n.SCORE >= 7 then 2
+        else 1
+      end                                                              as CRITICALITY  : Integer
 };
 
 
-entity Benchmark_Cluster : cuid, managed {
-  cluster          : Association to Cluster @title : '{i18n>Unidades_cluster}';
-  periodo          : String(6)     @title : '{i18n>KPI_Unidade_periodo}';
-  faturamentoMedio : Decimal(15,2) @title : '{i18n>Benchmark_Cluster_faturamentoMedio}';
-  ticketMedioMedio : Decimal(10,2) @title : '{i18n>Benchmark_Cluster_ticketMedioMedio}';
-  crescimentoMedio : Decimal(5,2)  @title : '{i18n>Benchmark_Cluster_crescimentoMedio}';
-  npsMedio         : Decimal(4,1)  @title : '{i18n>Benchmark_Cluster_npsMedio}';
-  qtdUnidades      : Integer       @title : '{i18n>Benchmark_Cluster_qtdUnidades}';
-}
+// Order header enriched with store name
+view OrderSummary as
+  select from SellinHdr as h
+  join Store as s on s.STORE_ID = h.STORE_ID
+{
+  key h.ORDER_ID,
+      h.STORE_ID,
+      s.STORE_NAME,
+      s.CITY,
+      s.REGION,
+      h.ORDER_DATE,
+      h.STATUS,
+      h.TOTAL_AMOUNT,
+      h.CURRENCY,
+      h.EXPECTED_DELIVERY,
+      h.NOTES,
+      case h.STATUS
+        when 'PENDING'   then 1
+        when 'DRAFT'     then 2
+        when 'DELIVERED' then 3
+        else 2
+      end                                                              as STATUS_CRITICALITY : Integer
+};
 
 
-// ═══════════════════════════════════════════════════════════
-// COMPLIANCE — Catálogo, Desvios, Notificações, Regras
-// ═══════════════════════════════════════════════════════════
-
-entity Catalogos : cuid, managed {
-  nome           : String(100) @title : '{i18n>Catalogos_nome}';
-  descricao      : String(500) @title : '{i18n>Catalogos_descricao}';
-  vigenciaInicio : Date        @title : '{i18n>Catalogos_vigenciaInicio}';
-  vigenciaFim    : Date        @title : '{i18n>Catalogos_vigenciaFim}';
-  status         : Association to StatusCatalogo @title : '{i18n>Catalogos_status}';
-  itens          : Composition of many ItensCatalogo
-                     on itens.catalogo = $self;
-}
-
-entity ItensCatalogo : cuid, managed {
-  catalogo      : Association to Catalogos @title : '{i18n>Catalogos}';
-  sku           : String(50)    @title : '{i18n>ItensCatalogo_sku}';
-  nomeProduto   : String(150)   @title : '{i18n>ItensCatalogo_nomeProduto}';
-  categoria     : String(100)   @title : '{i18n>ItensCatalogo_categoria}';
-  subCategoria  : String(100)   @title : '{i18n>ItensCatalogo_subCategoria}';  // ex: Moda, Acessórios, Beleza
-  precoMinimo   : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoMinimo}';
-  precoMaximo   : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoMaximo}';
-  precoSugerido : Decimal(10,2) @title : '{i18n>ItensCatalogo_precoSugerido}';
-  ativo         : Boolean default true;
-}
-
-entity VendaPraticada : cuid, managed {
-  unidade        : Association to Unidades @title : '{i18n>Unidades}';
-  periodo        : String(6)    @title : '{i18n>KPI_Unidade_periodo}';
-  sku            : String(50)   @title : '{i18n>ItensCatalogo_sku}';
-  nomeProduto    : String(150)  @title : '{i18n>ItensCatalogo_nomeProduto}';
-  precoPraticado : Decimal(10,2)@title : '{i18n>VendaPraticada_precoPraticado}';
-  qtdVendida     : Integer      @title : '{i18n>VendaPraticada_qtdVendida}';
-  dataCaptura    : DateTime     @title : '{i18n>VendaPraticada_dataCaptura}';
-}
-
-entity Desvios : cuid, managed {
-  unidade              : Association to Unidades @title : '{i18n>Unidades}';
-  tipo                 : Association to TipoDesvio @title : '{i18n>Desvios_tipo}';
-  sku                  : String(50)    @title : '{i18n>ItensCatalogo_sku}';
-  nomeProduto          : String(150)   @title : '{i18n>ItensCatalogo_nomeProduto}';
-  precoAutorizado      : Decimal(10,2) @title : '{i18n>Desvios_precoAutorizado}';
-  precoPraticado       : Decimal(10,2) @title : '{i18n>VendaPraticada_precoPraticado}';
-  percentualDesvio     : Decimal(5,2)  @title : '{i18n>Desvios_percentualDesvio}';
-  severidade           : Association to Severidade @title : '{i18n>Desvios_severidade}';
-  status               : Association to StatusDesvio @title : '{i18n>Desvios_status}';
-  dataDeteccao         : DateTime      @title : '{i18n>Desvios_dataDeteccao}';
-  dataResolucao        : DateTime      @title : '{i18n>Desvios_dataResolucao}';
-  // 1=vermelho (Alta), 2=amarelo (Media), 3=verde (Baixa)
-  severidadeCriticality: Integer       @title : '{i18n>Desvios_severidadeCriticality}' @Core.Computed: true;
-  notificacoes         : Composition of many NotificacoesCompliance
-                           on notificacoes.desvio = $self;
-}
-
-/**
- * Regras configuráveis pela franqueadora — lidas em runtime pelo service handler.
- */
-entity RegrasCompliance : cuid, managed {
-  tipo              : Association to TipoDesvio @title : '{i18n>Desvios_tipo}';
-  limiarMedia_pct   : Decimal(5,2) @title : '{i18n>RegrasCompliance_limiarMedia_pct}';
-  limiarAlta_pct    : Decimal(5,2) @title : '{i18n>RegrasCompliance_limiarAlta_pct}';
-  prazoCorrecao_dias: Integer      @title : '{i18n>RegrasCompliance_prazoCorrecao_dias}';
-  ativa             : Boolean default true;
-}
-
-entity NotificacoesCompliance : cuid, managed {
-  desvio             : Association to Desvios @title : '{i18n>Desvios}';
-  unidade            : Association to Unidades @title : '{i18n>Unidades}';
-  dataEnvio          : DateTime    @title : '{i18n>NotificacoesCompliance_dataEnvio}';
-  prazoCorrecao      : Date        @title : '{i18n>NotificacoesCompliance_prazoCorrecao}';
-  status             : Association to StatusNotificacao @title : '{i18n>NotificacoesCompliance_status}';
-  comentarioResposta : String(500) @title : '{i18n>NotificacoesCompliance_comentarioResposta}';
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// FRANCHISEE PORTAL — Recomendações (geradas pelo AI Core)
-// ═══════════════════════════════════════════════════════════
-
-/**
- * Recomendações geradas por job diário via AI Core + GenAI Hub.
- */
-entity Recomendacoes : cuid, managed {
-  unidade     : Association to Unidades @title : '{i18n>Unidades}';
-  tipo        : Association to TipoRecomendacao @title : '{i18n>Recomendacoes_tipo}';
-  titulo      : String(150)   @title : '{i18n>Recomendacoes_titulo}';
-  descricao   : String(2000)  @title : '{i18n>Recomendacoes_descricao}';
-  prioridade  : Association to Prioridade @title : '{i18n>Recomendacoes_prioridade}';
-  status      : Association to StatusRecomendacao @title : '{i18n>Recomendacoes_status}';
-  dataGeracao : DateTime      @title : '{i18n>Recomendacoes_dataGeracao}';
-  dataValidade: DateTime      @title : '{i18n>Recomendacoes_dataValidade}';
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// ONBOARDING — Processos, Etapas, Tarefas, Documentos
-// ═══════════════════════════════════════════════════════════
-
-entity ProcessosOnboarding : cuid, managed {
-  unidade              : Association to Unidades @title : '{i18n>Unidades}';
-  dataInicio           : Date        @title : '{i18n>ProcessosOnboarding_dataInicio}';
-  dataPrevisaoAbertura : Date        @title : '{i18n>ProcessosOnboarding_dataPrevisaoAbertura}';
-  status               : Association to StatusOnboarding @title : '{i18n>ProcessosOnboarding_status}';
-  percentualConclusao  : Decimal(5,2)@title : '{i18n>ProcessosOnboarding_percentualConclusao}';
-  // 1=vermelho (Suspenso/Cancelado), 2=amarelo (EmAndamento), 3=verde (Concluido)
-  statusCriticality    : Integer     @title : '{i18n>ProcessosOnboarding_statusCriticality}' @Core.Computed: true;
-  tarefas              : Composition of many TarefasOnboarding
-                           on tarefas.processo = $self;
-}
-
-/**
- * Template de etapas configurável pela franqueadora.
- */
-entity EtapasOnboarding : cuid, managed {
-  nome          : String(100) @title : '{i18n>EtapasOnboarding_nome}';
-  descricao     : String(500) @title : '{i18n>EtapasOnboarding_descricao}';
-  ordem         : Integer     @title : '{i18n>EtapasOnboarding_ordem}';
-  obrigatoria   : Boolean default true;
-  prazoEstimado : Integer     @title : '{i18n>EtapasOnboarding_prazoEstimado}';
-}
-
-entity TarefasOnboarding : cuid, managed {
-  processo          : Association to ProcessosOnboarding @title : '{i18n>ProcessosOnboarding}';
-  etapa             : Association to EtapasOnboarding @title : '{i18n>EtapasOnboarding}';
-  nome              : String(100) @title : '{i18n>TarefasOnboarding_nome}';
-  status            : Association to StatusTarefa @title : '{i18n>TarefasOnboarding_status}';
-  // 1=vermelho (Vencida/Bloqueada), 2=amarelo (EmAndamento), 3=verde (Concluida)
-  tarefaCriticality : Integer     @title : '{i18n>TarefasOnboarding_tarefaCriticality}' @Core.Computed: true;
-  responsavel       : String(100) @title : '{i18n>TarefasOnboarding_responsavel}';
-  dataVencimento    : Date        @title : '{i18n>TarefasOnboarding_dataVencimento}';
-  dataConclusao     : Date        @title : '{i18n>TarefasOnboarding_dataConclusao}';
-  observacao        : String(500) @title : '{i18n>TarefasOnboarding_observacao}';
-  documentos        : Composition of many DocumentosOnboarding
-                       on documentos.tarefa = $self;
-  aprovacoes        : Composition of many AprovacoesOnboarding
-                       on aprovacoes.tarefa = $self;
-}
-
-entity DocumentosOnboarding : cuid, managed {
-  tarefa     : Association to TarefasOnboarding @title : '{i18n>TarefasOnboarding}';
-  nome       : String(100) @title : '{i18n>DocumentosOnboarding_nome}';
-  tipo       : Association to TipoDocumento @title : '{i18n>DocumentosOnboarding_tipo}';
-  status     : Association to StatusDocumento @title : '{i18n>DocumentosOnboarding_status}';
-  url        : String(500) @title : '{i18n>DocumentosOnboarding_url}';
-  dataEnvio  : DateTime    @title : '{i18n>DocumentosOnboarding_dataEnvio}';
-  comentario : String(500) @title : '{i18n>DocumentosOnboarding_comentario}';
-}
-
-entity AprovacoesOnboarding : cuid, managed {
-  tarefa      : Association to TarefasOnboarding @title : '{i18n>TarefasOnboarding}';
-  aprovador   : String(100) @title : '{i18n>AprovacoesOnboarding_aprovador}';
-  status      : Association to StatusAprovacao @title : '{i18n>AprovacoesOnboarding_status}';
-  comentario  : String(500) @title : '{i18n>AprovacoesOnboarding_comentario}';
-  dataDecisao : DateTime    @title : '{i18n>AprovacoesOnboarding_dataDecisao}';
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// CONTRATOS
-// ═══════════════════════════════════════════════════════════
-
-entity Contratos_Franquia : cuid, managed {
-  unidade        : Association to Unidades @title : '{i18n>Unidades}';
-  dataInicio     : Date         @title : '{i18n>Contratos_Franquia_dataInicio}';
-  dataVencimento : Date         @title : '{i18n>Contratos_Franquia_dataVencimento}';
-  status         : Association to StatusContrato @title : '{i18n>Contratos_Franquia_status}';
-  valorRoyalties : Decimal(15,2)@title : '{i18n>Contratos_Franquia_valorRoyalties}';
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// ANALYTICS — KPIs por Categoria e Campanhas de Marketing
-// ═══════════════════════════════════════════════════════════
-
-/**
- * KPIs financeiros agregados por categoria de produto por unidade/período.
- * Alimenta D3 (drill-down Beleza) e D6 (tabela Margem por Categoria).
- */
-entity KPI_Categoria : cuid, managed {
-  unidade              : Association to Unidades @title : '{i18n>Unidades}';
-  periodo              : String(6)     @title : 'Period';
-  categoria            : String(100)   @title : 'Category';
-  subCategoria         : String(100)   @title : 'Sub-Category';
-  faturamento          : Decimal(15,2) @title : 'Revenue';
-  margemBruta          : Decimal(5,2)  @title : 'Gross Margin %';
-  qtdProdutos          : Integer       @title : 'SKUs Sold';
-  participacao         : Decimal(5,2)  @title : 'Revenue Share %';
-  meta                 : Decimal(5,2)  @title : 'Margin Target %';
-  repeatPurchaseRate   : Decimal(5,2)  @title : 'Repeat Purchase Rate %';
-  loyaltyParticipation : Decimal(5,2)  @title : 'Loyalty Participation %';
-  conversionRate       : Decimal(5,2)  @title : 'Conversion Rate %';
-}
-
-/**
- * Campanhas de marketing da rede (Black Friday, Verão BR, etc.)
- * Usada no D6 para o gráfico de Taxa de Ativação.
- */
-entity Campanhas : cuid, managed {
-  nome         : String(150)  @title : '{i18n>Campanhas_nome}';
-  pais         : String(50)   @title : '{i18n>Campanhas_pais}';            // BR, AR, US, CL, etc.
-  dataInicio   : Date         @title : '{i18n>Campanhas_dataInicio}';
-  dataFim      : Date         @title : '{i18n>Campanhas_dataFim}';
-  metaAtivacao : Decimal(5,2) @title : '{i18n>Campanhas_metaAtivacao}';    // % meta (ex: 90)
-  ativa        : Boolean default true;
-}
-
-/**
- * Adesão de cada unidade a cada campanha.
- * taxaAtivacao = se a loja executou a campanha (100 = sim, 0 = não, valores intermediários = parcial).
- */
-entity Ativacao_Campanha_Unidade : cuid, managed {
-  campanha     : Association to Campanhas @title : '{i18n>Campanhas_nome}';
-  unidade      : Association to Unidades  @title : '{i18n>Unidades}';
-  taxaAtivacao : Decimal(5,2)  @title : '{i18n>Ativacao_taxaAtivacao}';    // 0–100%
-  dataRegistro : Date          @title : '{i18n>Ativacao_dataRegistro}';
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// PILAR 3 — Financeiro Preditivo
-// ═══════════════════════════════════════════════════════════
-
-/**
- * Previsão de receita por unidade para 14 e 30 dias.
- * Calcula baseado em histórico KPI_Unidade + campanhas ativas + NPS.
- * Alimenta o card Previsão de Receita no Franchisee Portal (Pilar 3).
- */
-entity Previsao_Receita : cuid, managed {
-  unidade           : Association to Unidades @title : 'Store';
-  periodoPrevisao   : String(10)    @title : 'Forecast Period';   // '14d', '30d'
-  receitaPrevista   : Decimal(15,2) @title : 'Forecasted Revenue';
-  receitaAnterior   : Decimal(15,2) @title : 'Same Period Last Year';
-  variacaoEsperada  : Decimal(5,2)  @title : 'Expected Variation %';
-  cenarioOtimista   : Decimal(15,2) @title : 'Optimistic Scenario';
-  cenarioRealista   : Decimal(15,2) @title : 'Realistic Scenario';
-  cenarioPessimista : Decimal(15,2) @title : 'Pessimistic Scenario';
-  driversJson       : LargeString   @title : 'Impact Drivers (JSON)'; // [{driver,impactoPct}]
-  dataGeracao       : DateTime      @title : 'Generated At';
-}
-
-// ═══════════════════════════════════════════════════════════
-// PILAR 6 — Feed de Novidades
-// ═══════════════════════════════════════════════════════════
-
-/**
- * Feed de novidades, tendências e dicas da rede para o franqueado.
- * Alimenta o card Feed de Novidades no Franchisee Portal (Pilar 6).
- */
-entity Feed_Franqueado : cuid, managed {
-  titulo           : String(200)  @title : 'Title';
-  tipo             : String(30)   @title : 'Type';           // LANCAMENTO, TENDENCIA, CAMPANHA, DICA
-  conteudo         : String(2000) @title : 'Content';
-  dataPublicacao   : Date         @title : 'Published On';
-  skusRelacionados : String(500)  @title : 'Related SKUs';   // comma-separated SKU list
-  ativo            : Boolean default true;
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// ESTOQUE & REPOSIÇÃO — evitar ruptura na loja do franqueado
-// Considera sazonalidade regional + calendário promocional.
-// ═══════════════════════════════════════════════════════════
-
-/**
- * Posição de estoque por SKU por unidade.
- * Base para detecção de risco de ruptura (cobertura vs. ponto de reposição).
- */
-entity Estoque_Unidade : cuid, managed {
-  unidade              : Association to Unidades @title : '{i18n>Unidades}';
-  sku                  : String(50)   @title : 'SKU';
-  nomeProduto          : String(150)  @title : 'Product';
-  categoria            : String(100)  @title : 'Category';
-  // Grade — Cor × Tamanho (central para o fluxo de ruptura)
-  cor                  : String(50)   @title : 'Color';
-  tamanho              : String(10)   @title : 'Size';        // P, M, G, GG, 33, 34...
-  skuGrade             : String(100)  @title : 'Grade SKU';  // sku + cor + tamanho para unicidade
-  saldoAtual           : Integer      @title : 'On Hand';
-  estoqueMinimo        : Integer      @title : 'Reorder Point';
-  giroMedioDiario      : Decimal(8,2) @title : 'Daily Sales Rate';
-  leadTimeDias         : Integer      @title : 'Lead Time (days)';
-  previsaoDemanda14d   : Integer      @title : 'Demand Forecast 14d'; // previsão de venda em 14 dias
-  saldoProjetado14d    : Integer      @title : 'Projected Balance 14d'; // saldoAtual - previsaoDemanda14d
-  rupturaEm            : Integer      @title : 'Stockout in (days)';   // dias até ruptura
-  coberturaDias        : Decimal(6,1) @title : 'Days Cover'           @Core.Computed: true;
-  status               : Association to StatusEstoque @title : 'Status';
-  estoqueCriticality   : Integer      @title : 'Criticality'          @Core.Computed: true;
-  dataAtualizacao      : DateTime     @title : 'Last Updated';
-  centroDistribuicao   : String(20)   @title : 'Distribution Center';
-  valorImpactoStockout : Decimal(15,2)@title : 'Stockout Impact (R$)';
-  pedidos              : Association to many Pedidos_Reposicao
-                           on  pedidos.unidade = unidade
-                           and pedidos.sku     = sku;
-}
-
-/**
- * Produtos substitutos mapeados pela IA.
- * Para cada SKU em risco de ruptura, lista alternativas com % de similaridade.
- * Base para o "Se pedir X → Ofereça Y" no fluxo de ruptura.
- */
-entity Substitutos : cuid, managed {
-  skuOrigem          : String(50)   @title : 'Original SKU';
-  nomeOrigem         : String(150)  @title : 'Original Product';
-  corOrigem          : String(50)   @title : 'Original Color';
-  tamanhoOrigem      : String(10)   @title : 'Original Size';
-  skuSubstituto      : String(50)   @title : 'Substitute SKU';
-  nomeSubstituto     : String(150)  @title : 'Substitute Product';
-  corSubstituto      : String(50)   @title : 'Substitute Color';
-  tamanhoSubstituto  : String(10)   @title : 'Substitute Size';
-  similaridade       : Decimal(5,2) @title : 'Similarity %';   // 0-100
-  tipoSimilaridade   : String(50)   @title : 'Similarity Type'; // COR_SIMILAR, TAMANHO_PROXIMO, MODELO_EQUIVALENTE
-  unidade            : Association to Unidades @title : 'Store'; // null = válido para toda a rede
-  estoqueDisponivel  : Integer      @title : 'Available Stock';
-  ativo              : Boolean default true;
-}
-
-/**
- * Fator de sazonalidade da demanda por categoria × região × mês.
- * Ex.: Sandálias/Havaianas em Julho: Nordeste fator 1.8 (alta), Sul fator 0.4 (baixa).
- * O fator multiplica o giro médio para estimar a demanda real do período.
- */
-entity Sazonalidade_Regional : cuid, managed {
-  categoria    : String(100) @title : '{i18n>ItensCatalogo_categoria}';
-  regiao       : Association to Regiao @title : '{i18n>Unidades_regiao}';
-  mes          : Integer     @title : '{i18n>Sazonalidade_mes}';        // 1-12
-  fatorDemanda : Decimal(4,2)@title : '{i18n>Sazonalidade_fatorDemanda}'; // 1.0 = neutro; >1 alta; <1 baixa
-  observacao   : String(200) @title : '{i18n>Sazonalidade_observacao}';
-}
-
-/**
- * Calendário de campanhas/promoções que antecipam demanda.
- * O agente considera campanhas ativas/próximas ao calcular a reposição.
- */
-entity Calendario_Promocional : cuid, managed {
-  nome           : String(150) @title : '{i18n>Promocao_nome}';
-  categoria      : String(100) @title : '{i18n>ItensCatalogo_categoria}';
-  regiao         : Association to Regiao @title : '{i18n>Unidades_regiao}';  // null = todas as regiões
-  dataInicio     : Date        @title : '{i18n>Promocao_dataInicio}';
-  dataFim        : Date        @title : '{i18n>Promocao_dataFim}';
-  upliftDemanda  : Decimal(4,2)@title : '{i18n>Promocao_upliftDemanda}';  // multiplicador extra na demanda
-  ativa          : Boolean default true;
-}
-
-/**
- * Pedido de reposição gerado pelo Agente de Reposição.
- * Fluxo: PENDENTE → (aprovação BPA) → APROVADO/RECUSADO → ENVIADO → RECEBIDO.
- */
-entity Pedidos_Reposicao : cuid, managed {
-  unidade          : Association to Unidades @title : '{i18n>Unidades}';
-  sku              : String(50)   @title : '{i18n>ItensCatalogo_sku}';
-  nomeProduto      : String(150)  @title : '{i18n>ItensCatalogo_nomeProduto}';
-  qtdSugerida      : Integer      @title : '{i18n>PedidoRep_qtdSugerida}';   // calculada pelo agente
-  qtdAprovada      : Integer      @title : '{i18n>PedidoRep_qtdAprovada}';
-  justificativa    : String(2000) @title : '{i18n>PedidoRep_justificativa}'; // texto do agente (gpt-4o)
-  fornecedorSugerido: String(150) @title : '{i18n>PedidoRep_fornecedor}';
-  prazoDesejado    : Date         @title : '{i18n>PedidoRep_prazoDesejado}';
-  status           : Association to StatusPedidoRep @title : '{i18n>PedidoRep_status}';
-  aprovador        : String(100)  @title : '{i18n>PedidoRep_aprovador}';
-  dataDecisao      : DateTime     @title : '{i18n>PedidoRep_dataDecisao}';
-  origem           : Association to OrigemPedido @title : '{i18n>PedidoRep_origem}';  // AGENTE | MANUAL
-  // 1=vermelho (Alta urgência), 2=amarelo (Media), 3=verde (Baixa)
-  urgenciaCriticality : Integer   @title : '{i18n>PedidoRep_criticality}' @Core.Computed: true;
-}
+// Order item with article description
+view OrderItemDetail as
+  select from SellinItm as i
+  left join MaterialDesc as d on d.MATNR = i.MATNR and d.MANDT = '100' and d.SPRAS = 'E'
+{
+  key i.ORDER_ID,
+  key i.ITEM_NUM,
+      i.MATNR,
+      coalesce(d.MAKTX, i.MATNR)              as ARTICLE_NAME : String(40),
+      i.COLOR,
+      i.SIZE_VAL,
+      i.QTY_ORDERED,
+      i.QTY_DELIVERED,
+      i.UNIT_PRICE,
+      round(i.QTY_ORDERED * i.UNIT_PRICE, 2)  as LINE_TOTAL   : Decimal(15,2)
+};

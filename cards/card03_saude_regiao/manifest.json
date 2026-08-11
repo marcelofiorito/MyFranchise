@@ -1,12 +1,12 @@
 {
-  "_version": "1.58.0",
+  "_version": "1.84.0",
   "sap.app": {
     "id": "tropicalia.card03.saude.regiao",
     "type": "card",
-    "title": "Saúde da Rede por Região",
-    "subTitle": "Score médio de saúde",
+    "title": "Receita em Risco por Loja",
+    "subTitle": "SKUs críticos e receita projetada perdida",
     "applicationVersion": {
-      "version": "1.0.3"
+      "version": "2.0.0"
     }
   },
   "sap.ui": {
@@ -24,10 +24,10 @@
     "type": "Analytical",
     "configuration": {
       "destinations": {
-        "myfranchise-srv-wz": {
-          "name": "myfranchise-srv-wz",
-          "label": "MyFranchise API",
-          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com"
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
         }
       }
     },
@@ -35,7 +35,7 @@
       "type": "Numeric",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv-wz}}/franqueador/Saude_Dashboard?$apply=aggregate(scoreSaude with average as mediaScore)&$top=1",
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/revenue-at-risk-total",
           "method": "GET",
           "headers": {
             "Accept": "application/json"
@@ -43,13 +43,20 @@
         },
         "path": "/value/0"
       },
-      "title": "Saúde da Rede",
-      "subTitle": "Score médio — todas as lojas ativas",
-      "unitOfMeasurement": "/ 100",
+      "title": "Receita Total em Risco",
+      "subTitle": "Projeção de perda — SKUs críticos",
+      "unitOfMeasurement": "R$",
       "mainIndicator": {
-        "number": "{mediaScore}",
-        "state": "{= parseFloat(${mediaScore}) >= 70 ? 'Good' : parseFloat(${mediaScore}) >= 50 ? 'Critical' : 'Error'}"
-      }
+        "number": "{= (parseFloat(${total_revenue_at_risk}) / 1000).toFixed(0)}",
+        "unit": "K",
+        "state": "{= parseFloat(${total_revenue_at_risk}) > 50000 ? 'Error' : parseFloat(${total_revenue_at_risk}) > 10000 ? 'Critical' : 'Good'}"
+      },
+      "sideIndicators": [
+        {
+          "title": "SKUs Críticos",
+          "number": "{critical_skus}"
+        }
+      ]
     },
     "content": {
       "chartType": "Bar",
@@ -61,23 +68,19 @@
           "visible": true
         },
         "colorPalette": [
-          "#1F7A4D",
-          "#2A9D5C",
+          "#FF5A3C",
           "#FFCC2E",
-          "#FF8C42",
-          "#FF5A3C"
+          "#1F7A4D"
         ]
       },
       "title": {
-        "text": "Score por Região (Top 5)",
+        "text": "Receita em Risco por Loja (R$)",
         "visible": true,
         "alignment": "Center"
       },
-      "measureAxis": "valueAxis",
-      "dimensionAxis": "categoryAxis",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv-wz}}/franqueador/Saude_Dashboard?$apply=groupby((regiao_code),aggregate(scoreSaude with average as mediaScore))&$orderby=mediaScore desc&$top=5",
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/revenue-at-risk",
           "method": "GET",
           "headers": {
             "Accept": "application/json"
@@ -87,28 +90,44 @@
       },
       "dimensions": [
         {
-          "label": "Região",
-          "value": "{regiao_code}"
+          "name": "Loja",
+          "value": "{STORE_NAME}"
         }
       ],
       "measures": [
         {
-          "label": "Score Médio",
-          "value": "{mediaScore}"
+          "name": "Receita em Risco",
+          "value": "{REVENUE_AT_RISK}"
+        }
+      ],
+      "feeds": [
+        {
+          "type": "Dimension",
+          "uid": "categoryAxis",
+          "values": ["Loja"]
+        },
+        {
+          "type": "Measure",
+          "uid": "valueAxis",
+          "values": ["Receita em Risco"]
         }
       ]
     },
     "footer": {
       "actionsStrip": [
         {
-          "text": "Ver Painel Admin",
-          "type": "Navigation",
-          "parameters": {
-            "ibnTarget": {
-              "semanticObject": "ControlPanel",
-              "action": "display"
+          "text": "Ver Detalhes no Joule",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "StorePerformance",
+                  "action": "display"
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }

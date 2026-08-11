@@ -1,0 +1,109 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "myfranchise.franchiseeOvp",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "Minha Loja",
+    "description": "Visão franqueado — estoque, NPS e pedidos da minha loja",
+    "dataSources": {
+      "mainService": {
+        "uri": "franqueado/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "MyInventory-display": {
+          "semanticObject": "MyInventory",
+          "action": "display",
+          "title": "Minha Loja",
+          "subTitle": "Estoque · NPS · Pedidos",
+          "icon": "sap-icon://retail-store",
+          "signature": {
+            "parameters": {
+              "store": { "required": false }
+            },
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://retail-store" },
+    "fullWidth": true
+  },
+  "sap.ovp": {
+    "globalFilterModel": "mainService",
+    "globalFilterEntityType": "MyStockAlerts",
+    "enableLiveFilter": true,
+    "cards": {
+      "card00": {
+        "model": "mainService",
+        "template": "sap.ovp.cards.v4.analytical",
+        "settings": {
+          "title": "Meus SKUs em Risco",
+          "subTitle": "Críticos e em atenção",
+          "entitySet": "MyStockAlerts",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#CriticalBySize",
+          "navigation": "dataPointNav"
+        }
+      },
+      "card01": {
+        "model": "mainService",
+        "template": "sap.ovp.cards.v4.table",
+        "settings": {
+          "title": "Meus Pedidos",
+          "subTitle": "Pedidos de reposição",
+          "entitySet": "MyOrders",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#MyOrders",
+          "addODataSelect": true,
+          "navigation": "headerNav"
+        }
+      },
+      "card02": {
+        "model": "mainService",
+        "template": "sap.ovp.cards.v4.analytical",
+        "settings": {
+          "title": "Meu NPS",
+          "subTitle": "Satisfação dos clientes",
+          "entitySet": "MyNps",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#NpsByCategory",
+          "dataPointAnnotationPath": "com.sap.vocabularies.UI.v1.DataPoint#StoreNps",
+          "navigation": "dataPointNav"
+        }
+      }
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ovp": {}
+      }
+    },
+    "models": {
+      "mainService": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "myfranchise.franchiseeOvp.i18n.i18n" }
+      }
+    }
+  }
+}

@@ -1,12 +1,12 @@
 {
-  "_version": "1.58.0",
+  "_version": "1.84.0",
   "sap.app": {
     "id": "tropicalia.card01.estoque.status",
     "type": "card",
-    "title": "Status do Estoque",
-    "subTitle": "Grade Cor×Tamanho — minha loja",
+    "title": "Alertas de Ruptura",
+    "subTitle": "SKUs críticos na rede — Tropicália Co.",
     "applicationVersion": {
-      "version": "1.0.3"
+      "version": "2.0.0"
     }
   },
   "sap.ui": {
@@ -17,17 +17,17 @@
       "tablet": true
     },
     "icons": {
-      "icon": "sap-icon://donut-chart"
+      "icon": "sap-icon://alert"
     }
   },
   "sap.card": {
     "type": "Analytical",
     "configuration": {
       "destinations": {
-        "myfranchise-srv-wz": {
-          "name": "myfranchise-srv-wz",
-          "label": "MyFranchise API",
-          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com"
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
         }
       }
     },
@@ -35,23 +35,34 @@
       "type": "Numeric",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv-wz}}/franqueado/MeuEstoque/$count?$filter=status_code eq 'RUPTURA'",
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-count",
           "method": "GET",
           "headers": {
             "Accept": "application/json"
           }
-        }
+        },
+        "path": "/value/0"
       },
-      "title": "Rupturas na Grade",
-      "subTitle": "Itens sem estoque disponível",
+      "title": "SKUs em Risco",
+      "subTitle": "Críticos e em Atenção — rede toda",
       "unitOfMeasurement": "SKUs",
       "mainIndicator": {
-        "number": "{/}",
-        "state": "{= parseInt(${/}) > 10 ? 'Error' : parseInt(${/}) > 0 ? 'Critical' : 'Good'}"
-      }
+        "number": "{critical}",
+        "state": "{= ${critical} > 5 ? 'Error' : ${critical} > 0 ? 'Critical' : 'Good'}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Atenção",
+          "number": "{attention}"
+        },
+        {
+          "title": "Total",
+          "number": "{total}"
+        }
+      ]
     },
     "content": {
-      "chartType": "Donut",
+      "chartType": "donut",
       "legend": {
         "visible": true,
         "position": "Bottom",
@@ -62,21 +73,18 @@
           "visible": true
         },
         "colorPalette": [
-          "#1F7A4D",
-          "#FFCC2E",
-          "#FF5A3C"
+          "#FF5A3C",
+          "#FFCC2E"
         ]
       },
       "title": {
-        "text": "Distribuição por Status",
+        "text": "Distribuição Crítico vs. Atenção",
         "visible": true,
         "alignment": "Center"
       },
-      "measureAxis": "size",
-      "dimensionAxis": "color",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv-wz}}/franqueado/MeuEstoque?$apply=groupby((status_code),aggregate($count as total))&$orderby=status_code asc",
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-alerts",
           "method": "GET",
           "headers": {
             "Accept": "application/json"
@@ -86,28 +94,44 @@
       },
       "dimensions": [
         {
-          "label": "Status",
-          "value": "{status_code}"
+          "name": "Status",
+          "value": "{STATUS_LABEL}"
         }
       ],
       "measures": [
         {
-          "label": "Itens",
-          "value": "{total}"
+          "name": "Receita em Risco",
+          "value": "{REVENUE_AT_RISK}"
+        }
+      ],
+      "feeds": [
+        {
+          "type": "Dimension",
+          "uid": "color",
+          "values": ["Status"]
+        },
+        {
+          "type": "Measure",
+          "uid": "size",
+          "values": ["Receita em Risco"]
         }
       ]
     },
     "footer": {
       "actionsStrip": [
         {
-          "text": "Abrir Grade Completa",
-          "type": "Navigation",
-          "parameters": {
-            "ibnTarget": {
-              "semanticObject": "GradeRuptura",
-              "action": "display"
+          "text": "Ver Todos os Alertas",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "StockoutAlerts",
+                  "action": "display"
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }

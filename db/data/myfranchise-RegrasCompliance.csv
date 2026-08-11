@@ -1,4 +1,0 @@
-ID,tipo_code,limiarMedia_pct,limiarAlta_pct,prazoCorrecao_dias,ativa
-regra-001,PRECO,5.0,12.0,7,True
-regra-002,MIX,0.0,0.0,3,True
-regra-003,PROMOCAO,8.0,20.0,14,True

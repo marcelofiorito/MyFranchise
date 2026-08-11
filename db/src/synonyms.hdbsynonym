@@ -1,0 +1,29 @@
+{
+  "STORE": {
+    "target": { "object": "M_STORE", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "INVENTORY_SNAPSHOT": {
+    "target": { "object": "T_INVENTORY_SNAPSHOT", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "NPS_RESPONSE": {
+    "target": { "object": "T_NPS", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "SELLIN_HDR": {
+    "target": { "object": "T_SELLIN_HDR", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "SELLIN_ITM": {
+    "target": { "object": "T_SELLIN_ITM", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "DEMAND_FORECAST": {
+    "target": { "object": "T_DEMAND_FORECAST", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MATERIAL": {
+    "target": { "object": "MARA", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MATERIAL_DESC": {
+    "target": { "object": "MAKT", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "SUBSTITUTE": {
+    "target": { "object": "M_SUBSTITUTE", "schema": "RUNMYFRANCHISE_MF" }
+  }
+}

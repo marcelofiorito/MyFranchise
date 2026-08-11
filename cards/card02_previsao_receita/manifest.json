@@ -1,12 +1,12 @@
 {
-  "_version": "1.58.0",
+  "_version": "1.84.0",
   "sap.app": {
     "id": "tropicalia.card02.previsao.receita",
     "type": "card",
-    "title": "Previsão de Receita",
-    "subTitle": "Cenários 14d e 30d",
+    "title": "NPS da Rede",
+    "subTitle": "Satisfação de clientes por loja — Tropicália Co.",
     "applicationVersion": {
-      "version": "1.0.3"
+      "version": "2.0.0"
     }
   },
   "sap.ui": {
@@ -17,17 +17,17 @@
       "tablet": true
     },
     "icons": {
-      "icon": "sap-icon://trend-up"
+      "icon": "sap-icon://customer-and-contacts"
     }
   },
   "sap.card": {
     "type": "List",
     "configuration": {
       "destinations": {
-        "myfranchise-srv-wz": {
-          "name": "myfranchise-srv-wz",
-          "label": "MyFranchise API",
-          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com"
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
         }
       }
     },
@@ -35,7 +35,7 @@
       "type": "Numeric",
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv-wz}}/franqueado/MinhaPrevisaoReceita?$filter=periodoPrevisao eq '30d'&$top=1",
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/nps-avg",
           "method": "GET",
           "headers": {
             "Accept": "application/json"
@@ -43,31 +43,24 @@
         },
         "path": "/value/0"
       },
-      "title": "Receita Prevista (30d)",
-      "subTitle": "Variação esperada vs. período anterior",
-      "unitOfMeasurement": "R$",
+      "title": "NPS Médio da Rede",
+      "subTitle": "Escala 0–10 — todas as lojas ativas",
+      "unitOfMeasurement": "/ 10",
       "mainIndicator": {
-        "number": "{receitaPrevista}",
-        "trend": "{= parseFloat(${variacaoEsperada}) >= 0 ? 'Up' : 'Down'}",
-        "state": "{= parseFloat(${variacaoEsperada}) >= 5 ? 'Good' : parseFloat(${variacaoEsperada}) >= 0 ? 'None' : 'Error'}"
+        "number": "{avg_nps}",
+        "state": "{= parseFloat(${avg_nps}) >= 8 ? 'Good' : parseFloat(${avg_nps}) >= 6 ? 'Critical' : 'Error'}"
       },
       "sideIndicators": [
         {
-          "title": "Otimista",
-          "number": "{cenarioOtimista}",
-          "unit": "R$"
-        },
-        {
-          "title": "Pessimista",
-          "number": "{cenarioPessimista}",
-          "unit": "R$"
+          "title": "Respostas",
+          "number": "{total_responses}"
         }
       ]
     },
     "content": {
       "data": {
         "request": {
-          "url": "{{destinations.myfranchise-srv-wz}}/franqueado/MinhaPrevisaoReceita?$orderby=periodoPrevisao asc",
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/nps-summary",
           "method": "GET",
           "headers": {
             "Accept": "application/json"
@@ -77,33 +70,37 @@
       },
       "item": {
         "icon": {
-          "src": "{= parseFloat(${variacaoEsperada}) >= 0 ? 'sap-icon://trending-up' : 'sap-icon://trending-down'}",
-          "backgroundColor": "{= parseFloat(${variacaoEsperada}) >= 0 ? '#1F7A4D' : '#FF5A3C'}"
+          "src": "{= parseFloat(${AVG_NPS}) >= 8 ? 'sap-icon://thumb-up' : parseFloat(${AVG_NPS}) >= 6 ? 'sap-icon://warning' : 'sap-icon://thumb-down'}",
+          "backgroundColor": "{= parseFloat(${AVG_NPS}) >= 8 ? 'Accent7' : parseFloat(${AVG_NPS}) >= 6 ? 'Accent4' : 'Accent1'}"
         },
         "title": {
-          "value": "{= ${periodoPrevisao} === '14d' ? 'Previsão 14 dias' : 'Previsão 30 dias'}"
+          "value": "{STORE_NAME}"
         },
         "description": {
-          "value": "{= 'Realista: R$ ' + ${receitaPrevista}}"
+          "value": "{= ${CITY} + ' — ' + ${RESPONSES} + ' respostas'}"
         },
         "info": {
-          "value": "{= (parseFloat(${variacaoEsperada}) >= 0 ? '+' : '') + ${variacaoEsperada} + '%'}",
-          "state": "{= parseFloat(${variacaoEsperada}) >= 5 ? 'Success' : parseFloat(${variacaoEsperada}) >= 0 ? 'Warning' : 'Error'}"
+          "value": "{= 'NPS ' + ${AVG_NPS}}",
+          "state": "{NPS_STATE}"
         },
-        "highlight": "{= parseFloat(${variacaoEsperada}) >= 10 ? 'Success' : parseFloat(${variacaoEsperada}) >= 0 ? 'Information' : 'Error'}"
+        "highlight": "{= parseFloat(${AVG_NPS}) >= 8 ? 'Success' : parseFloat(${AVG_NPS}) >= 6 ? 'Warning' : 'Error'}"
       }
     },
     "footer": {
       "actionsStrip": [
         {
-          "text": "Ver Painel Financeiro",
-          "type": "Navigation",
-          "parameters": {
-            "ibnTarget": {
-              "semanticObject": "FranchiseePortal",
-              "action": "display"
+          "text": "Analisar NPS no Joule",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "StorePerformance",
+                  "action": "display"
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }

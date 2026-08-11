@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * MCP Server — RunMyFranchise
- * Expõe 6 ferramentas para o SAP Joule via Model Context Protocol.
- * Cada request cria uma nova instância do McpServer (stateless).
+ * MCP Server — Tropicália Co. RunMyFranchise
+ * 7 tools baseadas no modelo de dados central RUNMYFRANCHISE_JG (Juliana Genova).
+ * Acesso direto ao HANA Cloud via DBADMIN — cross-schema read-only no JG.
  */
 
 const { McpServer }  = require('@modelcontextprotocol/sdk/server/mcp.js');
@@ -12,667 +12,770 @@ const { z }          = require('zod');
 const express        = require('express');
 const cds            = require('@sap/cds');
 
-const PORT    = process.env.PORT || process.env.MCP_PORT || 3001;
-const LOG     = cds.log('mcp-server');
-const MES_REF = parseInt(process.env.MES_REFERENCIA || '7', 10);
+const PORT = process.env.PORT || process.env.MCP_PORT || 3001;
+const LOG  = cds.log('mcp-server');
+const JG   = 'RUNMYFRANCHISE_JG';
+const MF   = 'RUNMYFRANCHISE_MF';
 
 const ok  = (data) => ({ content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
 const err = (msg)  => ({ isError: true, content: [{ type: 'text', text: JSON.stringify({ error: msg }) }] });
 
-// Conexão DB reutilizada — inicializada uma vez na startup
-let _db = null;
-const getDb = async () => { if (!_db) _db = await cds.connect.to('db'); return _db; };
-
-// HANA retorna nomes de coluna em UPPERCASE — normaliza para lowercase
-const norm    = (row) => {
-  if (!row || typeof row !== 'object') return row;
-  const out = {};
-  for (const [k, v] of Object.entries(row)) out[k.toLowerCase()] = v;
-  return out;
-};
-const normAll = (rows) => Array.isArray(rows) ? rows.map(norm) : (rows ? [norm(rows)] : []);
-
-// Executa query e normaliza resultado
-const dbq = async (query) => {
-  const db = await getDb();
-  const res = await db.run(query);
-  return Array.isArray(res) ? normAll(res) : (res ? norm(res) : res);
-};
-
-// Cache leve para dados estáticos (Unidades, Sazonalidade) — TTL 5 min
-const _cache = new Map();
-const cached = async (key, ttlMs, fn) => {
-  const hit = _cache.get(key);
-  if (hit && Date.now() - hit.ts < ttlMs) return hit.val;
-  const val = await fn();
-  _cache.set(key, { val, ts: Date.now() });
-  return val;
-};
-
-const getUnidades  = () => cached('unidades', 5*60*1000, () => dbq(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade','regiao_code')));
-const getSazo      = () => cached('sazo', 5*60*1000, () => dbq(SELECT.from('myfranchise.Sazonalidade_Regional').where({ mes: MES_REF })));
-const getSaude     = () => cached('saude', 60*1000, () => dbq(SELECT.from('myfranchise.Saude_Dashboard')));
-
-// Resolve nome/cidade → unidade_ID
-const resolveUnidade = async (input) => {
-  if (!input) return null;
-  if (input.match(/^u\d+$/i)) return input;
-  const unids = await getUnidades();
-  const search = input.toLowerCase().replace('loja ', '').trim();
-  const found = unids.find(u => u.nome?.toLowerCase().includes(search) || u.cidade?.toLowerCase().includes(search));
-  return found ? (found.id || found.ID) : input;
-};
-
-// ── Factory: cria McpServer por request (evita "already connected") ──
-function buildServer() {
-  const server = new McpServer({
-    name: 'runmyfranchise-mcp',
-    version: '1.0.0',
-    instructions: `You are the AI assistant for RunMyFranchise, a franchise network management platform.
-You have full access to real-time data and CAN perform actions. Always use your tools — never say you cannot access data or perform actions.
-
-RULES:
-- When asked about stockout risk, at-risk stores, or coverage: use get_lojas_em_risco
-- When asked about stock coverage for a specific store: use get_cobertura_estoque
-- When asked about pending/approved/rejected orders: use get_pedidos_pendentes
-- When asked to APPROVE ALL orders (network-wide): use process_replenishment_orders with no arguments
-- When asked to APPROVE orders for a specific store: use process_replenishment_orders with unidade_ID
-- When asked to APPROVE a single order by ID: use confirm_single_order with pedido_id
-- When asked to REJECT an order: use reject_order with pedido_id
-- When asked to trigger the replenishment agent: use acionar_reposicao
-- When asked about AI recommendations: use get_recomendacoes
-- When asked about network health or scores: use get_score_rede
-
-Store names like "Porto Alegre", "Loja Recife", "Floripa", "Salvador" are accepted — resolution is automatic.
-You CAN approve orders. You CAN reject orders. Always use the tools provided.`
+// ── HANA direct connection (DBADMIN) ─────────────────────────────────────────
+let _hanaConn = null;
+const getHanaConn = async () => {
+  if (_hanaConn) {
+    try { await new Promise((res, rej) => _hanaConn.exec('SELECT 1 FROM DUMMY', [], (e) => e ? rej(e) : res())); return _hanaConn; }
+    catch (_) { _hanaConn = null; }
+  }
+  const hana = require('@sap/hana-client');
+  _hanaConn = hana.createConnection();
+  await new Promise((resolve, reject) => {
+    _hanaConn.connect({
+      host: '70ddf6e8-ee91-4a59-aa45-f2009a7e6ff9.hna1.prod-us10.hanacloud.ondemand.com',
+      port: 443, uid: 'DBADMIN', pwd: process.env.HANA_DBADMIN_PASSWORD,
+      encrypt: 'true', sslValidateCertificate: 'false',
+    }, (e) => e ? reject(e) : resolve());
   });
+  return _hanaConn;
+};
 
-  server.tool('get_lojas_em_risco',
-    'List stores at risk of stockout, considering regional seasonality (e.g. Havaianas in July in the Northeast have 1.8x higher demand than in the South). Use when asked about stockout risk, at-risk stores, or coverage days.',
+const hanaExec = (conn, sql, params = []) => new Promise((resolve, reject) => {
+  conn.exec(sql, params, (e, rows) => {
+    if (e) return reject(e);
+    resolve(rows.map(r => {
+      const out = {};
+      for (const [k, v] of Object.entries(r)) out[k.toLowerCase()] = v;
+      return out;
+    }));
+  });
+});
+
+// ── Store name → ID resolution ────────────────────────────────────────────────
+const resolveStore = async (conn, input) => {
+  if (!input) return null;
+  // Already a store ID (e.g. BR-SP-001)
+  if (/^[A-Z]{2}-[A-Z]{2,3}-\d{3}$/.test(input.trim())) return input.trim();
+  // Resolve by name
+  const rows = await hanaExec(conn,
+    `SELECT STORE_ID FROM "${JG}"."CV_DIM_STORE"
+     WHERE UPPER(STORE_NAME) LIKE UPPER(?) OR UPPER(CITY) LIKE UPPER(?)`,
+    [`%${input}%`, `%${input}%`]
+  );
+  return rows[0]?.store_id || null;
+};
+
+// ── Build MCP server ──────────────────────────────────────────────────────────
+function buildServer() {
+  const server = new McpServer({ name: 'tropicalia-mcp', version: '2.0.0' });
+
+  // ── SYSTEM PROMPT ────────────────────────────────────────────────────────────
+  server.prompt('system', {}, () => ({
+    messages: [{
+      role: 'assistant', content: { type: 'text', text: `
+You are the AI assistant for Tropicália Co., a Brazilian tropical fashion franchise with 7 stores across Brazil, Argentina, USA, and Portugal.
+
+Today is 2026-08-11. Tomorrow (2026-08-12) the "Tropical Summer" campaign launches — this is the critical context for all inventory and demand questions.
+
+You have access to real-time data from the Tropicália Co. HANA Cloud data model. Always use your tools — never say you cannot access data.
+
+Key facts for context:
+- Hero store: SP Jardins (BR-SP-001) in São Paulo — highest revenue store
+- Critical SKU: Tucano Flip Flop (TCO-FLIP-001) — especially Ipanema Blue sz 37-38
+- SP Jardins has only 3 units of Tucano Blue 37-38 left — 2 days to stockout
+- NPS at SP Jardins dropped from 9.2 (June) to 5.4 (August) — customers can't find their size
+- Buenos Aires (AR-BA-001) has 178 units of Tucano Blue in overstock — transfer opportunity
+- Total network revenue at risk: ~R$ 11,200
+
+When asked about stockout, inventory, NPS, sales, or demand — use the tools and present data clearly with emojis for status (🔴 Critical, 🟡 Attention, 🟢 OK).
+When presenting replenishment orders, always show line items and ask for confirmation before finalizing.`
+      }
+    }]
+  }));
+
+  // ── TOOL 1: get_stockout_alert ────────────────────────────────────────────────
+  server.tool('get_stockout_alert',
+    `Returns stockout risk alerts from the Tropicália Co. network.
+Shows which SKUs are at risk of running out of stock, with days to stockout and revenue at risk.
+Use when asked: "Which stores/SKUs are at risk?", "Show stockout alerts", "What products are running low?", "What is the inventory status?"`,
     {
-      regiao_code:     z.enum(['N','NE','CO','SE','S']).optional().describe('Region filter'),
-      categoria:       z.string().optional().describe('Product category filter'),
-      criticidade_max: z.number().int().min(1).max(2).default(2),
+      store_id: z.string().optional().describe('Store ID (e.g. BR-SP-001) or store name (e.g. "SP Jardins"). Omit for all stores.'),
+      status:   z.enum(['critical','attention','all']).optional().describe('critical=R only, attention=Y only, all=both (default).'),
     },
-    async ({ regiao_code, categoria, criticidade_max }) => {
+    async ({ store_id, status = 'all' }) => {
       try {
-        let q = SELECT.from('myfranchise.Estoque_Unidade')
-          .columns('unidade_ID','sku','nomeProduto','categoria','saldoAtual','giroMedioDiario','leadTimeDias');
-        if (categoria) q = q.where({ categoria });
-        // Paralelo: estoque + sazonalidade + unidades em simultâneo
-        const [rows, sazo, unids] = await Promise.all([dbq(q), getSazo(), getUnidades()]);
-        const fm = {}, um = {};
-        sazo.forEach(s  => { fm[`${s.categoria}|${s.regiao_code}`] = Number(s.fatordamanda || s.fatordemanda || 1); });
-        unids.forEach(u => { um[u.id || u.ID] = u; });
+        const conn = await getHanaConn();
+        const sid = store_id ? await resolveStore(conn, store_id) : null;
+        const statusFilter = status === 'critical' ? `STOCK_STATUS = 'R'`
+                           : status === 'attention' ? `STOCK_STATUS = 'Y'`
+                           : `STOCK_STATUS IN ('R','Y')`;
+        const storeFilter = sid ? `AND STORE_ID = '${sid}'` : '';
 
-        const resultado = [];
+        const rows = await hanaExec(conn,
+          `SELECT STORE_NAME, CITY, COUNTRY_CODE, ARTICLE_NAME, COLOR, SIZE_VAL,
+                  QTY_ON_HAND, QTY_FORECAST, DAYS_TO_STOCKOUT, QTY_SHORTAGE,
+                  REVENUE_AT_RISK, STOCK_STATUS, STOCK_STATUS_LABEL,
+                  WEATHER_IMPACT_PCT, CAMPAIGN_IMPACT_PCT
+           FROM "${JG}"."CV_FACT_INVENTORY"
+           WHERE ${statusFilter} ${storeFilter}
+           ORDER BY STOCK_STATUS ASC, REVENUE_AT_RISK DESC`
+        );
+
+        if (!rows.length) return ok({ message: 'No stockout alerts found.', alerts: [] });
+
+        const critical  = rows.filter(r => r.stock_status === 'R');
+        const attention = rows.filter(r => r.stock_status === 'Y');
+        const totalRev  = rows.reduce((s, r) => s + Number(r.revenue_at_risk || 0), 0);
+
+        // Group by store for summary
+        const byStore = {};
         for (const r of rows) {
-          const u = um[r.unidade_id || r.unidade_ID] || {};
-          const reg = u.regiaocode || u.regiao_code;
-          if (regiao_code && reg !== regiao_code) continue;
-          const fator    = fm[`${r.categoria}|${reg}`] || 1.0;
-          const demanda  = Number(r.giromediodiario || r.giroMedioDiario || 0) * fator;
-          const saldo    = Number(r.saldoatual || r.saldoAtual || 0);
-          const lead     = Number(r.leadtimedias || r.leadTimeDias || 0);
-          const cobertura = demanda > 0 ? Math.round((saldo / demanda) * 10) / 10 : 999;
-          const crit = cobertura < lead ? 1 : cobertura < lead * 1.5 ? 2 : 3;
-          if (crit <= criticidade_max) resultado.push({
-            loja: u.nome, cidade: u.cidade, regiao: reg,
-            sku: r.sku, produto: r.nomeproduto || r.nomeProduto,
-            saldo, coberturaDias: cobertura, leadTime: lead, fatorSazonal: fator,
-            criticidade: crit === 1 ? 'CRITICAL STOCKOUT' : 'WARNING',
-          });
-        }
-        resultado.sort((a, b) => a.coberturaDias - b.coberturaDias);
-        return ok({ total: resultado.length, mes_referencia: MES_REF, lojas: resultado });
-      } catch (e) { LOG.error('get_lojas_em_risco', e); return err(e.message); }
-    }
-  );
-
-  server.tool('get_cobertura_estoque',
-    'Returns stock coverage in days for a store, with regional seasonality adjustment. Use when asked about stock coverage, inventory levels, or days of supply for a specific store.',
-    {
-      unidade_ID: z.string().describe('Store ID (e.g. u147) OR store name/city (e.g. "Porto Alegre"). Will be resolved automatically.'),
-      sku:        z.string().optional().describe('Optional SKU filter'),
-    },
-    async ({ unidade_ID, sku }) => {
-      try {
-        const resolvedId = await resolveUnidade(unidade_ID);
-        let q = SELECT.from('myfranchise.Estoque_Unidade').where({ unidade_ID: resolvedId });
-        if (sku) q = q.where({ unidade_ID: resolvedId, sku });
-        // Paralelo: estoque + sazonalidade em simultâneo
-        const [rows, sazo, unids] = await Promise.all([dbq(q), getSazo(), getUnidades()]);
-        if (!rows.length) return err(`No items found for ${unidade_ID}`);
-        const unidade = unids.find(u => (u.id||u.ID) === resolvedId) || {};
-        const fm = {};
-        sazo.forEach(s => { fm[`${s.categoria}|${s.regiao_code}`] = Number(s.fatordamanda||s.fatordemanda||1); });
-        const reg = unidade.regiaocode || unidade.regiao_code;
-        const itens = rows.map(r => {
-          const fator   = fm[`${r.categoria}|${reg}`] || 1.0;
-          const demanda = Number(r.giromediodiario||r.giroMedioDiario||0) * fator;
-          const saldo   = Number(r.saldoatual||r.saldoAtual||0);
-          const lead    = Number(r.leadtimedias||r.leadTimeDias||0);
-          const cob     = demanda > 0 ? Math.round((saldo / demanda) * 10) / 10 : 999;
-          return { sku: r.sku, produto: r.nomeproduto||r.nomeProduto, saldo, fatorSazonal: fator,
-                   coberturaDias: cob, leadTime: lead,
-                   status: cob < lead ? 'CRITICAL STOCKOUT' : cob < lead * 1.5 ? 'WARNING' : 'OK' };
-        });
-        return ok({ loja: unidade.nome, cidade: unidade.cidade, regiao: reg, mes_referencia: MES_REF, itens });
-      } catch (e) { LOG.error('get_cobertura_estoque', e); return err(e.message); }
-    }
-  );
-
-  server.tool('get_pedidos_pendentes',
-    'List replenishment orders (reposição) for a store. Can filter by store name (e.g. "Loja Porto Alegre", "Porto Alegre"), store ID (e.g. "u147"), SKU (e.g. "SKU-200"), or status. Use this when asked about pending, approved, or rejected replenishment orders, or when verifying if a specific SKU has an order.',
-    {
-      unidade_ID:  z.string().optional().describe('Store ID (e.g. u147) OR store name/city (e.g. "Porto Alegre", "Loja Porto Alegre"). Will be resolved automatically.'),
-      sku:         z.string().optional().describe('SKU code to filter by (e.g. "SKU-200"). Use when the user mentions a specific product code.'),
-      status_code: z.enum(['PENDENTE','APROVADO','RECUSADO','ENVIADO','RECEBIDO']).default('PENDENTE').describe('Order status filter. Default: PENDENTE (awaiting approval).'),
-    },
-    async ({ unidade_ID, sku, status_code }) => {
-      try {
-        const [resolvedId, unids] = await Promise.all([resolveUnidade(unidade_ID), getUnidades()]);
-        const um = {}; unids.forEach(u => { um[u.id||u.ID] = u; });
-        const where = { status_code };
-        if (resolvedId) where.unidade_ID = resolvedId;
-        if (sku) where.sku = sku;
-        const pedidos = await dbq(SELECT.from('myfranchise.Pedidos_Reposicao').where(where));
-        return ok({ total: pedidos.length, status: status_code, pedidos: pedidos.map(p => ({
-          produto: p.nomeproduto || p.nomeProduto,
-          loja: um[p.unidade_id || p.unidade_ID]?.nome || p.unidade_id || p.unidade_ID,
-          cidade: um[p.unidade_id || p.unidade_ID]?.cidade,
-          sku: p.sku,
-          qtdSugerida: p.qtdsugerida || p.qtdSugerida,
-          fornecedor: p.fornecedorsugerido || p.fornecedorSugerido,
-          prazoDesejado: p.prazodesejado || p.prazoDesejado,
-          status: p.status_code,
-          justificativa: p.justificativa,
-        }))});
-      } catch (e) { LOG.error('get_pedidos_pendentes', e); return err(e.message); }
-    }
-  );
-
-  server.tool('get_recomendacoes',
-    'Returns AI recommendations (generated by gpt-4o) for a store. Use when asked about AI recommendations, suggested actions, or improvement tips for a store.',
-    {
-      unidade_ID:  z.string().optional().describe('Store ID or name/city. Will be resolved automatically.'),
-      status_code: z.enum(['NOVA','ACEITA','DESCARTADA']).default('NOVA'),
-      prioridade:  z.enum(['ALTA','MEDIA','BAIXA']).optional(),
-    },
-    async ({ unidade_ID, status_code, prioridade }) => {
-      try {
-        const [resolvedId, unids] = await Promise.all([resolveUnidade(unidade_ID), getUnidades()]);
-        const um = {}; unids.forEach(u => { um[u.id||u.ID] = u; });
-        const where = { status_code };
-        if (resolvedId) where.unidade_ID = resolvedId;
-        if (prioridade) where.prioridade_code = prioridade;
-        const recs = await dbq(SELECT.from('myfranchise.Recomendacoes').where(where).orderBy('prioridade_code'));
-        return ok({ total: recs.length, recomendacoes: recs.map(r => ({
-          loja: um[r.unidade_id||r.unidade_ID]?.nome || r.unidade_id || r.unidade_ID,
-          cidade: um[r.unidade_id||r.unidade_ID]?.cidade,
-          tipo: r.tipo_code, prioridade: r.prioridade_code, titulo: r.titulo,
-          descricao: r.descricao, status: r.status_code, geradaEm: r.datageracao || r.dataGeracao,
-        }))});
-      } catch (e) { LOG.error('get_recomendacoes', e); return err(e.message); }
-    }
-  );
-
-  server.tool('get_score_rede',
-    'Returns the health score of stores in the franchise network. Use when asked about store health, network overview, critical stores, or scores by region/cluster.',
-    {
-      regiao_code:  z.enum(['N','NE','CO','SE','S']).optional(),
-      cluster_code: z.string().optional(),
-      criticidade:  z.number().int().min(1).max(3).optional().describe('1=critical, 2=warning, 3=healthy'),
-      top:          z.number().int().min(1).max(50).default(10),
-    },
-    async ({ regiao_code, cluster_code, criticidade, top }) => {
-      try {
-        const rows = await getSaude();
-        let f = rows;
-        if (regiao_code)  f = f.filter(r => (r.regiao_code||r.regiaocode)   === regiao_code);
-        if (cluster_code) f = f.filter(r => (r.cluster_code||r.clustercode) === cluster_code);
-        const crit = (r) => Number(r.scorecriticality || r.scoreCriticality || 3);
-        if (criticidade)  f = f.filter(r => crit(r) === criticidade);
-        f.sort((a, b) => Number(a.scoresaude||a.scoreSaude||0) - Number(b.scoresaude||b.scoreSaude||0));
-        const resumo = {
-          total: rows.length,
-          critical: rows.filter(r => crit(r) === 1).length,
-          warning:  rows.filter(r => crit(r) === 2).length,
-          healthy:  rows.filter(r => crit(r) === 3).length,
-          avgScore: rows.length ? Math.round(rows.reduce((s,r) => s + Number(r.scoresaude||r.scoreSaude||0), 0) / rows.length * 10) / 10 : 0,
-        };
-        return ok({ network_summary: resumo, stores: f.slice(0, top).map(r => ({
-          store: r.nome, city: r.cidade,
-          region: r.regiao_code||r.regiaocode, cluster: r.cluster_code||r.clustercode,
-          score: r.scoresaude||r.scoreSaude,
-          compliance: r.compliancepct||r.compliancePct,
-          performance: r.performancepct||r.performancePct,
-          highAlerts: r.qtdalertasalta||r.qtdAlertasAlta,
-          status: crit(r) === 1 ? 'CRITICAL' : crit(r) === 2 ? 'WARNING' : 'HEALTHY',
-        }))});
-      } catch (e) { LOG.error('get_score_rede', e); return err(e.message); }
-    }
-  );
-
-  server.tool('acionar_reposicao',
-    'Trigger the AI Replenishment Agent for one or more stores. Detects stockouts, calculates quantities with seasonal adjustment, and creates PENDING orders for human approval. If no store is specified, automatically triggers all stores currently in stockout.',
-    {
-      unidade_ID: z.string().optional().describe('Store ID or name/city (e.g. "Porto Alegre"). Use for a single store.'),
-      unidades: z.array(z.string()).optional().describe('List of store IDs or names for multiple stores.')
-    },
-    async ({ unidade_ID, unidades }) => {
-      try {
-        const { gerarParaUnidade } = require('./ai/reposicao-agent');
-        const csn = await cds.load('srv/csn.json');
-        cds.model = cds.linked(csn);
-        await cds.connect.to('db');
-        const srv = await cds.serve('FranqueadoraService').from(csn);
-
-        // Resolve lista de unidades a processar
-        let lista = []
-        if (unidades?.length) {
-          lista = unidades
-        } else if (unidade_ID) {
-          lista = [unidade_ID]
-        } else {
-          // Nenhuma unidade informada — detecta todas em ruptura
-          const { Estoque_Unidade } = srv.entities
-          const em_risco = await SELECT.distinct.from(Estoque_Unidade)
-            .columns('unidade_ID')
-            .where({ status_code: { in: ['RUPTURA', 'ATENCAO'] } })
-          lista = em_risco.map(r => r.unidade_ID)
-          if (!lista.length) return ok({ mensagem: 'Nenhuma unidade em ruptura ou atenção no momento.' })
-        }
-
-        const resultados = []
-        for (const uid of lista) {
-          const r = await gerarParaUnidade(srv, uid)
-          resultados.push({ unidade_ID: uid, pedidosGerados: r.count, modo: r.modo })
-        }
-
-        const totalPedidos = resultados.reduce((s, r) => s + r.count, 0)
-        return ok({
-          unidades: resultados,
-          totalPedidos,
-          mensagem: totalPedidos > 0
-            ? `${totalPedidos} pedido(s) criados em status PENDENTE para ${lista.length} unidade(s). Aguardando aprovação.`
-            : 'Nenhum item em risco detectado nas unidades informadas.'
-        })
-      } catch (e) { LOG.error('acionar_reposicao', e); return err(e.message); }
-    }
-  );
-
-  server.tool('process_replenishment_orders',
-    'Updates the status of pending replenishment orders in RunMyFranchise. Marks orders as confirmed/processed. Use when asked to approve, confirm, authorize, process, or update pending replenishment orders — for a specific store or all stores.',
-    {
-      unidade_ID: z.string().optional().describe('Store ID (e.g. u147) OR store name/city (e.g. "Porto Alegre", "Loja Porto Alegre"). If omitted, approves ALL pending orders network-wide.'),
-      observacao: z.string().optional().describe('Optional approval note.')
-    },
-    async ({ unidade_ID, observacao }) => {
-      try {
-        let resolvedId = unidade_ID;
-        if (unidade_ID && !unidade_ID.match(/^u\d+$/i)) {
-          const unids = await dbq(SELECT.from('myfranchise.Unidades').columns('ID','nome','cidade'));
-          const search = unidade_ID.toLowerCase().replace('loja ', '').trim();
-          const found = unids.find(u => u.nome?.toLowerCase().includes(search) || u.cidade?.toLowerCase().includes(search));
-          if (found) resolvedId = found.id || found.ID;
-        }
-
-        const where = resolvedId
-          ? { status_code: 'PENDENTE', unidade_ID: resolvedId }
-          : { status_code: 'PENDENTE' }
-
-        const pedidos = await dbq(SELECT.from('myfranchise.Pedidos_Reposicao').where(where))
-        if (!pedidos.length) {
-          return ok({ aprovados: 0, mensagem: resolvedId
-            ? `No pending orders for store ${unidade_ID}.`
-            : 'No pending orders in the network at the moment.' })
-        }
-
-        const obs = observacao || 'Approved via Joule'
-        const db = await cds.connect.to('db')
-        let aprovados = 0
-        for (const p of pedidos) {
-          const qtd = Number(p.qtdsugerida || p.qtdSugerida || 0)
-          await db.run(UPDATE('myfranchise.Pedidos_Reposicao').set({
-            status_code: 'APROVADO',
-            qtdAprovada: qtd,
-            aprovador: 'joule',
-            dataDecisao: new Date().toISOString()
-          }).where({ ID: p.ID }))
-          aprovados++
+          if (!byStore[r.store_name]) byStore[r.store_name] = { critical: 0, attention: 0, rev: 0 };
+          if (r.stock_status === 'R') byStore[r.store_name].critical++;
+          else byStore[r.store_name].attention++;
+          byStore[r.store_name].rev += Number(r.revenue_at_risk || 0);
         }
 
         return ok({
-          aprovados,
-          mensagem: `${aprovados} order(s) approved${resolvedId ? ' for ' + (unidade_ID || resolvedId) : ' across the network'}. ${obs}`
-        })
-      } catch (e) { LOG.error('aprovar_pedidos', e); return err(e.message); }
+          summary: {
+            total_alerts: rows.length,
+            critical: critical.length,
+            attention: attention.length,
+            total_revenue_at_risk: `R$ ${totalRev.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            by_store: Object.entries(byStore).map(([name, d]) => ({
+              store: name,
+              critical: d.critical,
+              attention: d.attention,
+              revenue_at_risk: `R$ ${d.rev.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            })),
+          },
+          alerts: rows,
+        });
+      } catch (e) { LOG.error('get_stockout_alert', e); return err(e.message); }
     }
   );
 
-  server.tool('confirm_single_order',
-    'Updates a single replenishment order status to confirmed/processed in RunMyFranchise. Use when asked to approve, confirm, or process a specific order by its ID.',
+  // ── TOOL 2: get_substitute_suggest ───────────────────────────────────────────
+  server.tool('get_substitute_suggest',
+    `Returns product substitution suggestions for an out-of-stock SKU at a specific store.
+Use when asked: "What can I sell instead of X?", "Suggest alternatives for...", "I don't have size Y, what else can I offer?"
+Returns substitutes with similarity %, stock availability at the store, and a ready-to-use sales script.`,
     {
-      pedido_id:    z.string().describe('Order UUID from get_pedidos_pendentes()'),
-      qtd_aprovada: z.number().int().optional().describe('Approved quantity (0 or omit = use suggested quantity)'),
-      observacao:   z.string().optional().describe('Optional approval note')
+      store_id: z.string().describe('Store ID or name (e.g. "SP Jardins" or "BR-SP-001")'),
+      matnr:    z.string().describe('Article number (e.g. TCO-FLIP-001) or article name (e.g. "Tucano Flip Flop")'),
+      color:    z.string().describe('Color (e.g. "Ipanema Blue")'),
+      size_val: z.string().describe('Size (e.g. "37-38")'),
     },
-    async ({ pedido_id, qtd_aprovada, observacao }) => {
+    async ({ store_id, matnr, color, size_val }) => {
       try {
-        const rows = await dbq(SELECT.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id }));
-        const pedido = rows[0];
-        if (!pedido) return err(`Order not found: ${pedido_id}`);
-        LOG.info('aprovar_pedido keys:', Object.keys(pedido).join(','));
-        const statusVal = pedido.status_code;
-        const qtdVal    = Number(pedido.qtdsugerida || 0);
-        if (statusVal !== 'PENDENTE') return err(`Order already has status: ${statusVal}`);
-        const qtd = qtd_aprovada || qtdVal;
-        const db2 = await cds.connect.to('db');
-        await db2.run(UPDATE('myfranchise.Pedidos_Reposicao').set({
-          status_code: 'APROVADO', qtdAprovada: qtd,
-          aprovador: 'joule', dataDecisao: new Date().toISOString()
-        }).where({ ID: pedido_id }));
-        return ok({ sucesso: true, status: 'APROVADO', mensagem: observacao || `Approved — qty: ${qtd}` });
-      } catch (e) { LOG.error('aprovar_pedido', e); return err(e.message); }
-    }
-  );
+        const conn = await getHanaConn();
+        const sid = await resolveStore(conn, store_id);
+        if (!sid) return err(`Store not found: ${store_id}`);
 
-  server.tool('reject_order',
-    'Updates a single replenishment order status to rejected in RunMyFranchise. Use when asked to reject or decline a specific order by its ID.',
-    {
-      pedido_id: z.string().describe('Order UUID from get_pedidos_pendentes()'),
-      motivo:    z.string().optional().describe('Reason for rejection')
-    },
-    async ({ pedido_id, motivo }) => {
-      try {
-        const rows = await dbq(SELECT.from('myfranchise.Pedidos_Reposicao').where({ ID: pedido_id }));
-        const pedido = rows[0];
-        if (!pedido) return err(`Order not found: ${pedido_id}`);
-        const statusVal = pedido.status_code;
-        if (statusVal !== 'PENDENTE') return err(`Order already has status: ${statusVal}`);
-        const db2 = await cds.connect.to('db');
-        await db2.run(UPDATE('myfranchise.Pedidos_Reposicao').set({
-          status_code: 'RECUSADO',
-          aprovador: 'joule', dataDecisao: new Date().toISOString()
-        }).where({ ID: pedido_id }));
-        return ok({ sucesso: true, status: 'RECUSADO', mensagem: motivo || 'Order rejected via Joule' });
-      } catch (e) { LOG.error('recusar_pedido', e); return err(e.message); }
-    }
-  );
+        // Resolve article name to MATNR if needed
+        let resolvedMatnr = matnr;
+        if (!matnr.match(/^[A-Z]{3}-[A-Z]{3,4}-\d{3}$/)) {
+          const art = await hanaExec(conn,
+            `SELECT MATNR FROM "${JG}"."CV_DIM_ARTICLE" WHERE UPPER(ARTICLE_NAME) LIKE UPPER(?)`,
+            [`%${matnr}%`]
+          );
+          if (art[0]) resolvedMatnr = art[0].matnr;
+        }
 
-  server.tool('get_substitutos',
-    'Returns available substitute products for a SKU or product in stockout/risk. Use when the user asks about alternatives, substitutes, or "what can I offer instead of X". Returns similar products by color, size, or equivalent model.',
-    {
-      sku:         z.string().optional().describe('SKU code in stockout (e.g. "MR550053")'),
-      cor:         z.string().optional().describe('Color of the product in stockout (e.g. "Azul Ipanema")'),
-      tamanho:     z.string().optional().describe('Size of the product in stockout (e.g. "37/38")'),
-      unidade_ID:  z.string().optional().describe('Store ID or name to check local stock availability'),
-    },
-    async ({ sku, cor, tamanho, unidade_ID }) => {
-      try {
-        let q = SELECT.from('myfranchise.Substitutos').where({ ativo: true });
-        if (sku) q = SELECT.from('myfranchise.Substitutos').where({ skuOrigem: sku, ativo: true });
-        const rows = await dbq(q);
-        let filtered = rows;
-        if (cor) filtered = filtered.filter(r => (r.cororigem||r.corOrigem||'').toLowerCase().includes(cor.toLowerCase()));
-        if (tamanho) filtered = filtered.filter(r => (r.tamanhoorigem||r.tamanhoOrigem||'') === tamanho);
-        filtered.sort((a,b) => Number(b.similaridade||0) - Number(a.similaridade||0));
+        const rows = await hanaExec(conn,
+          `SELECT s.TARGET_MATNR, s.TARGET_COLOR, s.TARGET_SIZE,
+                  s.SIMILARITY_PCT, s.ACCEPTANCE_RATE, s.PRIORITY, s.SUGGEST_SCRIPT,
+                  COALESCE(i.QTY_ON_HAND, 0)   AS qty_available,
+                  COALESCE(i.STOCK_STATUS, 'G') AS stock_status,
+                  a.ARTICLE_NAME                AS target_article_name
+           FROM "${JG}"."M_SUBSTITUTE" s
+           LEFT JOIN "${JG}"."T_INVENTORY_SNAPSHOT" i
+             ON i.STORE_ID = ? AND i.MATNR = s.TARGET_MATNR
+            AND i.COLOR = s.TARGET_COLOR AND i.SIZE_VAL = s.TARGET_SIZE
+           LEFT JOIN "${JG}"."CV_DIM_ARTICLE" a ON a.MATNR = s.TARGET_MATNR
+           WHERE s.SOURCE_MATNR = ? AND s.SOURCE_COLOR = ? AND s.SOURCE_SIZE = ?
+             AND COALESCE(i.QTY_ON_HAND, 0) > 0
+           ORDER BY s.PRIORITY ASC`,
+          [sid, resolvedMatnr, color, size_val]
+        );
+
+        if (!rows.length) return ok({
+          message: `No substitutes with available stock found at ${store_id} for ${matnr} ${color} ${size_val}.`,
+          substitutes: [],
+        });
+
         return ok({
-          total: filtered.length,
-          message: filtered.length ? `Found ${filtered.length} substitute(s). Top recommendation: "${filtered[0].nomesubstituto||filtered[0].nomeSubstituto}" in ${filtered[0].corsubstituto||filtered[0].corSubstituto} size ${filtered[0].tamanhosubstituto||filtered[0].tamanhoSubstituto} (${filtered[0].similaridade}% match).` : 'No substitutes found for this product/color/size combination.',
-          substitutos: filtered.map(r => ({
-            original: `${r.nomeorigem||r.nomeOrigem} ${r.cororigem||r.corOrigem} ${r.tamanhoorigem||r.tamanhoOrigem}`,
-            substituto: `${r.nomesubstituto||r.nomeSubstituto} ${r.corsubstituto||r.corSubstituto} ${r.tamanhosubstituto||r.tamanhoSubstituto}`,
-            similaridade: `${r.similaridade}%`,
-            tipo: r.tiposimilaridade||r.tipoSimilaridade,
-            estoqueDisponivel: r.estoquedisponivel||r.estoqueDisponivel,
-            acaoRecomendada: `Se cliente pedir ${r.cororigem||r.corOrigem} ${r.tamanhoorigem||r.tamanhoOrigem} → Ofereça ${r.corsubstituto||r.corSubstituto} ${r.tamanhosubstituto||r.tamanhoSubstituto}`
-          }))
+          requested: { store: store_id, article: matnr, color, size: size_val },
+          substitutes: rows,
+          tip: 'Use the suggest_script field as a natural sales pitch to the customer.',
         });
-      } catch (e) { LOG.error('get_substitutos', e); return err(e.message); }
+      } catch (e) { LOG.error('get_substitute_suggest', e); return err(e.message); }
     }
   );
 
-  server.tool('get_grade_ruptura',
-    'Returns the full Cor × Tamanho (Color × Size) grid for a product/store showing stockout risk per combination. Use when asked about which specific sizes/colors are in stockout, the grade matrix, or detailed inventory breakdown by variant.',
+  // ── TOOL 3: generate_replenishment_order ─────────────────────────────────────
+  server.tool('generate_replenishment_order',
+    `Generates a replenishment (sell-in) order for all at-risk SKUs at a store.
+Calculates quantities needed (shortage + 5-unit safety buffer) and total cost.
+Use when asked: "Create a replenishment order for...", "Order stock for store X", "How much would it cost to replenish?"
+Always show the order lines and ask for user confirmation before saying the order is placed.`,
     {
-      unidade_ID:  z.string().describe('Store ID or name (e.g. "u178", "Recife", "SP Jardins")'),
-      sku:         z.string().optional().describe('Optional SKU to filter (e.g. "MR550053")'),
-      status_code: z.enum(['RUPTURA','ATENCAO','OK']).optional().describe('Filter by status. Omit to show all.'),
+      store_id:      z.string().describe('Store ID or name (e.g. "SP Jardins")'),
+      snapshot_date: z.string().optional().describe('Reference date YYYY-MM-DD. Defaults to 2026-08-11.'),
     },
-    async ({ unidade_ID, sku, status_code }) => {
+    async ({ store_id, snapshot_date = '2026-08-11' }) => {
       try {
-        const resolvedId = await resolveUnidade(unidade_ID);
-        let q = SELECT.from('myfranchise.Estoque_Unidade').where({ unidade_ID: resolvedId });
-        if (sku) q = SELECT.from('myfranchise.Estoque_Unidade').where({ unidade_ID: resolvedId, sku });
-        const rows = await dbq(q);
-        let filtered = rows;
-        if (status_code) filtered = filtered.filter(r => (r.status_code||r.STATUS_CODE) === status_code);
-        // Group by product
-        const byProduct = {};
-        filtered.forEach(r => {
-          const prod = r.nomeproduto||r.nomeProduto;
-          if (!byProduct[prod]) byProduct[prod] = { sku: r.sku, grade: [], totalRuptura: 0, receitaRisco: 0 };
-          const status = r.status_code||r.STATUS_CODE;
-          byProduct[prod].grade.push({
-            cor: r.cor||r.COR, tamanho: r.tamanho||r.TAMANHO,
-            saldo: r.saldoatual||r.saldoAtual,
-            rupturaEm: r.ruptura_em||r.rupturaEm,
-            impacto: r.valorimpactostockout||r.valorImpactoStockout,
-            status
-          });
-          if (status === 'RUPTURA') { byProduct[prod].totalRuptura++; byProduct[prod].receitaRisco += Number(r.valorimpactostockout||r.valorImpactoStockout||0); }
-        });
-        const produtos = Object.entries(byProduct).map(([nome, d]) => ({
-          produto: nome, sku: d.sku,
-          gradeItems: d.grade.length, rupturaItems: d.totalRuptura,
-          receitaRisco: `R$ ${d.receitaRisco.toLocaleString('pt-BR',{minimumFractionDigits:0})}`,
-          grade: d.grade
+        const conn = await getHanaConn();
+        const sid = await resolveStore(conn, store_id);
+        if (!sid) return err(`Store not found: ${store_id}`);
+
+        const items = await hanaExec(conn,
+          `SELECT MATNR, COLOR, SIZE_VAL, ARTICLE_NAME,
+                  QTY_ON_HAND, QTY_SHORTAGE, REVENUE_AT_RISK,
+                  COST_PRICE, STOCK_STATUS, STOCK_STATUS_LABEL
+           FROM "${JG}"."CV_FACT_INVENTORY"
+           WHERE STORE_ID = ? AND STOCK_STATUS IN ('R','Y')
+           ORDER BY STOCK_STATUS ASC, REVENUE_AT_RISK DESC`,
+          [sid]
+        );
+
+        if (!items.length) return ok({ message: `No at-risk SKUs found for store ${store_id}.` });
+
+        const lines = items.map(r => ({
+          matnr:       r.matnr,
+          article:     r.article_name,
+          color:       r.color,
+          size:        r.size_val,
+          status:      r.stock_status_label,
+          qty_on_hand: r.qty_on_hand,
+          qty_ordered: Number(r.qty_shortage || 0) + 5,
+          unit_cost:   Number(r.cost_price || 0),
+          line_total:  (Number(r.qty_shortage || 0) + 5) * Number(r.cost_price || 0),
         }));
-        const totalImpacto = filtered.reduce((s,r) => s + Number(r.valorimpactostockout||r.valorImpactoStockout||0), 0);
+
+        const totalAmount = lines.reduce((s, l) => s + l.line_total, 0);
+        const orderId = `SI-${snapshot_date.replace(/-/g,'')}-${sid.replace(/-/g,'')}`;
+
         return ok({
-          loja: resolvedId, totalItens: filtered.length,
-          rupturas: filtered.filter(r=>(r.status_code||r.STATUS_CODE)==='RUPTURA').length,
-          receitaTotalRisco: `R$ ${totalImpacto.toLocaleString('pt-BR',{minimumFractionDigits:0})}`,
-          produtos
+          order_id:           orderId,
+          store:              store_id,
+          store_id:           sid,
+          status:             'DRAFT — awaiting confirmation',
+          reference_date:     snapshot_date,
+          item_count:         lines.length,
+          total_cost:         `R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          estimated_delivery: '2026-08-18 (~7 days from HQ)',
+          lines,
+          note: 'This is a draft. Confirm to submit to HQ. Consider combining with a Buenos Aires transfer to cover the campaign launch on 2026-08-12.',
         });
-      } catch (e) { LOG.error('get_grade_ruptura', e); return err(e.message); }
+      } catch (e) { LOG.error('generate_replenishment_order', e); return err(e.message); }
     }
   );
 
-  server.tool('get_previsao_receita',
-    'Returns revenue forecast for a store for the next 14 or 30 days, with impact drivers (campaigns, heat wave, NPS, seasonality). Use when asked about revenue prediction, sales forecast, or expected income.',
+  // ── TOOL 4: get_demand_forecast ───────────────────────────────────────────────
+  server.tool('get_demand_forecast',
+    `Returns AI demand forecast for SKUs — including weather, campaign, and seasonality impact factors.
+Use when asked: "What is the demand forecast?", "How many units will we sell?", "What is the demand multiplier?", "How does the heat wave affect demand?"`,
     {
-      unidade_ID:      z.string().describe('Store ID or name (e.g. "u163", "Maceió", "SP Jardins")'),
-      periodoPrevisao: z.enum(['14d','30d']).default('14d').describe('Forecast horizon: 14d or 30d'),
+      store_id: z.string().optional().describe('Store ID or name. Omit for full network.'),
+      matnr:    z.string().optional().describe('Article number or name filter (e.g. "Tucano Flip Flop").'),
     },
-    async ({ unidade_ID, periodoPrevisao }) => {
+    async ({ store_id, matnr }) => {
       try {
-        const resolvedId = await resolveUnidade(unidade_ID);
-        const rows = await dbq(
-          SELECT.from('myfranchise.Previsao_Receita')
-            .where({ unidade_ID: resolvedId, periodoPrevisao })
-        );
-        if (!rows.length) return err(`No forecast found for ${unidade_ID} (${periodoPrevisao})`);
-        const r = rows[0];
-        let drivers = [];
-        try { drivers = JSON.parse(r.driversjson || r.driversJson || '[]'); } catch {}
-        const variacao = Number(r.variacaoesperada || r.variacaoEsperada || 0);
-        return ok({
-          loja: unidade_ID, periodo: periodoPrevisao,
-          receitaPrevista:   `R$ ${Number(r.receitaprevista || r.receitaPrevista || 0).toLocaleString('pt-BR', {minimumFractionDigits:0})}`,
-          receitaAnterior:   `R$ ${Number(r.receitaanterior || r.receitaAnterior || 0).toLocaleString('pt-BR', {minimumFractionDigits:0})}`,
-          variacaoEsperada:  `${variacao > 0 ? '+' : ''}${variacao}%`,
-          cenarioOtimista:   `R$ ${Number(r.cenariootimista || r.cenarioOtimista || 0).toLocaleString('pt-BR', {minimumFractionDigits:0})}`,
-          cenarioPessimista: `R$ ${Number(r.cenariopessimista || r.cenarioPessimista || 0).toLocaleString('pt-BR', {minimumFractionDigits:0})}`,
-          driversDeImpacto: drivers,
-          mensagem: `Forecast for ${periodoPrevisao}: expected ${variacao > 0 ? '+' : ''}${variacao}% vs. same period last year. ${drivers.length ? 'Key drivers: ' + drivers.slice(0,2).map(d => `${d.driver} (${d.impactoPct > 0 ? '+' : ''}${d.impactoPct}%)`).join(', ') : ''}`
-        });
-      } catch (e) { LOG.error('get_previsao_receita', e); return err(e.message); }
-    }
-  );
+        const conn = await getHanaConn();
+        const sid = store_id ? await resolveStore(conn, store_id) : null;
 
-  server.tool('get_feed_novidades',
-    'Returns the latest news feed items for franchisees: product launches, trends, campaigns, and operational tips from the Tropicália Co. network. Use when asked about news, launches, trends, campaigns, or what is new in the network.',
-    {
-      tipo: z.enum(['LANCAMENTO','TENDENCIA','CAMPANHA','DICA','ALL']).default('ALL').describe('Filter by type. Use ALL for everything.'),
-    },
-    async ({ tipo }) => {
-      try {
-        let q = SELECT.from('myfranchise.Feed_Franqueado').where({ ativo: true }).orderBy('dataPublicacao desc').limit(10);
-        const rows = await dbq(q);
-        let filtered = rows;
-        if (tipo !== 'ALL') filtered = rows.filter(r => (r.tipo||r.TIPO) === tipo);
-        return ok({
-          total: filtered.length,
-          feed: filtered.map(r => ({
-            titulo:        r.titulo || r.TITULO,
-            tipo:          r.tipo   || r.TIPO,
-            conteudo:      r.conteudo || r.CONTEUDO,
-            data:          r.datapublicacao || r.dataPublicacao,
-            skus:          r.skusrelacionados || r.skusRelacionados
-          }))
-        });
-      } catch (e) { LOG.error('get_feed_novidades', e); return err(e.message); }
-    }
-  );
-
-  server.tool('get_correlacao_nps_ruptura',
-    'Returns the correlation between NPS and stockout occurrences by region. Use when asked about the relationship between customer satisfaction (NPS) and stock problems, or to identify which regions have both low NPS and high stockout rates.',
-    {
-      regiao_code: z.string().optional().describe('Region code filter (e.g. NE, SE, S, CO, N). Omit for all regions.'),
-    },
-    async ({ regiao_code }) => {
-      try {
-        const db = await cds.connect.to('db');
-        // KPI por unidade com NPS
-        let kpiRows = await db.run(
-          `SELECT k.UNIDADE_ID, k.NPS, u.REGIAO_CODE, u.NOME
-           FROM MYFRANCHISE_KPI_UNIDADE k
-           JOIN MYFRANCHISE_UNIDADES u ON k.UNIDADE_ID = u.ID
-           WHERE k.NPS IS NOT NULL
-           ORDER BY k.PERIODO DESC`
-        );
-        // Dedup: último KPI por unidade
-        const kpiMap = {};
-        for (const r of (kpiRows.rows || kpiRows)) {
-          const uid = r.UNIDADE_ID || r.unidade_ID;
-          if (!kpiMap[uid]) kpiMap[uid] = r;
-        }
-        // Rupturas por unidade
-        const rupRows = await db.run(
-          `SELECT UNIDADE_ID, COUNT(*) AS QTDRUPTURAS
-           FROM MYFRANCHISE_ESTOQUE_UNIDADE
-           WHERE STATUS_CODE = 'RUPTURA'
-           GROUP BY UNIDADE_ID`
-        );
-        const rupMap = {};
-        for (const r of (rupRows.rows || rupRows)) {
-          const uid = r.UNIDADE_ID || r.unidade_ID;
-          rupMap[uid] = Number(r.QTDRUPTURAS || r.qtdrupturas || 0);
+        let matFilter = '';
+        if (matnr) {
+          if (!matnr.match(/^[A-Z]{3}-[A-Z]{3,4}-\d{3}$/)) {
+            const art = await hanaExec(conn,
+              `SELECT MATNR FROM "${JG}"."CV_DIM_ARTICLE" WHERE UPPER(ARTICLE_NAME) LIKE UPPER(?)`,
+              [`%${matnr}%`]
+            );
+            if (art[0]) matFilter = `AND f.MATNR = '${art[0].matnr}'`;
+          } else {
+            matFilter = `AND f.MATNR = '${matnr}'`;
+          }
         }
 
-        // Agrupa por região
-        const regioes = {};
-        for (const [uid, k] of Object.entries(kpiMap)) {
-          const reg = k.REGIAO_CODE || k.regiao_CODE || 'N/D';
-          if (regiao_code && reg !== regiao_code.toUpperCase()) continue;
-          if (!regioes[reg]) regioes[reg] = { lojas: 0, somaNPS: 0, totalRupturas: 0, npsBaixo: 0 };
-          const nps = Number(k.NPS || k.nps || 0);
-          regioes[reg].lojas++;
-          regioes[reg].somaNPS += nps;
-          regioes[reg].totalRupturas += rupMap[uid] || 0;
-          if (nps < 40) regioes[reg].npsBaixo++;
-        }
+        const storeFilter = sid ? `AND f.STORE_ID = '${sid}'` : '';
 
-        const resultado = Object.entries(regioes).map(([reg, d]) => ({
-          regiao:        reg,
-          lojas:         d.lojas,
-          npsMedio:      d.lojas ? parseFloat((d.somaNPS / d.lojas).toFixed(1)) : 0,
-          lojasBaixoNPS: d.npsBaixo,
-          totalRupturas: d.totalRupturas,
-          rupturasPorLoja: d.lojas ? parseFloat((d.totalRupturas / d.lojas).toFixed(1)) : 0,
-          correlacao:    d.npsBaixo > 0 && d.totalRupturas > 0 ? 'ALTA' : d.totalRupturas > 0 ? 'MEDIA' : 'BAIXA'
-        })).sort((a, b) => b.totalRupturas - a.totalRupturas);
+        const rows = await hanaExec(conn,
+          `SELECT f.STORE_NAME, f.CITY, f.ARTICLE_NAME, f.COLOR, f.SIZE_VAL,
+                  f.QTY_ON_HAND, f.QTY_FORECAST, f.DAYS_TO_STOCKOUT, f.QTY_SHORTAGE,
+                  f.REVENUE_AT_RISK, f.RISK_LABEL, f.DEMAND_MULTIPLIER,
+                  f.WEATHER_IMPACT_PCT, f.CAMPAIGN_IMPACT_PCT, f.SEASONALITY_IMPACT_PCT,
+                  f.CONFIDENCE_SCORE
+           FROM "${JG}"."CV_FACT_FORECAST" f
+           WHERE 1=1 ${storeFilter} ${matFilter}
+           ORDER BY f.REVENUE_AT_RISK DESC, f.DAYS_TO_STOCKOUT ASC`
+        );
 
-        return ok({ regioes: resultado, insight: 'Regiões com NPS médio abaixo de 40 tendem a apresentar maior incidência de ruptura — baixa satisfação do cliente frequentemente coincide com falhas operacionais de estoque.' });
-      } catch (e) { LOG.error('get_correlacao_nps_ruptura', e); return err(e.message); }
+        if (!rows.length) return ok({ message: 'No forecast data found.', forecasts: [] });
+
+        // Summary of demand drivers
+        const avgWeather  = rows.reduce((s, r) => s + Number(r.weather_impact_pct || 0), 0) / rows.length;
+        const avgCampaign = rows.reduce((s, r) => s + Number(r.campaign_impact_pct || 0), 0) / rows.length;
+        const avgMult     = rows.reduce((s, r) => s + Number(r.demand_multiplier || 1), 0) / rows.length;
+
+        return ok({
+          summary: {
+            total_skus_forecasted: rows.length,
+            avg_demand_multiplier: avgMult.toFixed(2),
+            avg_weather_impact:    `+${avgWeather.toFixed(0)}%`,
+            avg_campaign_impact:   `+${avgCampaign.toFixed(0)}%`,
+            context: 'Tropical Summer campaign starts 2026-08-12. Heat wave forecast for São Paulo (38°C).',
+          },
+          forecasts: rows,
+        });
+      } catch (e) { LOG.error('get_demand_forecast', e); return err(e.message); }
     }
   );
 
-  server.tool('get_sellout_hoje',
-    'Returns the sell-out (sales) aggregated for the current day across the network, or for a specific store. Use when asked about today\'s sales, daily sell-out, or real-time revenue.',
+  // ── TOOL 5: get_nps_analysis ──────────────────────────────────────────────────
+  server.tool('get_nps_analysis',
+    `Returns NPS (Net Promoter Score) analysis for stores, including promoters, detractors, and customer verbatims.
+Use when asked: "What is the NPS score?", "How satisfied are customers?", "Why is NPS dropping?", "What are customers saying?"
+Correlates NPS with stockout data when both are mentioned.`,
     {
-      unidade_id: z.string().optional().describe('Store ID or name filter. Omit for full network aggregate.'),
+      store_id: z.string().optional().describe('Store ID or name. Omit for all stores.'),
     },
-    async ({ unidade_id }) => {
+    async ({ store_id }) => {
       try {
-        const db = await cds.connect.to('db');
-        // VendaPraticada contém vendas — filtra pelo dia atual via createdAt ou dataVenda
-        let rows;
-        if (unidade_id) {
-          const uid = await resolveUnidade(unidade_id);
-          rows = await db.run(
-            `SELECT v.UNIDADE_ID, u.NOME, v.SKU, v.QUANTIDADE, v.VALORUNITARIO, v.DATAVENDA
-             FROM MYFRANCHISE_VENDAPRATICADA v
-             JOIN MYFRANCHISE_UNIDADES u ON v.UNIDADE_ID = u.ID
-             WHERE v.UNIDADE_ID = '${uid}'
-             ORDER BY v.DATAVENDA DESC`
+        const conn = await getHanaConn();
+        const sid = store_id ? await resolveStore(conn, store_id) : null;
+        const storeFilter = sid ? `WHERE n.STORE_ID = '${sid}'` : '';
+
+        // NPS by store
+        const npsRows = await hanaExec(conn,
+          `SELECT n.STORE_NAME, n.STORE_ID,
+                  COUNT(*)          AS responses,
+                  AVG(n.SCORE)      AS avg_nps,
+                  SUM(n.IS_PROMOTER)   AS promoters,
+                  SUM(n.IS_PASSIVE)    AS passives,
+                  SUM(n.IS_DETRACTOR)  AS detractors
+           FROM "${JG}"."CV_FACT_NPS" n
+           ${storeFilter}
+           GROUP BY n.STORE_NAME, n.STORE_ID
+           ORDER BY avg_nps ASC`
+        );
+
+        // Verbatims (detractors first)
+        const verbFilter = sid ? `WHERE STORE_ID = '${sid}'` : '';
+        const verbatims = await hanaExec(conn,
+          `SELECT STORE_NAME, SCORE, CATEGORY, VERBATIM, SURVEY_DATE
+           FROM "${JG}"."CV_FACT_NPS"
+           ${verbFilter}
+           ORDER BY SCORE ASC, SURVEY_DATE DESC
+           LIMIT 10`
+        );
+
+        // Stockout correlation
+        const invRows = await hanaExec(conn,
+          `SELECT STORE_ID, SUM(REVENUE_AT_RISK) AS rev_at_risk,
+                  COUNT(CASE WHEN STOCK_STATUS='R' THEN 1 END) AS critical_skus
+           FROM "${JG}"."CV_FACT_INVENTORY"
+           WHERE STOCK_STATUS IN ('R','Y')
+           GROUP BY STORE_ID`
+        );
+        const invMap = {};
+        for (const r of invRows) invMap[r.store_id] = r;
+
+        const enriched = npsRows.map(r => ({
+          ...r,
+          avg_nps: Number(r.avg_nps).toFixed(1),
+          nps_score: Math.round(((r.promoters - r.detractors) / r.responses) * 100),
+          stockout_correlation: invMap[r.store_id] ? {
+            revenue_at_risk: `R$ ${Number(invMap[r.store_id].rev_at_risk).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            critical_skus: invMap[r.store_id].critical_skus,
+          } : null,
+        }));
+
+        return ok({
+          nps_by_store: enriched,
+          verbatims: verbatims.filter(v => v.verbatim),
+          insight: 'SP Jardins NPS dropped from 9.2 (June) to 5.4 (August). 7 of 11 customers are Detractors. Root cause: Tucano Flip Flop stockout — customers cannot find their size.',
+        });
+      } catch (e) { LOG.error('get_nps_analysis', e); return err(e.message); }
+    }
+  );
+
+  // ── TOOL 6: get_sellout_summary ───────────────────────────────────────────────
+  server.tool('get_sellout_summary',
+    `Returns sell-out (POS sales) summary — revenue, top articles, top stores, and campaign performance.
+Use when asked: "How much did we sell?", "What is our revenue?", "Which article sells most?", "How is the campaign performing?", "Show me sales data."`,
+    {
+      store_id:   z.string().optional().describe('Store ID or name. Omit for full network.'),
+      article:    z.string().optional().describe('Article name or MATNR filter.'),
+      campaign_id: z.string().optional().describe('Campaign ID filter (e.g. CAMP-001).'),
+    },
+    async ({ store_id, article, campaign_id }) => {
+      try {
+        const conn = await getHanaConn();
+        const sid = store_id ? await resolveStore(conn, store_id) : null;
+
+        const filters = [];
+        if (sid)         filters.push(`STORE_ID = '${sid}'`);
+        if (campaign_id) filters.push(`CAMPAIGN_ID = '${campaign_id}'`);
+        if (article) {
+          if (!article.match(/^[A-Z]{3}-[A-Z]{3,4}-\d{3}$/)) {
+            const art = await hanaExec(conn,
+              `SELECT MATNR FROM "${JG}"."CV_DIM_ARTICLE" WHERE UPPER(ARTICLE_NAME) LIKE UPPER(?)`,
+              [`%${article}%`]
+            );
+            if (art[0]) filters.push(`MATNR = '${art[0].matnr}'`);
+          } else {
+            filters.push(`MATNR = '${article}'`);
+          }
+        }
+        const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+
+        // Overall totals
+        const totals = await hanaExec(conn,
+          `SELECT COUNT(DISTINCT RECEIPT_ID) AS receipts,
+                  SUM(QTY)                   AS total_qty,
+                  SUM(ITEM_NET_AMOUNT)        AS total_revenue,
+                  SUM(ITEM_NET_AMOUNT - (COST_PRICE * QTY)) AS total_margin
+           FROM "${JG}"."CV_FACT_SELLOUT" ${where}`
+        );
+
+        // Top articles
+        const topArticles = await hanaExec(conn,
+          `SELECT ARTICLE_NAME, SUM(QTY) AS qty, SUM(ITEM_NET_AMOUNT) AS revenue
+           FROM "${JG}"."CV_FACT_SELLOUT" ${where}
+           GROUP BY ARTICLE_NAME ORDER BY revenue DESC LIMIT 5`
+        );
+
+        // Top stores (only if not filtered by store)
+        let topStores = [];
+        if (!sid) {
+          topStores = await hanaExec(conn,
+            `SELECT STORE_NAME, CITY, SUM(QTY) AS qty, SUM(ITEM_NET_AMOUNT) AS revenue
+             FROM "${JG}"."CV_FACT_SELLOUT" ${where}
+             GROUP BY STORE_NAME, CITY ORDER BY revenue DESC LIMIT 5`
           );
-        } else {
-          rows = await db.run(
-            `SELECT v.UNIDADE_ID, u.NOME, v.SKU, v.QUANTIDADE, v.VALORUNITARIO, v.DATAVENDA
-             FROM MYFRANCHISE_VENDAPRATICADA v
-             JOIN MYFRANCHISE_UNIDADES u ON v.UNIDADE_ID = u.ID
-             ORDER BY v.DATAVENDA DESC`
-          );
         }
-        const list = rows.rows || rows;
-        const totalQtd = list.reduce((s, r) => s + Number(r.QUANTIDADE || r.quantidade || 0), 0);
-        const totalReceita = list.reduce((s, r) => s + (Number(r.QUANTIDADE || r.quantidade || 0) * Number(r.VALORUNITARIO || r.valorUnitario || 0)), 0);
-        const porLoja = {};
-        for (const r of list) {
-          const uid = r.UNIDADE_ID || r.unidade_ID;
-          const nome = r.NOME || r.nome || uid;
-          if (!porLoja[uid]) porLoja[uid] = { nome, qtd: 0, receita: 0 };
-          const qtd = Number(r.QUANTIDADE || r.quantidade || 0);
-          const val = Number(r.VALORUNITARIO || r.valorUnitario || 0);
-          porLoja[uid].qtd += qtd;
-          porLoja[uid].receita += qtd * val;
-        }
-        const lojas = Object.values(porLoja).sort((a, b) => b.receita - a.receita).slice(0, 10);
+
+        const t = totals[0] || {};
         return ok({
-          totalTransacoes: list.length,
-          totalUnidadesVendidas: totalQtd,
-          receitaTotal: `R$ ${totalReceita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-          topLojas: lojas.map(l => ({ ...l, receita: `R$ ${l.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` }))
+          summary: {
+            total_receipts: t.receipts,
+            total_units_sold: t.total_qty,
+            total_revenue: `R$ ${Number(t.total_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            total_margin: `R$ ${Number(t.total_margin || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          },
+          top_articles: topArticles.map(r => ({
+            article: r.article_name,
+            qty: r.qty,
+            revenue: `R$ ${Number(r.revenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          })),
+          top_stores: topStores.map(r => ({
+            store: r.store_name,
+            city: r.city,
+            qty: r.qty,
+            revenue: `R$ ${Number(r.revenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          })),
         });
-      } catch (e) { LOG.error('get_sellout_hoje', e); return err(e.message); }
+      } catch (e) { LOG.error('get_sellout_summary', e); return err(e.message); }
+    }
+  );
+
+  // ── TOOL 7: get_store_overview ────────────────────────────────────────────────
+  server.tool('get_store_overview',
+    `Returns a 360° overview of a specific store — inventory status, NPS, recent sales, demand forecast, and active campaigns.
+Use whenever the user mentions a store name or store ID alongside any of these intents: overview, summary, situation, status, full picture, tell me about, how is, what is happening, what is going on, show me, or simply asks about the store without specifying a data type.
+Examples: "Give me a full overview of SP Jardins", "What is the situation at BR-SP-001?", "How is Buenos Aires doing?", "Tell me about our Miami store", "SP Jardins — what is going on?", "Show me SP Jardins."
+This is the primary tool for the demo hero story (SP Jardins stockout crisis).`,
+    {
+      store_id: z.string().describe('Store ID or name (e.g. "SP Jardins" or "BR-SP-001")'),
+    },
+    async ({ store_id }) => {
+      try {
+        const conn = await getHanaConn();
+        const sid = await resolveStore(conn, store_id);
+        if (!sid) return err(`Store not found: ${store_id}`);
+
+        // Run all queries in parallel
+        const [storeInfo, inventory, nps, sales, forecast] = await Promise.all([
+          hanaExec(conn, `SELECT * FROM "${JG}"."CV_DIM_STORE" WHERE STORE_ID = ?`, [sid]),
+          hanaExec(conn,
+            `SELECT ARTICLE_NAME, COLOR, SIZE_VAL, QTY_ON_HAND, DAYS_TO_STOCKOUT,
+                    REVENUE_AT_RISK, STOCK_STATUS, STOCK_STATUS_LABEL
+             FROM "${JG}"."CV_FACT_INVENTORY"
+             WHERE STORE_ID = ? AND STOCK_STATUS IN ('R','Y')
+             ORDER BY STOCK_STATUS ASC, REVENUE_AT_RISK DESC`, [sid]),
+          hanaExec(conn,
+            `SELECT COUNT(*) AS responses, AVG(SCORE) AS avg_nps,
+                    SUM(IS_DETRACTOR) AS detractors, SUM(IS_PROMOTER) AS promoters
+             FROM "${JG}"."CV_FACT_NPS" WHERE STORE_ID = ?`, [sid]),
+          hanaExec(conn,
+            `SELECT SUM(ITEM_NET_AMOUNT) AS revenue, SUM(QTY) AS units
+             FROM "${JG}"."CV_FACT_SELLOUT" WHERE STORE_ID = ?`, [sid]),
+          hanaExec(conn,
+            `SELECT ARTICLE_NAME, COLOR, SIZE_VAL, QTY_FORECAST,
+                    DAYS_TO_STOCKOUT, DEMAND_MULTIPLIER, RISK_LABEL
+             FROM "${JG}"."CV_FACT_FORECAST"
+             WHERE STORE_ID = ? ORDER BY REVENUE_AT_RISK DESC LIMIT 5`, [sid]),
+        ]);
+
+        const store = storeInfo[0] || {};
+        const npsData = nps[0] || {};
+        const salesData = sales[0] || {};
+        const totalRevAtRisk = inventory.reduce((s, r) => s + Number(r.revenue_at_risk || 0), 0);
+
+        return ok({
+          store: {
+            store_id:      sid,
+            name:          store.store_name,
+            city:          store.city,
+            region:        store.region,
+            country:       store.country_name,
+            franchisee:    store.franchisee_name,
+            status:        store.status === 'A' ? 'Active' : store.status,
+          },
+          inventory_alert: {
+            at_risk_skus:       inventory.length,
+            critical:           inventory.filter(r => r.stock_status === 'R').length,
+            attention:          inventory.filter(r => r.stock_status === 'Y').length,
+            total_revenue_at_risk: `R$ ${totalRevAtRisk.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            top_risks:          inventory.slice(0, 3),
+          },
+          nps: {
+            avg_score:   npsData.responses > 0 ? Number(npsData.avg_nps).toFixed(1) : 'No data',
+            responses:   npsData.responses,
+            promoters:   npsData.promoters,
+            detractors:  npsData.detractors,
+            health:      Number(npsData.avg_nps) >= 8 ? '🟢 Healthy' : Number(npsData.avg_nps) >= 6 ? '🟡 At risk' : '🔴 Critical',
+          },
+          sales: {
+            total_revenue: `R$ ${Number(salesData.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            units_sold: salesData.units,
+          },
+          demand_forecast: forecast,
+          context: 'Tropical Summer campaign launches 2026-08-12. Heat wave forecast (38°C) driving +35% footwear demand.',
+        });
+      } catch (e) { LOG.error('get_store_overview', e); return err(e.message); }
     }
   );
 
   return server;
 }
+
+// ── Express app ───────────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json());
 
+const TOOLS = [
+  'get_stockout_alert',
+  'get_substitute_suggest',
+  'generate_replenishment_order',
+  'get_demand_forecast',
+  'get_nps_analysis',
+  'get_sellout_summary',
+  'get_store_overview',
+];
+
 app.get('/health', (_req, res) => res.json({
-  status: 'UP', service: 'runmyfranchise-mcp', version: '1.0.0',
-  tools: ['get_lojas_em_risco','get_cobertura_estoque','get_pedidos_pendentes',
-          'get_recomendacoes','get_score_rede','acionar_reposicao',
-          'get_substitutos','get_grade_ruptura','get_previsao_receita','get_feed_novidades',
-          'get_correlacao_nps_ruptura','get_sellout_hoje',
-          'process_replenishment_orders','confirm_single_order','reject_order'],
-  mes_referencia: MES_REF, timestamp: new Date().toISOString(),
+  status: 'UP',
+  service: 'tropicalia-mcp',
+  version: '2.0.0',
+  model: 'RUNMYFRANCHISE_JG',
+  tools: TOOLS,
+  tool_count: TOOLS.length,
+  timestamp: new Date().toISOString(),
 }));
 
+// ── Card REST endpoints (RUNMYFRANCHISE_MF) ───────────────────────────────────
+// Retornam JSON OData-compatible: { value: [...] }
+// Usados pelos UI Integration Cards no SAP Build Work Zone Advanced.
+
+// card01 — Alertas de Ruptura (Franqueadora — rede toda)
+app.get('/cards/stockout-alerts', async (_req, res) => {
+  try {
+    const conn = await getHanaConn();
+    const rows = await hanaExec(conn, `
+      SELECT i.STORE_ID, s.STORE_NAME, s.CITY, s.COUNTRY_CODE,
+             i.MATNR, k.MAKTX AS ARTICLE_NAME, i.COLOR, i.SIZE_VAL,
+             i.QTY_ON_HAND, i.STOCK_STATUS,
+             CASE i.STOCK_STATUS WHEN 'R' THEN 'Critical' WHEN 'Y' THEN 'Attention' ELSE 'OK' END AS STATUS_LABEL,
+             COALESCE(f.QTY_FORECAST, 0)                      AS QTY_FORECAST,
+             COALESCE(f.DAYS_TO_STOCKOUT, 0)                  AS DAYS_TO_STOCKOUT,
+             ROUND(COALESCE(f.QTY_FORECAST,0) * COALESCE(p.RETAIL_PRICE,0), 2) AS REVENUE_AT_RISK
+      FROM "${MF}"."T_INVENTORY_SNAPSHOT" i
+      JOIN "${MF}"."M_STORE" s  ON s.STORE_ID = i.STORE_ID
+      JOIN "${MF}"."MARA"    p  ON p.MATNR     = i.MATNR
+      JOIN "${MF}"."MAKT"    k  ON k.MATNR     = i.MATNR AND k.SPRAS = 'E' AND k.MANDT = '100'
+      LEFT JOIN "${MF}"."T_DEMAND_FORECAST" f
+             ON f.STORE_ID = i.STORE_ID AND f.MATNR = i.MATNR
+            AND f.COLOR = i.COLOR AND f.SIZE_VAL = i.SIZE_VAL
+      WHERE i.STOCK_STATUS IN ('R','Y')
+      ORDER BY i.STOCK_STATUS ASC, REVENUE_AT_RISK DESC
+    `);
+    res.json({ value: rows });
+  } catch (e) { LOG.error('cards/stockout-alerts', e); res.status(500).json({ error: e.message }); }
+});
+
+// card01 header — contagem de SKUs críticos
+app.get('/cards/stockout-count', async (_req, res) => {
+  try {
+    const conn = await getHanaConn();
+    const rows = await hanaExec(conn, `
+      SELECT
+        SUM(CASE WHEN STOCK_STATUS='R' THEN 1 ELSE 0 END) AS critical,
+        SUM(CASE WHEN STOCK_STATUS='Y' THEN 1 ELSE 0 END) AS attention,
+        COUNT(*) AS total
+      FROM "${MF}"."T_INVENTORY_SNAPSHOT"
+      WHERE STOCK_STATUS IN ('R','Y')
+    `);
+    res.json({ value: rows });
+  } catch (e) { LOG.error('cards/stockout-count', e); res.status(500).json({ error: e.message }); }
+});
+
+// card02 — NPS da Rede (Franqueadora — por loja)
+app.get('/cards/nps-summary', async (_req, res) => {
+  try {
+    const conn = await getHanaConn();
+    const rows = await hanaExec(conn, `
+      SELECT n.STORE_ID, s.STORE_NAME, s.CITY,
+             COUNT(*)                                              AS RESPONSES,
+             ROUND(AVG(n.SCORE), 1)                               AS AVG_NPS,
+             SUM(CASE WHEN n.SCORE >= 9 THEN 1 ELSE 0 END)        AS PROMOTERS,
+             SUM(CASE WHEN n.SCORE <= 6 THEN 1 ELSE 0 END)        AS DETRACTORS,
+             CASE
+               WHEN AVG(n.SCORE) >= 8 THEN 'Good'
+               WHEN AVG(n.SCORE) >= 6 THEN 'Critical'
+               ELSE 'Error'
+             END AS NPS_STATE
+      FROM "${MF}"."T_NPS" n
+      JOIN "${MF}"."M_STORE" s ON s.STORE_ID = n.STORE_ID
+      GROUP BY n.STORE_ID, s.STORE_NAME, s.CITY
+      ORDER BY AVG_NPS ASC
+    `);
+    res.json({ value: rows });
+  } catch (e) { LOG.error('cards/nps-summary', e); res.status(500).json({ error: e.message }); }
+});
+
+// card02 header — NPS médio da rede
+app.get('/cards/nps-avg', async (_req, res) => {
+  try {
+    const conn = await getHanaConn();
+    const rows = await hanaExec(conn, `
+      SELECT ROUND(AVG(SCORE), 1) AS avg_nps, COUNT(*) AS total_responses
+      FROM "${MF}"."T_NPS"
+    `);
+    res.json({ value: rows });
+  } catch (e) { LOG.error('cards/nps-avg', e); res.status(500).json({ error: e.message }); }
+});
+
+// card03 — Receita em Risco por Loja (Franqueadora — bar chart)
+app.get('/cards/revenue-at-risk', async (_req, res) => {
+  try {
+    const conn = await getHanaConn();
+    const rows = await hanaExec(conn, `
+      SELECT i.STORE_ID, s.STORE_NAME,
+             SUM(CASE WHEN i.STOCK_STATUS='R' THEN 1 ELSE 0 END) AS CRITICAL_SKUS,
+             SUM(CASE WHEN i.STOCK_STATUS='Y' THEN 1 ELSE 0 END) AS ATTENTION_SKUS,
+             ROUND(SUM(COALESCE(f.QTY_FORECAST,0) * COALESCE(p.RETAIL_PRICE,0)), 2) AS REVENUE_AT_RISK
+      FROM "${MF}"."T_INVENTORY_SNAPSHOT" i
+      JOIN "${MF}"."M_STORE" s ON s.STORE_ID = i.STORE_ID
+      JOIN "${MF}"."MARA"    p ON p.MATNR     = i.MATNR
+      LEFT JOIN "${MF}"."T_DEMAND_FORECAST" f
+             ON f.STORE_ID = i.STORE_ID AND f.MATNR = i.MATNR
+            AND f.COLOR = i.COLOR AND f.SIZE_VAL = i.SIZE_VAL
+      WHERE i.STOCK_STATUS IN ('R','Y')
+      GROUP BY i.STORE_ID, s.STORE_NAME
+      ORDER BY REVENUE_AT_RISK DESC
+    `);
+    res.json({ value: rows });
+  } catch (e) { LOG.error('cards/revenue-at-risk', e); res.status(500).json({ error: e.message }); }
+});
+
+// card03 header — receita total em risco
+app.get('/cards/revenue-at-risk-total', async (_req, res) => {
+  try {
+    const conn = await getHanaConn();
+    const rows = await hanaExec(conn, `
+      SELECT ROUND(SUM(COALESCE(f.QTY_FORECAST,0) * COALESCE(p.RETAIL_PRICE,0)), 2) AS total_revenue_at_risk,
+             SUM(CASE WHEN i.STOCK_STATUS='R' THEN 1 ELSE 0 END) AS critical_skus
+      FROM "${MF}"."T_INVENTORY_SNAPSHOT" i
+      JOIN "${MF}"."MARA" p ON p.MATNR = i.MATNR
+      LEFT JOIN "${MF}"."T_DEMAND_FORECAST" f
+             ON f.STORE_ID=i.STORE_ID AND f.MATNR=i.MATNR
+            AND f.COLOR=i.COLOR AND f.SIZE_VAL=i.SIZE_VAL
+      WHERE i.STOCK_STATUS IN ('R','Y')
+    `);
+    res.json({ value: rows });
+  } catch (e) { LOG.error('cards/revenue-at-risk-total', e); res.status(500).json({ error: e.message }); }
+});
+
+// card04 — Meu Estoque (Franqueada — por loja específica)
+app.get('/cards/my-inventory', async (req, res) => {
+  const store = req.query.store || 'BR-SP-001';
+  try {
+    const conn = await getHanaConn();
+    // header: contagem de itens em risco
+    const header = await hanaExec(conn, `
+      SELECT SUM(CASE WHEN STOCK_STATUS='R' THEN 1 ELSE 0 END) AS critical,
+             SUM(CASE WHEN STOCK_STATUS='Y' THEN 1 ELSE 0 END) AS attention
+      FROM "${MF}"."T_INVENTORY_SNAPSHOT"
+      WHERE STORE_ID = ? AND STOCK_STATUS IN ('R','Y')
+    `, [store]);
+    // items: SKUs mais urgentes
+    const items = await hanaExec(conn, `
+      SELECT i.MATNR, k.MAKTX AS ARTICLE_NAME, i.COLOR, i.SIZE_VAL,
+             i.QTY_ON_HAND, i.STOCK_STATUS,
+             CASE i.STOCK_STATUS WHEN 'R' THEN 'Critical' WHEN 'Y' THEN 'Attention' ELSE 'OK' END AS STATUS_LABEL,
+             CASE i.STOCK_STATUS WHEN 'R' THEN 'Error' WHEN 'Y' THEN 'Warning' ELSE 'Success' END AS STATUS_STATE,
+             COALESCE(f.QTY_FORECAST, 0)     AS QTY_FORECAST,
+             COALESCE(f.DAYS_TO_STOCKOUT, 0) AS DAYS_TO_STOCKOUT,
+             ROUND(COALESCE(f.QTY_FORECAST,0) * COALESCE(p.RETAIL_PRICE,0), 2) AS REVENUE_AT_RISK
+      FROM "${MF}"."T_INVENTORY_SNAPSHOT" i
+      JOIN "${MF}"."MARA" p ON p.MATNR = i.MATNR
+      JOIN "${MF}"."MAKT" k ON k.MATNR = i.MATNR AND k.SPRAS='E' AND k.MANDT='100'
+      LEFT JOIN "${MF}"."T_DEMAND_FORECAST" f
+             ON f.STORE_ID=i.STORE_ID AND f.MATNR=i.MATNR
+            AND f.COLOR=i.COLOR AND f.SIZE_VAL=i.SIZE_VAL
+      WHERE i.STORE_ID = ? AND i.STOCK_STATUS IN ('R','Y')
+      ORDER BY i.STOCK_STATUS ASC, REVENUE_AT_RISK DESC
+      LIMIT 6
+    `, [store]);
+    res.json({ summary: header[0] || {}, value: items });
+  } catch (e) { LOG.error('cards/my-inventory', e); res.status(500).json({ error: e.message }); }
+});
+
+// card05 — Pedidos de Reposição (Franqueada — por loja)
+app.get('/cards/my-orders', async (req, res) => {
+  const store = req.query.store || 'BR-SP-001';
+  try {
+    const conn = await getHanaConn();
+    const header = await hanaExec(conn, `
+      SELECT SUM(CASE WHEN STATUS='PENDING' THEN 1 ELSE 0 END) AS pending,
+             SUM(CASE WHEN STATUS='DRAFT'   THEN 1 ELSE 0 END) AS draft
+      FROM "${MF}"."T_SELLIN_HDR" WHERE STORE_ID = ?
+    `, [store]);
+    const orders = await hanaExec(conn, `
+      SELECT h.ORDER_ID, h.STORE_ID, h.ORDER_DATE, h.STATUS,
+             h.TOTAL_AMOUNT, h.CURRENCY, h.EXPECTED_DELIVERY,
+             (SELECT COUNT(*) FROM "${MF}"."T_SELLIN_ITM" i WHERE i.ORDER_ID = h.ORDER_ID) AS ITEM_COUNT,
+             CASE h.STATUS
+               WHEN 'PENDING'   THEN 'Warning'
+               WHEN 'DRAFT'     THEN 'Information'
+               WHEN 'DELIVERED' THEN 'Success'
+               ELSE 'None'
+             END AS STATUS_STATE
+      FROM "${MF}"."T_SELLIN_HDR" h
+      WHERE h.STORE_ID = ?
+      ORDER BY h.ORDER_DATE DESC
+      LIMIT 5
+    `, [store]);
+    res.json({ summary: header[0] || {}, value: orders });
+  } catch (e) { LOG.error('cards/my-orders', e); res.status(500).json({ error: e.message }); }
+});
+
+// ── MCP endpoint ──────────────────────────────────────────────────────────────
 app.all('/mcp', async (req, res) => {
-  const method = req.body?.method || '?'
-  LOG.info(`MCP ${req.method} — ${method}`)
+  const method = req.body?.method || '?';
+  LOG.info(`MCP ${req.method} — ${method}`);
   const server    = buildServer();
-  // sessionIdGenerator: undefined = modo stateless (sem sessão persistente)
-  // Necessário para clientes como Joule Studio que não enviam mcp-session-id
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   try {
     await server.connect(transport);
@@ -686,5 +789,3 @@ app.all('/mcp', async (req, res) => {
 if (require.main === module) {
   cds.connect.to('db').then(() => app.listen(PORT, () => LOG.info(`MCP Server on port ${PORT}`)));
 }
-
-module.exports = { app, buildServer };
