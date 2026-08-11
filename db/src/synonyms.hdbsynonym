@@ -1,29 +1,29 @@
 {
-  "Store": {
+  "myfranchise::Store": {
     "target": { "object": "M_STORE", "schema": "RUNMYFRANCHISE_MF" }
   },
-  "InventorySnapshot": {
+  "myfranchise::InventorySnapshot": {
     "target": { "object": "T_INVENTORY_SNAPSHOT", "schema": "RUNMYFRANCHISE_MF" }
   },
-  "NpsResponse": {
+  "myfranchise::NpsResponse": {
     "target": { "object": "T_NPS", "schema": "RUNMYFRANCHISE_MF" }
   },
-  "SellinHdr": {
+  "myfranchise::SellinHdr": {
     "target": { "object": "T_SELLIN_HDR", "schema": "RUNMYFRANCHISE_MF" }
   },
-  "SellinItm": {
+  "myfranchise::SellinItm": {
     "target": { "object": "T_SELLIN_ITM", "schema": "RUNMYFRANCHISE_MF" }
   },
-  "DemandForecast": {
+  "myfranchise::DemandForecast": {
     "target": { "object": "T_DEMAND_FORECAST", "schema": "RUNMYFRANCHISE_MF" }
   },
-  "Material": {
+  "myfranchise::Material": {
     "target": { "object": "MARA", "schema": "RUNMYFRANCHISE_MF" }
   },
-  "MaterialDesc": {
+  "myfranchise::MaterialDesc": {
     "target": { "object": "MAKT", "schema": "RUNMYFRANCHISE_MF" }
   },
-  "Substitute": {
+  "myfranchise::Substitute": {
     "target": { "object": "M_SUBSTITUTE", "schema": "RUNMYFRANCHISE_MF" }
   }
 }
