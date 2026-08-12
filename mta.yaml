@@ -57,6 +57,9 @@ modules:
         - db/
         - joule-mcp/
         - rpt-predicao/
+        - .git/
+        - mta-op-*/
+        - .claude/
     provides:
       - name: mcp-api
         properties:
