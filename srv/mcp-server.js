@@ -234,11 +234,14 @@ Returns: STORE_NAME, ARTICLE_NAME, MATNR, COLOR, SIZE_VAL, QTY_ON_HAND, QTY_FORE
           byStore[r.store_name].rev += Number(r.revenue_at_risk || 0);
         }
 
+        const within3days = rows.filter(r => r.days_to_stockout <= 3).length;
+
         return ok({
           summary: {
             total_alerts: rows.length,
             critical: critical.length,
             attention: attention.length,
+            stockout_within_3_days: within3days,
             total_revenue_at_risk: `R$ ${totalRev.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
             by_store: Object.entries(byStore).map(([name, d]) => ({
               store: name,
