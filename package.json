@@ -12,6 +12,7 @@
     "@sap-ai-sdk/orchestration": "^2.13.0",
     "@sap/cds": "^10",
     "@sap/cds-messaging": "^1.8.3",
+    "@sap/hana-client": "^2.29.25",
     "@sap/hdi-deploy": "^5.7.0",
     "@sap/xb-msg-amqp-v100": "^0.9.58",
     "@sap/xssec": "^4.13.3",

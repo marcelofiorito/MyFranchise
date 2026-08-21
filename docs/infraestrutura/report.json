@@ -1,0 +1,52 @@
+{
+  "status": "SUCCEEDED",
+  "contents": {
+    "total": 31,
+    "failed": 0,
+    "status": "SUCCEEDED",
+    "messages": {
+      "AppId_tropicalia.card03.saude.regiao": {
+        "error": [],
+        "warning": [
+          "sap.ui5/dependencies/minUI5Version cannot be null if it is a UI5 app"
+        ]
+      },
+      "AppId_tropicalia.card04.cobertura.sku": {
+        "error": [],
+        "warning": [
+          "sap.ui5/dependencies/minUI5Version cannot be null if it is a UI5 app"
+        ]
+      },
+      "AppId_tropicalia.card01.estoque.status": {
+        "error": [],
+        "warning": [
+          "sap.ui5/dependencies/minUI5Version cannot be null if it is a UI5 app"
+        ]
+      },
+      "AppId_tropicalia.card02.previsao.receita": {
+        "error": [],
+        "warning": [
+          "sap.ui5/dependencies/minUI5Version cannot be null if it is a UI5 app"
+        ]
+      },
+      "AppId_tropicalia.card05.pedidos.pendentes": {
+        "error": [],
+        "warning": [
+          "sap.ui5/dependencies/minUI5Version cannot be null if it is a UI5 app"
+        ]
+      }
+    },
+    "correlationId": "cf8a862e-d858-4d11-6f86-1c231c375caf"
+  },
+  "reportId": {
+    "contextId": "SUB_ACCOUNT",
+    "subdomain": "build-platform-rfm61ms1",
+    "instanceId": "SAAS_APPROUTER_HTML5_APP_REPO",
+    "providerId": "saas_approuter",
+    "contextType": "sub_account",
+    "scenarioName": "WORKZONE",
+    "subaccountId": "0a3bf8c0-f8f0-438e-8326-50322e696406",
+    "identityZoneId": "0a3bf8c0-f8f0-438e-8326-50322e696406"
+  },
+  "correlationId": "cf8a862e-d858-4d11-6f86-1c231c375caf"
+}

@@ -1,0 +1,107 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card03.receita.risco",
+    "type": "card",
+    "title": "Revenue at Risk by Store",
+    "subTitle": "Projected loss — critical SKUs",
+    "applicationVersion": {
+      "version": "2.1.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://bar-chart"
+    }
+  },
+  "sap.card": {
+    "type": "Table",
+    "configuration": {
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "header": {
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/revenue-at-risk-total",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value/0"
+      },
+      "title": "Total Revenue at Risk",
+      "subTitle": "Projected loss — critical SKUs",
+      "unitOfMeasurement": "R$",
+      "mainIndicator": {
+        "number": "{= (${total_revenue_at_risk} / 1000).toFixed(1)}",
+        "unit": "K",
+        "state": "{= ${total_revenue_at_risk} > 50000 ? 'Error' : ${total_revenue_at_risk} > 10000 ? 'Critical' : 'Good'}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Critical SKUs",
+          "number": "{critical_skus}"
+        }
+      ]
+    },
+    "content": {
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/revenue-at-risk",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value"
+      },
+      "row": {
+        "highlight": "{= ${revenue_at_risk} > 5000 ? 'Error' : ${revenue_at_risk} > 1000 ? 'Warning' : 'None'}",
+        "columns": [
+          { "title": "Store", "value": "{store_name}", "width": "40%", "identifier": true },
+          { "title": "Critical", "value": "{critical_skus}", "hAlign": "End", "width": "20%",
+            "state": "{= ${critical_skus} > 0 ? 'Error' : 'None'}" },
+          { "title": "Attention", "value": "{attention_skus}", "hAlign": "End", "width": "20%",
+            "state": "{= ${attention_skus} > 0 ? 'Warning' : 'None'}" },
+          { "title": "Revenue R$", "value": "{revenue_at_risk}", "hAlign": "End", "width": "20%",
+            "state": "{= ${revenue_at_risk} > 5000 ? 'Error' : ${revenue_at_risk} > 1000 ? 'Warning' : 'None'}" }
+        ]
+      }
+    },
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "View Details in Joule",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "StorePerformance",
+                  "action": "display"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

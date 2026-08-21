@@ -4,14 +4,18 @@
     "id": "myfranchise.networkOvp",
     "type": "application",
     "i18n": "i18n/i18n.properties",
-    "applicationVersion": { "version": "1.0.0" },
-    "title": "Visão Geral da Rede",
-    "description": "Network OVP — stockouts, NPS e pedidos da rede Tropicália",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "Network Overview",
+    "description": "Network OVP — stockouts, NPS and orders — Tropicália",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
         "type": "OData",
-        "settings": { "odataVersion": "4.0" }
+        "settings": {
+          "odataVersion": "4.0"
+        }
       }
     },
     "crossNavigation": {
@@ -19,8 +23,8 @@
         "NetworkOvp-display": {
           "semanticObject": "NetworkOvp",
           "action": "display",
-          "title": "Visão Geral da Rede",
-          "subTitle": "Ruptura · NPS · Pedidos",
+          "title": "Network Overview",
+          "subTitle": "Stockout · NPS · Orders",
           "icon": "sap-icon://home",
           "signature": {
             "parameters": {},
@@ -32,7 +36,9 @@
   },
   "sap.ui": {
     "technology": "UI5",
-    "icons": { "icon": "sap-icon://home" },
+    "icons": {
+      "icon": "sap-icon://home"
+    },
     "fullWidth": true
   },
   "sap.ovp": {
@@ -43,36 +49,36 @@
     "cards": {
       "card00": {
         "model": "mainService",
-        "template": "sap.ovp.cards.v4.analytical",
+        "template": "sap.ovp.cards.v4.list",
         "settings": {
-          "title": "SKUs em Ruptura",
-          "subTitle": "Críticos e em Atenção",
+          "title": "Revenue at Risk by Store",
+          "subTitle": "Critical & attention SKUs",
           "entitySet": "StockoutAlerts",
-          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#Donut",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Critical",
-          "dataPointAnnotationPath": "com.sap.vocabularies.UI.v1.DataPoint#StockoutCount",
-          "navigation": "dataPointNav"
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem",
+          "addODataSelect": true,
+          "navigation": "headerNav"
         }
       },
       "card01": {
         "model": "mainService",
-        "template": "sap.ovp.cards.v4.analytical",
+        "template": "sap.ovp.cards.v4.list",
         "settings": {
-          "title": "Receita em Risco por Loja",
-          "subTitle": "Top lojas com maior exposição",
+          "title": "Stockout Alerts",
+          "subTitle": "Days to stockout — critical first",
           "entitySet": "StockoutAlerts",
-          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#RevenueByStore",
-          "navigation": "dataPointNav"
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem",
+          "addODataSelect": true,
+          "navigation": "headerNav"
         }
       },
       "card02": {
         "model": "mainService",
         "template": "sap.ovp.cards.v4.table",
         "settings": {
-          "title": "NPS por Loja",
-          "subTitle": "Últimas respostas",
+          "title": "NPS by Store",
+          "subTitle": "Latest responses",
           "entitySet": "NpsResponses",
-          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#NpsSummary",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem",
           "addODataSelect": true,
           "navigation": "headerNav"
         }
@@ -81,11 +87,10 @@
         "model": "mainService",
         "template": "sap.ovp.cards.v4.list",
         "settings": {
-          "title": "Pedidos Pendentes",
-          "subTitle": "Aguardando ação",
+          "title": "Pending Orders",
+          "subTitle": "Awaiting action",
           "entitySet": "Orders",
-          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#Pending",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Pending",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem",
           "addODataSelect": true,
           "navigation": "headerNav"
         }
@@ -115,8 +120,14 @@
       },
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "settings": { "bundleName": "myfranchise.networkOvp.i18n.i18n" }
+        "settings": {
+          "bundleName": "myfranchise.networkOvp.i18n.i18n"
+        }
       }
     }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
   }
 }

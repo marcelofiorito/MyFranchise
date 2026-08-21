@@ -1,0 +1,142 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card01.alertas.ruptura",
+    "type": "card",
+    "title": "Stockout Alerts",
+    "subTitle": "Critical SKUs across the network — Tropicália Co.",
+    "applicationVersion": {
+      "version": "2.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://alert"
+    }
+  },
+  "sap.card": {
+    "type": "Analytical",
+    "configuration": {
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "header": {
+  "type": "Numeric",
+  "data": {
+    "request": {
+      "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-count",
+      "method": "GET",
+      "headers": {
+        "Accept": "application/json"
+      }
+    },
+    "path": "/value/0"
+  },
+  "title": "SKUs at Risk",
+  "subTitle": "Critical & Attention — full network",
+  "unitOfMeasurement": "SKUs",
+  "mainIndicator": {
+  "number": "{total}",
+  "state": "{= ${critical} > 5 ? 'Error' : ${critical} > 0 ? 'Critical' : 'Good'}"
+},
+  "sideIndicators": [
+  {
+    "title": "Critical",
+    "number": "{critical}"
+  },
+  {
+    "title": "Attention",
+    "number": "{attention}"
+  }
+]
+}
+,
+    "content": {
+  "chartType": "bar",
+  "legend": {
+    "visible": false
+  },
+  "plotArea": {
+    "dataLabel": {
+      "visible": true
+    },
+    "colorPalette": [
+      "#FF5A3C",
+      "#FFCC2E"
+    ]
+  },
+  "title": {
+    "text": "Revenue at Risk by Status",
+    "visible": true,
+    "alignment": "Center"
+  },
+  "data": {
+    "request": {
+      "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-by-status",
+      "method": "GET",
+      "headers": {
+        "Accept": "application/json"
+      }
+    },
+    "path": "/value"
+  },
+  "dimensions": [
+    {
+      "name": "Status",
+      "value": "{status_label}"
+    }
+  ],
+  "measures": [
+    {
+      "name": "Revenue at Risk",
+      "value": "{revenue_at_risk}"
+    }
+  ],
+  "feeds": [
+    {
+      "type": "Dimension",
+      "uid": "categoryAxis",
+      "values": ["Status"]
+    },
+    {
+      "type": "Measure",
+      "uid": "valueAxis",
+      "values": ["Revenue at Risk"]
+    }
+  ]
+}
+,
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "View All Alerts",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "StockoutAlerts",
+                  "action": "display"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

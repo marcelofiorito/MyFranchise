@@ -100,26 +100,17 @@ modules:
         - name: store-performance
           artifacts: [store-performance.zip]
           target-path: app/
-        - name: franchisee-ovp
-          artifacts: [franchisee-ovp.zip]
-          target-path: app/
         - name: orders
           artifacts: [orders.zip]
           target-path: app/
-        - name: compliance
-          artifacts: [compliance.zip]
+        - name: demo-admin
+          artifacts: [demo-admin.zip]
           target-path: app/
-        - name: onboarding
-          artifacts: [onboarding.zip]
+        - name: minha-loja
+          artifacts: [minha-loja.zip]
           target-path: app/
-        - name: categories
-          artifacts: [categories.zip]
-          target-path: app/
-        - name: admin
-          artifacts: [admin.zip]
-          target-path: app/
-        - name: sac-overview
-          artifacts: [sac-overview.zip]
+        - name: sac-story
+          artifacts: [sac-story.zip]
           target-path: app/
 
   # ------------- APPS FIORI (build → dist) --------------------
@@ -150,15 +141,6 @@ modules:
       commands: [npm install, npm run build]
       supported-platforms: []
 
-  - name: franchisee-ovp
-    type: html5
-    path: app/franchisee-ovp
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands: [npm install, npm run build]
-      supported-platforms: []
-
   - name: orders
     type: html5
     path: app/orders
@@ -168,45 +150,27 @@ modules:
       commands: [npm install, npm run build]
       supported-platforms: []
 
-  - name: compliance
+  - name: demo-admin
     type: html5
-    path: app/compliance
+    path: app/demo-admin
     build-parameters:
       build-result: dist
       builder: custom
       commands: [npm install, npm run build]
       supported-platforms: []
 
-  - name: onboarding
+  - name: minha-loja
     type: html5
-    path: app/onboarding
+    path: app/minha-loja
     build-parameters:
       build-result: dist
       builder: custom
-      commands: [npm install, npm run build]
+      commands: [npm install, npm run build:cf]
       supported-platforms: []
 
-  - name: categories
+  - name: sac-story
     type: html5
-    path: app/categories
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands: [npm install, npm run build]
-      supported-platforms: []
-
-  - name: admin
-    type: html5
-    path: app/admin
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands: [npm install, npm run build]
-      supported-platforms: []
-
-  - name: sac-overview
-    type: html5
-    path: app/sac-overview
+    path: app/sac-story
     build-parameters:
       build-result: dist
       builder: custom
@@ -294,6 +258,7 @@ resources:
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
+      - name: mcp-api
     parameters:
       service: destination
       service-plan: lite
@@ -306,6 +271,20 @@ resources:
             destinations:
               - Name: myfranchise-srv
                 URL: ~{srv-api/srv-url}
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
+              - Name: myfranchise-mcp
+                URL: ~{mcp-api/mcp-url}
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
+              - Name: SAC_DEMO
+                URL: https://demo-presalesbrazil.us10.sapanalytics.cloud
                 Authentication: NoAuthentication
                 Type: HTTP
                 ProxyType: Internet

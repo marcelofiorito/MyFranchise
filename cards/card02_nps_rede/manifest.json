@@ -1,0 +1,112 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card02.nps.rede",
+    "type": "card",
+    "title": "Network NPS",
+    "subTitle": "Customer satisfaction by store — Tropicália Co.",
+    "applicationVersion": {
+      "version": "2.1.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://customer-and-contacts"
+    }
+  },
+  "sap.card": {
+    "type": "List",
+    "configuration": {
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "header": {
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/nps-avg",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value/0"
+      },
+      "title": "Network Average NPS",
+      "subTitle": "Scale 0–10 — all active stores",
+      "unitOfMeasurement": "/ 10",
+      "mainIndicator": {
+        "number": "{= parseFloat(${avg_nps}).toFixed(1)}",
+        "state": "{= parseFloat(${avg_nps}) >= 8 ? 'Good' : parseFloat(${avg_nps}) >= 6 ? 'Critical' : 'Error'}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Responses",
+          "number": "{total_responses}"
+        }
+      ]
+    },
+    "content": {
+      "maxItems": 5,
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/nps-summary",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value"
+      },
+      "item": {
+        "icon": {
+          "src": "{= parseFloat(${avg_nps}) >= 8 ? 'sap-icon://thumb-up' : parseFloat(${avg_nps}) >= 6 ? 'sap-icon://warning' : 'sap-icon://thumb-down'}",
+          "backgroundColor": "{= parseFloat(${avg_nps}) >= 8 ? 'Accent7' : parseFloat(${avg_nps}) >= 6 ? 'Accent4' : 'Accent1'}"
+        },
+        "title": {
+          "value": "{store_name}"
+        },
+        "description": {
+          "value": "{= ${city} + ' — ' + ${responses} + ' responses'}"
+        },
+        "info": {
+          "value": "{= 'NPS ' + parseFloat(${avg_nps}).toFixed(1)}",
+          "state": "{nps_state}"
+        },
+        "highlight": "{= parseFloat(${avg_nps}) >= 8 ? 'Success' : parseFloat(${avg_nps}) >= 6 ? 'Warning' : 'Error'}"
+      }
+    },
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "Analyze NPS",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "StorePerformance",
+                  "action": "display"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

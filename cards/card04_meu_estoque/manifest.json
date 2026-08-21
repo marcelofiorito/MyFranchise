@@ -1,0 +1,134 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card04.meu.estoque",
+    "type": "card",
+    "title": "My Inventory — SKUs at Risk",
+    "subTitle": "Critical and attention items — my store",
+    "applicationVersion": {
+      "version": "2.1.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://inventory"
+    }
+  },
+  "sap.card": {
+    "type": "Table",
+    "configuration": {
+      "parameters": {
+        "store": {
+          "value": "BR-SP-001",
+          "label": "Store ID",
+          "type": "string"
+        }
+      },
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "header": {
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/my-inventory?store={{parameters.store}}",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/summary"
+      },
+      "title": "Items at Risk",
+      "subTitle": "Attention or stockout — my store",
+      "unitOfMeasurement": "SKUs",
+      "mainIndicator": {
+        "number": "{= ${critical} + ${attention}}",
+        "state": "{= ${critical} > 0 ? 'Error' : ${attention} > 0 ? 'Critical' : 'Good'}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Critical",
+          "number": "{critical}"
+        },
+        {
+          "title": "Attention",
+          "number": "{attention}"
+        }
+      ]
+    },
+    "content": {
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/my-inventory?store={{parameters.store}}",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value"
+      },
+      "row": {
+        "highlight": "{status_state}",
+        "columns": [
+          {
+            "title": "Article",
+            "value": "{article_name}",
+            "width": "40%",
+            "identifier": true
+          },
+          {
+            "title": "Color / Size",
+            "value": "{= ${color} + ' ' + ${size_val}}",
+            "width": "30%"
+          },
+          {
+            "title": "Stock",
+            "value": "{qty_on_hand}",
+            "hAlign": "End",
+            "width": "15%"
+          },
+          {
+            "title": "Days",
+            "value": "{days_to_stockout}",
+            "hAlign": "End",
+            "width": "15%",
+            "state": "{= ${days_to_stockout} <= 2 ? 'Error' : ${days_to_stockout} <= 5 ? 'Warning' : 'None'}"
+          }
+        ]
+      }
+    },
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "Request Replenishment",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "MyOrders",
+                  "action": "display"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

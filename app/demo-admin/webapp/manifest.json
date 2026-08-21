@@ -1,0 +1,56 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "myfranchise.demoAdmin",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "Demo Admin",
+    "description": "Control demo data for Tropicália RunMyFranchise presentation",
+    "crossNavigation": {
+      "inbounds": {
+        "DemoAdmin-display": {
+          "semanticObject": "DemoAdmin",
+          "action": "display",
+          "title": "Demo Admin",
+          "subTitle": "Demo scenario control",
+          "icon": "sap-icon://technical-configuration",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://technical-configuration" },
+    "fullWidth": false
+  },
+  "sap.ui5": {
+    "flexEnabled": false,
+    "rootView": {
+      "viewName": "myfranchise.demoAdmin.view.Main",
+      "type": "XML",
+      "id": "mainView"
+    },
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {}
+      }
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "myfranchise.demoAdmin.i18n.i18n" }
+      }
+    }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
+  }
+}

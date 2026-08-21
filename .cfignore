@@ -1,0 +1,14 @@
+node_modules/
+gen/
+mta_archives/
+.MyFranchise_mta_build_tmp/
+app/
+db/
+joule-mcp/
+rpt-predicao/
+exemplo/
+docs/
+scripts/
+.git/
+*.mtar
+*.zip

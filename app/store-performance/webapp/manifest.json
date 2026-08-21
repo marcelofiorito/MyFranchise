@@ -4,14 +4,18 @@
     "id": "myfranchise.storePerformance",
     "type": "application",
     "i18n": "i18n/i18n.properties",
-    "applicationVersion": { "version": "1.0.0" },
-    "title": "Performance por Loja",
-    "description": "NPS e saúde operacional por unidade franqueada",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "Store Performance",
+    "description": "NPS and operational health by franchisee",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
         "type": "OData",
-        "settings": { "odataVersion": "4.0" }
+        "settings": {
+          "odataVersion": "4.0"
+        }
       }
     },
     "crossNavigation": {
@@ -19,8 +23,8 @@
         "StorePerformance-display": {
           "semanticObject": "StorePerformance",
           "action": "display",
-          "title": "Performance por Loja",
-          "subTitle": "NPS e saúde operacional",
+          "title": "Store Performance",
+          "subTitle": "NPS and operational health",
           "icon": "sap-icon://survey",
           "signature": {
             "parameters": {},
@@ -32,7 +36,9 @@
   },
   "sap.ui": {
     "technology": "UI5",
-    "icons": { "icon": "sap-icon://survey" },
+    "icons": {
+      "icon": "sap-icon://survey"
+    },
     "fullWidth": true
   },
   "sap.ui5": {
@@ -58,7 +64,9 @@
       },
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "settings": { "bundleName": "myfranchise.storePerformance.i18n.i18n" }
+        "settings": {
+          "bundleName": "myfranchise.storePerformance.i18n.i18n"
+        }
       }
     },
     "routing": {
@@ -86,7 +94,9 @@
               "initialLoad": true,
               "navigation": {
                 "NpsResponses": {
-                  "detail": { "route": "NpsResponsesObjectPage" }
+                  "detail": {
+                    "route": "NpsResponsesObjectPage"
+                  }
                 }
               }
             }
@@ -104,5 +114,9 @@
         }
       }
     }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
   }
 }

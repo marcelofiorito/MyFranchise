@@ -1,0 +1,35 @@
+<mvc:View
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:viz="sap.viz.ui5.controls"
+  xmlns:vizFrame="sap.viz.ui5.controls.common.feeds"
+  xmlns:vizData="sap.viz.ui5.data"
+  controllerName="tropicalia.card01.custom.test.controller.Main"
+  displayBlock="true">
+
+  <viz:VizFrame
+    id="vizFrame"
+    uiConfig="{applicationSet:'fiori'}"
+    vizType="bar"
+    width="100%"
+    height="220px">
+
+    <viz:dataset>
+      <vizData:FlattenedDataset data="{/items}">
+        <vizData:dimensions>
+          <vizData:DimensionDefinition name="Status" value="{status_label}"/>
+        </vizData:dimensions>
+        <vizData:measures>
+          <vizData:MeasureDefinition name="Revenue at Risk" value="{revenue_at_risk}"/>
+        </vizData:measures>
+      </vizData:FlattenedDataset>
+    </viz:dataset>
+
+    <viz:feeds>
+      <vizFrame:FeedItem uid="valueAxis" type="Measure" values="Revenue at Risk"/>
+      <vizFrame:FeedItem uid="categoryAxis" type="Dimension" values="Status"/>
+    </viz:feeds>
+
+  </viz:VizFrame>
+
+</mvc:View>

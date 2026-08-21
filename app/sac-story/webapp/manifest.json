@@ -1,0 +1,53 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "myfranchise.sacStory",
+    "type": "application",
+    "title": "Analytics",
+    "description": "SAC Story — RunMyFranchise network analytics",
+    "applicationVersion": { "version": "1.0.0" },
+    "crossNavigation": {
+      "inbounds": {
+        "SACStory-display": {
+          "semanticObject": "SACStory",
+          "action": "display",
+          "title": "Analytics",
+          "subTitle": "Network Dashboard",
+          "icon": "sap-icon://bar-chart",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://bar-chart" },
+    "fullWidth": true
+  },
+  "sap.ui5": {
+    "rootView": {
+      "viewName": "myfranchise.sacStory.view.Main",
+      "type": "XML",
+      "id": "app"
+    },
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {}
+      }
+    },
+    "flexEnabled": false
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
+  },
+  "sap.fiori": {
+    "registrationIds": ["myfranchise-sac-story"],
+    "archeType": "analytical"
+  }
+}

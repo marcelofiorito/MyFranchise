@@ -1,0 +1,117 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card10.sp.revenue",
+    "type": "card",
+    "title": "Revenue at Risk — SP Jardins",
+    "subTitle": "Potential lost revenue from at-risk SKUs",
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://alert"
+    }
+  },
+  "sap.card": {
+    "type": "Object",
+    "configuration": {
+      "parameters": {
+        "store": {
+          "value": "BR-SP-001",
+          "label": "Store ID",
+          "type": "string"
+        }
+      },
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "data": {
+      "request": {
+        "url": "{{destinations.RunMyFranchise-MCP}}/cards/my-revenue?store={{parameters.store}}",
+        "method": "GET",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "path": "/summary"
+    },
+    "header": {
+      "type": "Numeric",
+      "title": "Revenue at Risk",
+      "subTitle": "SP Jardins — current scenario",
+      "unitOfMeasurement": "BRL",
+      "mainIndicator": {
+        "number": "{revenue_at_risk}",
+        "state": "{revenue_state}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Critical SKUs",
+          "number": "{critical_skus}"
+        },
+        {
+          "title": "Attention SKUs",
+          "number": "{attention_skus}"
+        }
+      ]
+    },
+    "content": {
+      "groups": [
+        {
+          "title": "Stock Alert Summary",
+          "items": [
+            {
+              "label": "Revenue at Risk (BRL)",
+              "value": "{revenue_at_risk}",
+              "state": "{revenue_state}"
+            },
+            {
+              "label": "Critical (Red) SKUs",
+              "value": "{critical_skus}",
+              "state": "Error"
+            },
+            {
+              "label": "Attention (Yellow) SKUs",
+              "value": "{attention_skus}",
+              "state": "Warning"
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "View At-Risk SKUs",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "MinhaLoja",
+                  "action": "display"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

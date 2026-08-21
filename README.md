@@ -1,567 +1,151 @@
-# RunMyFranchise
+# RunMyFranchise — Tropicália Co.
 
 **🇧🇷 Português** · [🇬🇧 English](README.en.md)
 
-> **Solução SAP BTP para gestão de redes de franquias**
-> Dragons' Den: Learn to Win Edition 2026 — SAP Solution Advisory
+> Plataforma de inteligência operacional para redes de franquias de moda tropical no SAP BTP.
 
 ---
 
 ## Visão Geral
 
-**Problema:** Franqueadoras enfrentam dificuldade para gerenciar e expandir redes de forma padronizada. Informações ficam descentralizadas, compliance é manual, KPIs chegam com atraso e franqueados operam como ilhas — sem visibilidade da própria performance nem orientação proativa.
+**Tropicália Co.** é uma rede de franquias de moda tropical com 7 lojas em Brasil, Argentina, EUA e Portugal. A plataforma RunMyFranchise conecta franqueadora e franqueados em tempo real, com dados centralizados no HANA Cloud e SAP Joule como copiloto de IA.
 
-**Solução:** Plataforma SAP BTP que conecta franqueadora e franqueados em tempo real: painel executivo da rede, compliance automático, agentes de IA para recomendações e reposição de estoque, broker de eventos autônomo (AEM) e portal do franqueado com dashboard próprio.
-
-**Persona âncora:** Gestor da Franqueadora — Diretor de Operações, rede de 300 lojas fashion/lifestyle (R$ 177–179M/trimestre), quer dobrar a rede sem multiplicar o caos.
+**Cenário da demo:** Crise de ruptura de estoque às vésperas da campanha "Verão Tropical" (início: 12/08/2026). A loja SP Jardins está a 2 dias de zerar o Chinelo Tucano Azul Ipanema tamanho 37-38 — com NPS caindo de 9,2 para 5,4 e R$ 42.500 em risco só nessa loja.
 
 ---
 
-## Caso de Foco — Ruptura de Estoque
+## Stack Técnico
 
-Ruptura de estoque é um dos principais riscos operacionais em redes de franquias: falta de produto gera venda perdida, insatisfação do franqueado e dano à marca. O diferencial está em **antecipar** a ruptura considerando sazonalidade regional — a mesma estratégia de reposição não serve para todas as regiões.
-
-**Demonstração com dados reais (julho — mês de referência):**
-
-| Loja | Região | SKU | Cobertura (jul) | Status |
-|---|---|---|---|---|
-| Recife (u178) | NE | Sandália Feminina (MR550053) | 2,6 dias | RUPTURA |
-| Salvador (u156) | NE | Sandália Feminina (MR550053) | 1,8 dias | RUPTURA |
-| Porto Alegre (u147) | S | Sandália Feminina (MR550053) | 66,7 dias | OK |
-| Porto Alegre (u147) | S | Calça Jeans Masculina (MR550061) | 1,8 dias | RUPTURA |
-
-Mesmo produto, mesmo mês → risco oposto por região. O agente calcula cobertura com fator sazonal regional e gera pedidos de reposição com justificativa do gpt-4o, considerando também o calendário de promoções.
-
-**Grade Cor×Tamanho:** 2.022 itens de estoque com 117 em RUPTURA distribuídos em 8 produtos × cores × tamanhos.
-
-**Substitutos:** 17 mapeamentos de produto substituto para guia "Se X → Ofereça Y" (disponível via Joule `get_substitutos`).
-
-> **Cenário da demo:** o caso de ruptura de estoque é o foco principal da demonstração de 26/08. Outros cenários (compliance, recomendações IA, performance por categoria) poderão ser incluídos conforme análise do time.
-
-### Fluxo da Demo
-
-O fluxo central é a **gestão de ruptura de estoque** — desde a detecção pela IA até a aprovação pelo Joule e reposição confirmada. Ver `teste/ROTEIRO_DEMO.md` para o roteiro completo com checklist pré-demo.
-
----
-
-## Contexto da Competição
-
-| Item | Detalhe |
+| Camada | Tecnologia |
 |---|---|
-| Evento | Dragons' Den: Learn to Win Edition 2026 |
-| Organização | SAP Solution Advisory |
-| Formato | 15 min demo ao vivo + 5 min Q&A |
-| Data | 26 de agosto de 2026 |
-| Requisito crítico | Demo ao vivo, sem screenshots |
-| Critério de maior peso | Live Demo Quality (20%) |
+| Dados | HANA Cloud — schema `RUNMYFRANCHISE_JG` |
+| Camada Semântica | SAP Datasphere — Space `I831004` |
+| Dashboards | SAP Analytics Cloud (SAC) — Live Connection via Datasphere |
+| Portal | SAP Build Work Zone Advanced — UI Integration Cards + Apps |
+| Backend | SAP CAP (Node.js) — `myfranchise-srv` |
+| MCP / Joule | Node.js Express + `@modelcontextprotocol/sdk` — `myfranchise-mcp` |
+| Frontend | SAP Fiori Elements (UI5) — 9 apps |
+| AI | SAP Joule via MCP + SAP AI Core |
+| Eventos | Advanced Event Mesh (AEM) |
+| Deploy | SAP BTP Cloud Foundry — org `sa-build-platform-org`, space `DEV` |
 
 ---
 
-## Estado do Projeto
+## Arquitetura de Dados
 
-**Deployado em produção** — SAP BTP Cloud Foundry, org `sa-build-platform-org / DEV`, região `us10`.
+O schema `RUNMYFRANCHISE_JG` (HANA Cloud) é a fonte de verdade para toda a plataforma:
 
-| Componente | Status |
-|---|---|
-| Backend CAP + HANA Cloud + XSUAA | Produção |
-| AI Core + GenAI Hub (gpt-4o) | Produção |
-| Executive Home (OVP — 4 cards) | Produção |
-| Network Overview (ALP — health scores, donut, gráfico por região) | Produção |
-| Governança & Compliance (LROP Desvios) | Produção |
-| Category Performance (LROP KPI_Categoria — Beauty/Fashion/Accessories) | Produção |
-| Franchisor Dashboard (SAC Overview — iFrame story) | Produção |
-| Franchisee Portal (OVP — 8 cards) | Produção |
-| Network Stock Monitor (LROP — grade Cor×Tamanho, previsão 14d) | Produção |
-| Replenishment Approvals (LROP — pedidos do agente IA) | Produção |
-| Demo Control Panel (simularVendas, resetarDemo, simularRecebimento) | Produção |
-| Joule MCP Server Node.js (11 tools, HANA direto) | Produção |
-| KPI tiles dinâmicos (ruptura + pendentes) | Produção |
-| SAP Advanced Event Mesh (AEM) — broker pub/sub | Produção |
-| Loop de Reposição Autônomo — varredura no startup + agente orientado a eventos | Produção |
-| SAP RPT Predictive App | Produção — `myfranchise-rpt.cfapps.us10.hana.ondemand.com` |
-| Agente nível 3 (aprovação automática via BPA) | Pós-demo — futuro: SAP BPA + IS iFlow como consumer AEM |
-
-**Backend:** `https://sa-build-platform-org-dev-myfranchise-srv.cfapps.us10.hana.ondemand.com`
+```
+Tabelas S/4HANA Fashion   →  MARA, MAKT, MAW1, FSH_COLLECTIONS, KLAH, KSSK, AUSP
+Tabelas Master (M_*)      →  M_STORE, M_CAMPAIGN, M_SUBSTITUTE, M_ARTICLE_GRADE...
+Tabelas Transacionais     →  T_INVENTORY_SNAPSHOT, T_NPS, T_SELLOUT_HDR/ITM...
+         ↓
+Semantic Layer: CV_DIM_* (4 views dimensão) + CV_FACT_* (4 views fato)
+         ↓
+Procedures: P_STOCKOUT_ALERT · P_SUBSTITUTE_SUGGEST · P_GENERATE_SELLIN_ORDER
+         ↓
+Datasphere (Space I831004): Remote Tables → Dimension Views → Fact Views → Analytic Models
+         ↓
+SAC (Live Connection) + Work Zone (Cards) + Joule (MCP — 7 tools)
+```
 
 ---
 
-## Arquitetura SAP BTP
+## Lojas Ativas
 
-![Arquitetura RunMyFranchise](docs/imagens/arquitetura_solucao_franquias_v2.png)
+| Store ID | Cidade | País |
+|---|---|---|
+| BR-SP-001 | São Paulo (Jardins) | Brasil 🇧🇷 |
+| BR-RJ-001 | Rio de Janeiro (Ipanema) | Brasil 🇧🇷 |
+| BR-MG-001 | Belo Horizonte (Savassi) | Brasil 🇧🇷 |
+| BR-RS-001 | Porto Alegre | Brasil 🇧🇷 |
+| AR-BA-001 | Buenos Aires | Argentina 🇦🇷 |
+| US-MIA-001 | Miami | EUA 🇺🇸 |
+| PT-LIS-001 | Lisboa | Portugal 🇵🇹 |
 
 ---
 
-## Módulos (9 apps HTML5 + Joule)
+## MCP Server — SAP Joule
 
-### 1. Executive Home (`home`)
-- **Floorplan:** Overview Page (OVP) — 4 cards
-- **Cards:** Network Revenue, Today's Highlights, Recent Activities, Network KPIs
-- **Destaque:** Visão executiva consolidada da rede. Entry point da demo para o gestor franqueador.
+O Joule acessa dados em tempo real via MCP Server deployado no CF.
 
-### 2. Network Overview (`network`)
-- **Floorplan:** Analytical List Page (ALP)
-- **contextPath:** `/Saude_Dashboard`
-- **Destaque:** Health scores por unidade com donut de criticidade (Crítico/Atenção/Saudável), flag `emReforma`, gráfico de barras por região. Filtro por cluster/região. Drill-down para `/Unidades`.
-
-### 3. Governance & Compliance (`compliance`)
-- **Floorplan:** List Report + Object Page (LROP)
-- **contextPath:** `/Desvios`
-- **Destaque:** Detecção automática de desvios no `after CREATE VendaPraticada`. Severidade colorida (ALTA vermelho, MÉDIA amarelo). Filtros por loja, período e severidade.
-
-### 4. Category Performance (`categories`)
-- **Floorplan:** List Report + Object Page (LROP)
-- **contextPath:** `/KPI_Categoria`
-- **Destaque:** Margens por subcategoria (Beauty / Fashion / Accessories). 396 linhas de dados cobrindo 3 categorias × 22 lojas × 6 períodos.
-
-### 5. Franchisor Dashboard (`sac-overview`)
-- **Floorplan:** UI5 customizado com iFrame embed
-- **semanticObject/action:** `SACOverview` / `display`
-- **Destaque:** Renderiza o painel `FlowLayoutPanel_1` da story `RunMyFranchise — Network Overview` diretamente no Work Zone via SAC Widget API. Fallback automático para iFrame se a Widget API não estiver disponível.
-- **Story:** `2AC0BD802424A3FE4EDEA8C056538AB0` no tenant `demo-presalesbrazil.us10.sapanalytics.cloud`
-
-### 6. Franchisee Portal (`franchisee`)
-- **Floorplan:** Overview Page (OVP) — 8 cards
-- **Cards:** Revenue, Health Score, Category Margins, Campaign Activation, Pending Actions, AI Recommendations, Stock Alerts, Benchmark
-- **Destaque:** Cada card restrito à loja do franqueado. Visão 360° do desempenho individual sem acesso a dados de terceiros.
-
-### 7. Network Stock Monitor (`inventory`)
-- **Floorplan:** List Report + Object Page (LROP)
-- **contextPath:** `/Estoque_Unidade`
-- **Destaque:** Grade completa Cor×Tamanho (2.022 itens, 117 RUPTURA). Previsão de cobertura 14 dias com sazonalidade regional. KPI tile dinâmico: número de itens em ruptura (refresh 30s). Object Page com impacto da ruptura em R$.
-
-### 8. Replenishment Approvals (`replenishment`)
-- **Floorplan:** List Report + Object Page (LROP)
-- **contextPath:** `/Pedidos_Reposicao`
-- **Destaque:** App dedicado para o gestor aprovar/recusar pedidos gerados pelo Agente de Reposição. 10 pedidos PENDENTE pré-carregados. Filtros por status, região e origem (Agente IA / Manual). Botões Aprovar e Recusar com diálogo de parâmetros. KPI tile dinâmico: número de pedidos pendentes (refresh 30s).
-
-### 9. Demo Control Panel (`admin`)
-- **Floorplan:** UI5 customizado (page + botões)
-- **Serviço:** `FranqueadoraService` — role `Franqueadora_Gestor`
-- **Destaque:** Painel de controle para a demo. Mostra KPIs ao vivo (pedidos PENDENTE + itens em RUPTURA). Fluxo de 4 etapas:
-  - **Etapa 1 — Resetar Demo**: todos os estoques → OK (saldo ~180), todos os pedidos excluídos, health scores recalculados
-  - **Etapa 2 — Simular Rush de Vendas**: reduz 8 SKUs para RUPTURA/ATENCAO → emite eventos AEM → agente cria pedidos PENDENTE automaticamente (~15s)
-  - **Etapa 3 — Aprovar (via Joule ou app)**: aprovar todos os pedidos pendentes
-  - **Etapa 4 — Simular Recebimento**: repõe estoque → emite eventos AEM → handler registra a resolução
-  - Log de operações com timestamp (últimas 20 ações)
-
-### Joule (copiloto conversacional)
-- **MCP Server Node.js:** `myfranchise-mcp` (Node.js, CF — 11 tools, HANA direto, ativo no Joule Studio)
-  `https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com`
-- **MCP Server Python (backup):** `joule-myfranchise-mcp` (Python FastMCP, CF)
-  `https://joule-myfranchise-mcp.cfapps.us10.hana.ondemand.com`
-- **11 tools:**
+**URL:** `https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com`
+**Destination BTP:** `RunMyFranchise-MCP`
+**Health check:** `GET /health`
 
 | Tool | Descrição |
 |---|---|
-| `get_lojas_em_risco` | Lojas em risco de ruptura, filtradas por região/categoria |
-| `get_cobertura_estoque` | Cobertura em dias para uma loja/SKU específico |
-| `get_pedidos_pendentes` | Pedidos de reposição aguardando aprovação |
-| `get_recomendacoes` | Recomendações da IA por loja e prioridade |
-| `get_score_rede` | Scores de saúde na rede |
-| `acionar_reposicao` | Acionar Agente de Reposição para uma ou todas as lojas |
-| `process_replenishment_orders` | Aprovar TODOS os pedidos pendentes (rede ou por loja) |
-| `confirm_single_order` | Aprovar pedido individual por ID |
-| `reject_order` | Recusar pedido individual por ID |
-| `get_substitutos` | Produtos substitutos — guia "Se X → Ofereça Y" |
-| `get_grade_ruptura` | Grade Cor×Tamanho com itens em ruptura por SKU/loja |
-
-- **Fluxo validado:** aprovação de pedidos por linguagem natural end-to-end
-- **Exemplo:** *"Aprova todos os pedidos de Sandália Feminina pendentes"* → Joule lista, identifica IDs e aprova todos automaticamente
-- **Nomes de lojas:** todos os tools aceitam nome por extenso (ex: "Porto Alegre") — resolvem o ID automaticamente
-- **Auth:** OAuth2 `client_credentials` via XSUAA; busca CSRF token antes de ações POST
+| `get_stockout_alert` | Alertas de ruptura por loja/SKU com receita em risco |
+| `get_substitute_suggest` | Substitutos em estoque com script de venda |
+| `generate_replenishment_order` | Gera pedido de reposição (DRAFT) com custo total |
+| `get_demand_forecast` | Previsão de demanda com fatores clima/campanha/sazonalidade |
+| `get_nps_analysis` | NPS por loja com verbatims e correlação com ruptura |
+| `get_sellout_summary` | Faturamento, top artigos e top lojas |
+| `get_store_overview` | Visão 360° de uma loja: estoque + NPS + vendas + previsão |
 
 ---
 
-## SAP Advanced Event Mesh (AEM)
+## Cenário da Demo — Crise Verão Tropical
 
-A integração com o **SAP Advanced Event Mesh** (Solace PubSub+) está totalmente funcional em produção.
+**Data da demo:** 2026-08-11 | **Campanha inicia:** 2026-08-12
 
-- **Plugin:** `@cap-js/advanced-event-mesh` com wrapper customizado `PatchedAEM` (`srv/aem-patched.js`)
-- **Correção:** Basic Auth no `createSession` (OAuth não funciona no plano Developer 100)
-- **Consumer:** fila separada `myfranchise-consumer` com owner `solace-cloud-client`
-- **3 tópicos ativos:**
-  - `Estoque/Changed` — emitido ao criar/atualizar itens de estoque
-  - `Pedido/StatusChanged` — emitido ao aprovar/recusar pedidos
-  - `Desvio/Detectado` — emitido ao detectar desvio de compliance
-- **Broker:** `mr-connection-yfqw57w6xwk.messaging.solace.cloud`
-- **Dev:** `file-based-messaging`; **Produção:** `advanced-event-mesh`
+### Personas
 
-### Loop de Eventos Autônomo (`srv/events/messaging.js`)
-
-- **No startup:** varre todos os itens em ruptura → emite eventos → agente cria pedidos automaticamente
-- **`messaging.on(TOPIC_ESTOQUE)`:** RUPTURA/ATENCAO → aciona Agente de Reposição sem intervenção humana
-- **`messaging.on(TOPIC_PEDIDO)`:** registra eventos de aprovação
-- **Consumer futuro:** SAP BPA + Integration Suite via iFlow
-
----
-
-## SAP Analytics Cloud (SAC)
-
-Story executiva publicada no SAC, alimentada diretamente pelo HANA Cloud via conexão ao vivo.
-
-- **Tenant SAC:** `demo-presalesbrazil.us10.sapanalytics.cloud` (região us10 — mesma do BTP)
-- **Conexão HANA:** `MFRANCHISE` — usuário técnico `_RT` com `access_role` concedido via DBADMIN
-- **Identidade:** IDP confiável configurado no SAC App Integration (BTP XSUAA)
-- **Modelo analítico:** `MF_NetworkHealth` baseado na Calculation View `myfranchise::CV_NET_HEALTH_SAC`
-- **Story:** `RunMyFranchise — Network Overview` (publicada para o time "Viewer")
-- **Story ID:** `2AC0BD802424A3FE4EDEA8C056538AB0`
-- **App Franchisor Dashboard:** renderiza `FlowLayoutPanel_1` da story via SAC Widget API diretamente no Work Zone
-- **Projeto SAC separado:** `https://github.com/marcelofiorito/MyFranchise-SAC`
-
----
-
-## Agentes de IA
-
-### Agente de Recomendações (`srv/ai/recommendations-job.js`)
-- **LLM:** gpt-4o via `@sap-ai-sdk/orchestration` (GenAI Hub)
-- **Input:** KPIs, benchmark do cluster, desvios de compliance abertos
-- **Output:** 3 recomendações priorizadas (ALTA/MÉDIA/BAIXA) com descrição rica
-- **Fallback:** regras determinísticas (desvio de preço → PRECIFICACAO; queda de faturamento → CAMPANHA; NPS baixo → TREINAMENTO)
-- **Actions:** `gerarRecomendacoes(unidade_ID)`, `gerarRecomendacoesTodas()`
-
-### Agente de Reposição (`srv/ai/reposicao-agent.js`)
-- **LLM:** gpt-4o via GenAI Hub (mesmo padrão)
-- **Input:** saldo de estoque, giro médio, lead time, fator sazonal regional, uplift promocional
-- **Output:** `Pedidos_Reposicao` em status **PENDENTE** — quantidade calculada (giro × lead time × fator sazonal), fornecedor sugerido, justificativa detalhada
-- **Lógica sazonal:** `coberturaDias = saldoAtual / (giroMedioDiario × fatorSazonal × upliftPromo)`. Ruptura quando `coberturaDias < leadTimeDias`.
-- **Actions:** `gerarReposicao(unidade_ID)`, `gerarReposicaoTodas()`
-- **Nível:** 1-2 (detecta + propõe). Nível 3 (aprovação via BPA) = próximo passo.
-
----
-
-## Modelo de Dados
-
-Schema HANA: `2177F43B75D34848AE3EA84FAB461E66`
-
-| Entidade | Linhas | Descrição |
+| Persona | Papel | Acesso |
 |---|---|---|
-| `Unidades` | 22 | Lojas com lat/lon, tipoLoja (Flagship/Tier1/Tier2), emReforma |
-| `KPI_Rede` | 4 | Trimestres, R$ 177–179M, breakdown por categoria |
-| `KPI_Unidade` | 132 | 6 meses × 22 lojas, KPIs financeiros |
-| `KPI_Categoria` | 396 | 3 categorias × lojas × períodos, com subCategoria |
-| `Saude_Unidade` | 22 | Health scores (35% perf + 35% compliance + 15% contrato + 15% estoque) |
-| `Estoque_Unidade` | 2.022 | Grade completa Cor×Tamanho — 117 RUPTURA em 8 produtos |
-| `Substitutos` | 17 | Mapeamentos produto substituto para guia "Se X → Ofereça Y" |
-| `Pedidos_Reposicao` | 10 | Pedidos PENDENTE pré-carregados (gpt-4o) |
-| `Campanhas` | — | Campanhas ativas |
-| `Ativacao_Campanha_Unidade` | — | Ativação de campanhas por loja |
-| `Atividades_Rede` | — | Feed de atividades para Executive Home |
+| **Carlos Mendes** | Head de Operações — Franqueadora | Todas as 7 lojas |
+| **Marina Santos** | Proprietária — SP Jardins (BR-SP-001) | Somente a própria loja |
 
-### Dados Reais SAP (Master Data)
+### Números-chave
 
-Os seeds do projeto foram substituídos por dados reais extraídos de arquivos de master data SAP Retail (pasta `master_data/`).
+| Indicador | Valor |
+|---|---|
+| Lojas em risco crítico | 5 de 7 |
+| SKUs críticos na rede | 87 |
+| Receita em risco (rede) | R$ 125.000 |
+| Receita em risco SP Jardins | R$ 42.500 |
+| NPS SP Jardins (ago/2026) | 5,4 (era 9,2 em junho) |
+| Detratores SP Jardins | 7 de 11 respostas |
+| Estoque excedente Buenos Aires | 178 unidades Tucano Azul Ipanema |
+| Impacto climático na demanda | +35% (onda de calor 38°C em SP) |
+| Impacto da campanha | +25% |
 
-**SKUs reais (material IDs SAP):**
-- `MR550053` — Sandália Feminina A
-- `MR550099` — Sandália Feminina B
-- `MR550153` — Sandália Feminina C
-- `MR550253` — Sandália Feminina D
-- `MR550061` — Calça Jeans Masculina
-- `MR550070` — Óculos Sol
-- `MR550050` / `MR550051` / `MR550052` — Blusas
-- Série `MR560*` — itens adicionais do mix
+### Fluxo da demo (~10 min)
 
-**Lojas adicionadas de dados reais de sortimento:**
-- `R163` — Loja Maceió Jaraguá
-- `R114` — Loja João Pessoa Manaíra
-
-**Fonte:** arquivos exportados de master data SAP Retail em `master_data/` (`EXPORT_20260803_*.xlsx`, `Products.xlsx`).
+1. **Carlos** acessa Work Zone → vê card de alerta de ruptura da rede
+2. **Carlos** analisa detalhes no SAC → SP Jardins em vermelho, NPS caindo
+3. **Carlos** consulta Joule → análise completa + recomendação de alerta
+4. **Carlos** confirma envio de notificação para Marina
+5. **Marina** recebe alerta no Work Zone → consulta Joule
+6. **Joule** apresenta 3 opções → recomenda **Opção C** (ROI 401%)
+7. **Marina** confirma pedido SI-2026-008 → status muda DRAFT → PENDING
 
 ---
 
-## Fórmula do Health Score
+## Deploy
 
-```
-scoreSaude = (performancePct × 0,35) + (compliancePct × 0,35) + (scoreContrato × 0,15) + (estoquePct × 0,15)
+```bash
+# MCP Server (standalone, sem mtar)
+cf push myfranchise-mcp
 
-performancePct = min(kpi.faturamento / benchmark.faturamentoMedio × 100, 100)
-                 default 50 se não há KPI ou benchmark disponível
+# Configurar senha HANA (NUNCA commitar)
+DBPWD='...' && cf set-env myfranchise-mcp HANA_DBADMIN_PASSWORD "$DBPWD"
+cf restart myfranchise-mcp
 
-compliancePct  = max(0, 100 − desviosAbertos × 12)
-                 cada desvio ABERTO ou NOTIFICADO custa 12 pontos
-
-scoreContrato:   ATIVO            → 100
-                 VENCENDOEM90DIAS →  60
-                 VENCENDOEM30DIAS →  30
-                 outro / expirado →   0
-
-estoquePct     = max(0, 100 − rupturas × 25 − atencoes × 10)
-                 reflete rupturas imediatamente ao chamar simularVendas
-
-Limiares de criticidade:
-  scoreSaude < 45  → 1 CRÍTICO  (vermelho)
-  45 ≤ score < 70  → 2 ATENÇÃO  (amarelo)
-  score ≥ 70       → 3 SAUDÁVEL (verde)
+# Verificar
+curl https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com/health
 ```
 
----
-
-## Modelo de Segurança
-
-O isolamento de dados entre franqueados é implementado via **autorização baseada em instância** com XSUAA e SAP Cloud Identity Services (IAS):
-
-- Cada usuário franqueado recebe um atributo customizado `unidade_ID` no IAS/XSUAA durante o onboarding.
-- O CAP aplica automaticamente filtros em tempo de query via anotações `@restrict`: `where: 'unidade_ID = $user.unidade_ID'`.
-- Nenhuma query entre franqueados é possível sem o role `Franqueadora_Gestor`.
-- Modelo padrão: **single-tenant com segurança em nível de linha** — adequado para centenas de unidades. Para escala SaaS multi-tenant, o CAP suporta evolução para `@multitenancy` com tenants isolados por assinante.
+> **Segurança:** `HANA_DBADMIN_PASSWORD` jamais deve ser commitada. Sempre use `cf set-env` via variável de shell.
 
 ---
 
 ## Documentação
 
-Todos os documentos do projeto, organizados por categoria. Cada documento contém um link de retorno ao README.
-
-| Categoria | Documento | Descrição |
-|---|---|---|
-| Negócio | [Product Requirements Document](docs/requisitos/PRD.md) | Requisitos funcionais, personas, histórias de usuário e critérios de aceite |
-| Negócio | [Roteiro de Demo](teste/ROTEIRO_DEMO.md) | 4 atos, narrativa de ruptura, checklist pré-demo e plano B |
-| Técnica | [Especificação Técnica](docs/especificação/SPEC.md) | Modelo de dados, serviços OData, handlers CAP e anotações de segurança |
-| Técnica | [Integração SAP Retail Portfolio](docs/integração/Integração.md) | Análise de fit com S/4HANA, IBP, CAR e Ariba |
-| Técnica | [Setup Joule no Work Zone](docs/integração/joule.md) | Pré-requisitos e configuração do MCP Server no Work Zone |
-| Técnica | [MCP Server — Joule](docs/integração/mcp-server.md) | 11 ferramentas, arquitetura do servidor, deploy e troubleshooting |
-| Ideias | [Visão de Produto Pós-Demo](docs/ideias/visao-produto.md) | Roadmap conceitual para uso como ativo de pré-vendas após a demo |
-| Arquitetura | [Diagrama de Arquitetura (Draw.io)](docs/imagens/arquitetura-runmyfranchise.drawio) | Fonte editável do diagrama de arquitetura (Draw.io com estilo SAP) |
-| Arquitetura | [SAP Shape Libraries](docs/sap-shape-libraries/) | Bibliotecas de shapes SAP utilizadas no diagrama Draw.io |
-
----
-
-## Decisões Técnicas
-
-| Decisão | Escolha | Motivo |
-|---|---|---|
-| Frontend | Fiori Elements + Build Work Zone | Annotation-driven, sem app nativo |
-| Backend | SAP CAP Node.js, OData V4 | `@sap/cds ^10` |
-| Banco de dados | HANA Cloud (prod) / SQLite in-memory (dev) | `@cap-js/hana ^2.8` / `@cap-js/sqlite ^2.1.3` |
-| IA | AI Core + GenAI Hub (gpt-4o) | `@sap-ai-sdk/orchestration ^2.13` |
-| Mensageria | SAP Advanced Event Mesh (Solace) | `@cap-js/advanced-event-mesh ^1.0.0` |
-| Predição | SAP RPT 1.5-large via AI Core | Zero-shot, sem treinamento, in-context learning |
-| UI5 runtime | Versão fixa `1.136.7` | Alinha build e runtime; evita comportamento `Active` no FE V4 |
-| Perfis CAP | `hana-cloud`/`xsuaa` como default; `[development]` ativa sqlite+mocked | Evita apps vazios em CF |
-
----
-
-## Tech Stack
-
-```
-@sap/cds                   ^10.0.5     # Backend CAP (OData V4)
-@cap-js/sqlite             ^2.1.3      # SQLite em memória (dev)
-@cap-js/hana               ^2.8.0      # HANA Cloud (prod)
-@sap-ai-sdk/orchestration  ^2.13.0     # GenAI Hub — gpt-4o
-@sap/xssec                 ^4.13.3     # Autorização XSUAA
-express                    ^4.22.2     # Runtime HTTP
-@cap-js/advanced-event-mesh ^1.0.0    # SAP Advanced Event Mesh (Solace PubSub+)
-streamlit                  1.37.0      # App preditivo RPT
-sap-rpt-1.5-large                      # SAP Relational Pretrained Transformer (AI Core)
-
-SAP HANA Cloud                         # Banco de dados em produção (schema 2177F43B75D34848AE3EA84FAB461E66)
-SAP Build Work Zone Advanced           # Portal e launchpad (managed approuter)
-SAP AI Core + GenAI Hub               # Agentes de IA (gpt-4o) + RPT preditivo
-SAP Advanced Event Mesh               # Broker de eventos pub/sub (Solace PubSub+)
-SAP IAS + XSUAA                       # Identidade e autorização
-SAPUI5 1.136.7                        # Runtime Fiori Elements (versão fixada)
-```
-
-**Perfis CAP:** `hana-cloud`/`xsuaa` como **default**; `[development]` ativa sqlite+mocked automaticamente com `cds watch`.
-
----
-
-## Estrutura do Projeto
-
-```
-MyFranchise/
-├── db/
-│   ├── schema.cds              # Modelo de dados (todos os módulos)
-│   └── data/                   # CSVs de seed
-│       ├── myfranchise-Estoque_Unidade.csv    (2.022 itens Cor×Tamanho)
-│       ├── myfranchise-Pedidos_Reposicao.csv  (10 pedidos PENDENTE — gpt-4o)
-│       ├── myfranchise-Substitutos.csv         (17 mapeamentos produto substituto)
-│       ├── myfranchise-OrigemPedido.csv        (AGENTE / MANUAL)
-│       └── ... (demais entidades e code lists)
-├── srv/
-│   ├── service.cds             # FranqueadoraService + FranqueadoService
-│   ├── service.js              # Handlers: desvios, score, estoque, aprovação pedidos, KPI endpoints
-│   ├── franqueado-service.js   # Impl FranqueadoService
-│   ├── server.js               # Middleware JWT + endpoints /kpi/ruptura e /kpi/pedidos-pendentes
-│   ├── mcp-server.js           # MCP Server Node.js (CF) — 11 tools, HANA direto
-│   ├── aem-patched.js          # PatchedAEM — correção Basic Auth para plano Developer 100
-│   ├── events/
-│   │   └── messaging.js        # Handlers de eventos autônomos (tópicos AEM)
-│   └── ai/
-│       ├── recommendations-job.js   # Agente de recomendações (gpt-4o + fallback)
-│       └── reposicao-agent.js       # Agente de reposição sazonal (gpt-4o + fallback)
-├── app/
-│   ├── home/             # Executive Home (OVP — 4 cards)
-│   ├── network/          # Network Overview (ALP — health scores, donut, gráfico)
-│   ├── compliance/       # Governance & Compliance (LROP Desvios)
-│   ├── categories/       # Category Performance (LROP KPI_Categoria)
-│   ├── sac-overview/     # Franchisor Dashboard (SAC story iFrame)
-│   ├── franchisee/       # Franchisee Portal (OVP — 8 cards)
-│   ├── inventory/        # Network Stock Monitor (LROP grade Cor×Tamanho) — KPI tile
-│   ├── replenishment/    # Replenishment Approvals (LROP pedidos agente IA) — KPI tile
-│   └── admin/            # Demo Control Panel (UI5 customizado)
-├── joule-mcp/
-│   └── mcp_server_cf.py        # Python FastMCP — backup do MCP Server
-├── rpt-predicao/               # App preditivo SAP RPT (Streamlit)
-│   ├── app.py                  # App principal — predição RPT em 2 etapas
-│   ├── dados/historico_estoque_franquias.csv  # Dados de treinamento (94 linhas)
-│   └── requirements.txt
-├── master_data/                # Arquivos de master data SAP Retail (fonte dos seeds reais)
-│   ├── EXPORT_20260803_202202.xlsx
-│   ├── EXPORT_20260803_202256.xlsx
-│   └── Products.xlsx
-├── docs/
-│   ├── especificação/SPEC.md               # Especificação técnica
-│   ├── requisitos/PRD.md                   # Product Requirements Document
-│   ├── integração/                         # Setup Joule, MCP Server, integração SAP
-│   ├── ideias/visao-produto.md             # Roadmap pós-demo
-│   └── imagens/
-│       ├── arquitetura_solucao_franquias_v2_en.png  # Diagrama de arquitetura (EN)
-│       └── arquitetura_solucao_franquias_v2.png     # Diagrama de arquitetura (PT)
-├── teste/
-│   └── ROTEIRO_DEMO.md   # Roteiro 4 atos, checklist, plano B
-├── manifest-rpt.yml      # Deploy CF para app RPT
-├── mta.yaml              # Deploy CF (módulos, serviços)
-├── xs-security.json      # XSUAA (roles, scopes, atributos)
-└── README.md
-```
-
----
-
-## Executar Localmente
-
-### Pré-requisitos
-```bash
-npm install -g @sap/cds-dk
-```
-
-### Iniciar
-```bash
-npm install
-cds watch
-```
-Acesse **http://localhost:4004**
-
-### Usuários de teste
-
-| Usuário | Senha | Role | Serviço |
-|---|---|---|---|
-| `gestor` | `gestor` | Franqueadora_Gestor | `/franqueadora` |
-| `roberto` | `roberto` | Franqueado (unidade STD) | `/franqueado` |
-
-### Endpoints úteis
-```bash
-# Estoque — grade Cor×Tamanho de uma loja
-GET /franqueadora/Estoque_Unidade?$filter=sku eq 'MR550053'
-
-# Desvios de uma loja
-GET /franqueadora/Desvios?$filter=unidade_ID eq 'u178'
-
-# KPIs jan–jun por loja
-GET /franqueadora/KPI_Unidade?$filter=unidade_ID eq 'u163'&$orderby=periodo
-
-# KPI por categoria
-GET /franqueadora/KPI_Categoria?$filter=unidade_ID eq 'u023'
-
-# Produtos substitutos
-GET /franqueadora/Substitutos
-
-# Agente de recomendações (gpt-4o)
-POST /franqueadora/gerarRecomendacoes   { "unidade_ID": "u178" }
-
-# Agente de reposição (gpt-4o, com sazonalidade)
-POST /franqueadora/gerarReposicao       { "unidade_ID": "u178" }
-
-# Portal do franqueado
-GET /franqueado/MeusKPIs
-GET /franqueado/MeuEstoque
-GET /franqueado/MinhasRecomendacoes
-```
-
----
-
-## Deploy (Cloud Foundry)
-
-```bash
-mbt build
-cf deploy mta_archives/myfranchise_1.0.0.mtar -f
-```
-
-O `mta.yaml` publica os módulos do backend e MCP Server, o db-deployer, os 9 apps HTML5 (home, network, compliance, categories, sac-overview, franchisee, inventory, replenishment, admin), o appcontent e o destinationcontent. Serviços: HANA (hdi-shared), XSUAA, HTML5 Repo (host + runtime), Destination, AI Core (existing `default_aicore`), Advanced Event Mesh.
-
-**Após cada deploy do appcontent:** remover e re-adicionar os apps no Content Manager do Work Zone para limpar o cache (o site não recarrega automaticamente).
-
-### Work Zone — tiles
-
-| App | `semanticObject` | `action` | Role | KPI tile |
-|---|---|---|---|---|
-| Executive Home | `Home` | `display` | Franqueadora_Gestor | — |
-| Network Overview | `NetworkPanel` | `display` | Franqueadora_Gestor | — |
-| Governance & Compliance | `Compliance` | `manage` | Franqueadora_Gestor | — |
-| Category Performance | `Categories` | `display` | Franqueadora_Gestor | — |
-| Franchisor Dashboard | `SACOverview` | `display` | Franqueadora_Gestor | — |
-| Franchisee Portal | `FranchiseePortal` | `display` | Franqueado | — |
-| Network Stock Monitor | `Inventory` | `manage` | Franqueadora_Gestor | contagem `RUPTURA` |
-| Replenishment Approvals | `Replenishment` | `manage` | Franqueadora_Gestor | contagem `PENDENTE` |
-| Demo Control Panel | `Admin` | `manage` | Franqueadora_Gestor | — |
-
----
-
-## Notas de Produção
-
-- **Atributos JWT do Franqueado:** o IdP (IAS) não envia `unidade_ID`/`cluster` na asserção. `srv/server.js` injeta o default `u147`/`STD` via middleware CAP. Para produção real, mapear via IAS assertion attributes.
-- **Cold start HANA/AI Core:** fazer 1 request de aquecimento antes da demo (HANA e AI Core têm cold start de segundos).
-- **Navegação LR→OP:** requer `contextPath` (não `entitySet`) + `navigation` explícito + `ResponsiveTable` no manifest, e UI5 runtime em **versão fixa** (não `/resources/latest`). A versão `1.136.7` foi validada.
-- **AEM Basic Auth:** o plano Developer 100 do SAP Advanced Event Mesh não suporta OAuth no `createSession`. O wrapper `PatchedAEM` (`srv/aem-patched.js`) força Basic Auth nessa chamada.
-- **SAC iFrame:** a SAC Widget API não suporta containers do Work Zone. O app `sac-overview` usa iFrame embed com fallback automático.
-
----
-
-## Roadmap (pós-demo)
-
-### Inteligência e Automação
-- **SAP RPT Preditivo de Ruptura** — prova de conceito validada em produção (`myfranchise-rpt`). Próximo passo: integrar as predições diretamente no Agente de Reposição para substituir a fórmula heurística de quantidade pelo RPT. O modelo já prediz risco de ruptura E quantidade ótima de reposição a partir de 94 linhas de histórico, zero-shot.
-- **BPA + Integration Suite como consumers AEM** — o broker de eventos está pronto. Próximo passo: configurar gatilho SAP Build Process Automation em `Pedido/StatusChanged(APROVADO)` e iFlow da Integration Suite em `Estoque/Changed` para write-back no ERP.
-- **SAP Analytics Cloud** — dashboards executivos em produção (story `RunMyFranchise — Network Overview` + Franchisor Dashboard no Work Zone)
-
-### Integração com Sistemas Retail SAP
-
-A integração com o S/4HANA é **bidirecional** — cada direção serve a um propósito diferente:
-
-**MyFranchise → S/4HANA** (saída — pedido de reposição):
-- Gatilho: `Pedido/StatusChanged(APROVADO)` publicado no AEM
-- iFlow no Integration Suite consome o evento → cria **Purchase Order** no S/4HANA
-- Status do pedido no MyFranchise: `APROVADO` → `ENVIADO`
-
-**S/4HANA → MyFranchise** (entrada — recebimento de mercadoria):
-- Gatilho: S/4HANA publica `MaterialDocument.Created` no AEM quando a mercadoria chega
-- iFlow consome o evento → chama OData do MyFranchise para atualizar o estoque
-- Status do pedido: `ENVIADO` → `RECEBIDO`
-- `saldoAtual` reposto + `status_code` → OK + score de saúde recalculado
-
-Hoje o botão `Simular Recebimento` (app Admin) substitui ambos os passos para fins de demo.
-
-- **SAP S/4HANA Retail** — Purchase Orders (saída) + Goods Receipt write-back (entrada)
-- **SAP Customer Activity Repository (CAR)** — dados reais de vendas nos PDVs
-- **SAP Ariba** — gestão de fornecedores para fechar o ciclo de reposição
-- **SAP Integrated Business Planning (IBP)** — previsão de demanda com sazonalidade regional
-
-### Dados e Plataforma
-- **SAP Datasphere** — federação de dados de múltiplas fontes
-- **IAS Assertion Attributes** — mapear `unidade_ID`/`cluster` via IdP (remover middleware de fallback)
-- **HANA Sequences** — substituir lógica de código de unidade por sequence nativa
-
-> **Visão completa pós-demo, motor de simulação e roadmap multi-perspectiva:**
-> [docs/ideias/visao-produto.md](docs/ideias/visao-produto.md)
-
----
-
-## Referências
-
-- [CAP Documentation](https://cap.cloud.sap/docs/)
-- [SAP Fiori Elements — Feature Showcase](https://github.com/SAP-samples/fiori-elements-feature-showcase)
-- [cap-sflight (referência para ALP/chart)](https://github.com/SAP-samples/cap-sflight)
-- [cap-cert-petrobras (referência para navegação LR→OP)](https://github.com/marcelofiorito/cap-cert-petrobras)
-- [SAP Build Work Zone](https://help.sap.com/docs/build-work-zone-standard-edition)
-- [SAP AI Core + GenAI Hub](https://help.sap.com/docs/sap-ai-core)
-- [SAP Advanced Event Mesh](https://help.sap.com/docs/advanced-event-mesh)
-- [OData Annotation Vocabulary](https://ui5.sap.com/#/topic/030faebe70b34198b17a93b4c6e7b4d7)
+| Documento | Conteúdo |
+|---|---|
+| [teste/ROTEIRO_DEMO.md](teste/ROTEIRO_DEMO.md) | Roteiro completo da demo 26/08 com scripts Joule |
+| [teste/testes.md](teste/testes.md) | Perguntas de teste para validar as 7 tools do Joule |
+| [docs/integração/joule.md](docs/integração/joule.md) | Configuração do Joule Studio |
+| [docs/integração/mcp-server.md](docs/integração/mcp-server.md) | Referência técnica do MCP Server |
+| [docs/infraestrutura/sac-setup.md](docs/infraestrutura/sac-setup.md) | SAC Story Design — Franchise Network Dashboard |

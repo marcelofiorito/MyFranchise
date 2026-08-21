@@ -1,0 +1,775 @@
+{
+  "table": "T_NPS",
+  "columns": [
+    "NPS_ID",
+    "STORE_ID",
+    "SURVEY_DATE",
+    "SCORE",
+    "CATEGORY",
+    "VERBATIM",
+    "RECEIPT_ID",
+    "SCENARIO"
+  ],
+  "rows": [
+    {
+      "NPS_ID": "NPS-SP-001",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-06-01",
+      "SCORE": 9,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Love the flip flops! Always find my size.",
+      "RECEIPT_ID": "SO-20260601-SP-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-002",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-06-15",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Great store, amazing colors!",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-003",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Tucano flip flop is perfect for summer!",
+      "RECEIPT_ID": "SO-20260701-SP-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-004",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-15",
+      "SCORE": 7,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Good experience but some sizes were missing",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-005",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-20",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Went looking for Tucano Blue 37-38 \u2014 out of stock again!",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-006",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-25",
+      "SCORE": 3,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Third visit this week, still no Tucano in my size. Gave up.",
+      "RECEIPT_ID": "SO-20260715-SP-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-007",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-28",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Staff was helpful but the product I wanted was unavailable",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-008",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-01",
+      "SCORE": 5,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Store is nice but always missing popular sizes",
+      "RECEIPT_ID": "SO-20260801-SP-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-009",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-05",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Came for the campaign but Ipanema Blue is sold out!",
+      "RECEIPT_ID": "SO-20260805-SP-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-010",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-10",
+      "SCORE": 3,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "How can you run a summer campaign with no stock?",
+      "RECEIPT_ID": "SO-20260810-SP-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-011",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Disappointed - loved the brand but not finding products",
+      "RECEIPT_ID": "SO-20260811-SP-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-001",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Great store in Ipanema!",
+      "RECEIPT_ID": "SO-20260701-RJ-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-002",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-08-01",
+      "SCORE": 7,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Good but some sizes low on stock",
+      "RECEIPT_ID": "SO-20260801-RJ-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-003",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 5,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Wanted Tucano Blue 37-38 - out of stock",
+      "RECEIPT_ID": "SO-20260811-RJ-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-001",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 9,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Best flip flops ever!",
+      "RECEIPT_ID": "SO-20260701-MG-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-002",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 5,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "My size was not available",
+      "RECEIPT_ID": "SO-20260811-MG-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RS-001",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 7,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Good store, could use more inventory",
+      "RECEIPT_ID": "SO-20260811-RS-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-AR-001",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 9,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Excelente seleccion!",
+      "RECEIPT_ID": "SO-20260701-AR-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-AR-002",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Amazing product range!",
+      "RECEIPT_ID": "SO-20260811-AR-001",
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-G01",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-27",
+      "SCORE": 9,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Tucano Blue is back in stock! Found my size right away - love this store",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-G02",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-27",
+      "SCORE": 10,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Came back after weeks and finally got the flip flop I wanted. 10/10!",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-G03",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-28",
+      "SCORE": 9,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Great campaign and great stock levels. Will definitely recommend to friends",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-G04",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-28",
+      "SCORE": 8,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "The Tucano Flip Flop in Ipanema Blue was exactly what I needed for summer",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-G05",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-28",
+      "SCORE": 9,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Stock is fully replenished! Staff was amazing too. Definitely a promoter",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-G06",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-29",
+      "SCORE": 10,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Happy customer! Buying 2 pairs of Tucano Blue - glad they restocked so fast",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-G07",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-29",
+      "SCORE": 9,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Found everything I needed for summer. Excellent experience at SP Jardins",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-G08",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-29",
+      "SCORE": 8,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Finally! Back to loving this store - Tucano Blue available in every size",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-B01",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-08-15",
+      "SCORE": 5,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Still can't find some styles in my size. Campaign selection feels limited",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-B02",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-08-19",
+      "SCORE": 6,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Tropical Summer pieces look great but key sizes keep selling out fast",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-B03",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-08-23",
+      "SCORE": 5,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Came in for the Arara Flip Flop in Forest Green and left empty handed again",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-B04",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-08-27",
+      "SCORE": 5,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Staff was helpful but the stock situation is really frustrating this season",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-B01",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-08-14",
+      "SCORE": 5,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Wanted the Tucano Flip Flop \u2014 three visits this week, still out of stock",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-B02",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-08-20",
+      "SCORE": 4,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "The campaign items are never available in the right sizes. Very disappointing",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-B03",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-08-25",
+      "SCORE": 5,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Nice collection but hard to buy when everything I want is sold out",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-B04",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-08-27",
+      "SCORE": 4,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Disappointing visit. Half the Tropical Summer items are already depleted",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-BA-B01",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-08-16",
+      "SCORE": 8,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Good selection here in Buenos Aires, though I heard other branches are struggling",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-BA-B02",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-08-21",
+      "SCORE": 7,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Still good overall but noticed some campaign sizes running low this week",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-BA-B03",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-08-26",
+      "SCORE": 7,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Pleasant experience. Staff mentioned stock transfers might be coming \u2014 fingers crossed",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RS-B01",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-08-13",
+      "SCORE": 7,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Great store but the Tropical Summer launch stock is running thin already",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RS-B02",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-08-19",
+      "SCORE": 6,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Two items on my list were out of stock. Staff said replenishment is delayed",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RS-B03",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-08-25",
+      "SCORE": 5,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Love Tropic\u00e1lia but the inventory issues this season are really hurting the experience",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-GH01",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-06-01",
+      "SCORE": 9,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Love the flip flops! Always find my size.",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-GH02",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-06-15",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Great store, amazing colors!",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-GH03",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Tucano flip flop is perfect for summer!",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-GH04",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-15",
+      "SCORE": 7,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Good experience but some sizes were missing",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-GH05",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-20",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Went looking for Tucano Blue 37-38 \u2014 out of stock again!",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-GH06",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-25",
+      "SCORE": 3,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Third visit this week, still no Tucano in my size. Gave up.",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-SP-GH07",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-28",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Staff was helpful but the product I wanted was unavailable",
+      "RECEIPT_ID": null,
+      "SCENARIO": "GOOD"
+    },
+    {
+      "NPS_ID": "NPS-RS-B04",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-07-10",
+      "SCORE": 8,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Lovely store, great summer selection available",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RS-B05",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-07-25",
+      "SCORE": 7,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Good visit overall, a few sizes running low but found what I needed",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-J01",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-06-05",
+      "SCORE": 9,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Pre-campaign visit \u2014 great selection, found everything on my list",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-J02",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-06-20",
+      "SCORE": 8,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Good experience, looking forward to the Tropical Summer campaign next month",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RJ-J03",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-07-15",
+      "SCORE": 7,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Some sizes selling out faster than expected, staff said stock is coming",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-J01",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-06-08",
+      "SCORE": 9,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Amazing selection, found everything on my list. Beautiful new pieces",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-J02",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-06-22",
+      "SCORE": 8,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Great store, very helpful staff. Excited about the summer campaign",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-J03",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-07-15",
+      "SCORE": 8,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Still good experience but popular items are moving fast this season",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MG-J04",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-07-28",
+      "SCORE": 6,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Getting harder to find specific sizes. Hope they restock before peak season",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-BA-J01",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-06-12",
+      "SCORE": 9,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Excellent store, well stocked and beautiful display for the new collection",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-BA-J02",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-06-28",
+      "SCORE": 9,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Love this brand, always find what I need here. Staff is fantastic",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-BA-J03",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-07-15",
+      "SCORE": 9,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Great campaign pieces available in all colors and sizes. No issues at all",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RS-J01",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-06-10",
+      "SCORE": 9,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Summer collection looks amazing, great availability across all articles",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RS-J02",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-06-25",
+      "SCORE": 8,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Really happy with the store, got two pairs of flip flops. Will be back",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-RS-J03",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-07-03",
+      "SCORE": 8,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Good stock levels, campaign material looks great. Happy customer",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-012",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-14",
+      "SCORE": 3,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Fourth visit this month \u2014 Tucano Blue still not available. Losing patience",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-013",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-19",
+      "SCORE": 3,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Campaign started but the main items are sold out. Very disappointing",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-SP-014",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-24",
+      "SCORE": 4,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Staff apologized for the stockout but I've been waiting weeks for Tucano Blue",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-LX-001",
+      "STORE_ID": "PT-LX-001",
+      "SURVEY_DATE": "2026-06-08",
+      "SCORE": 9,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Amazing Brazilian brand \u2014 the flip flops are perfect for Lisbon summer",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-LX-002",
+      "STORE_ID": "PT-LX-001",
+      "SURVEY_DATE": "2026-06-25",
+      "SCORE": 8,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Great store in Chiado, very helpful staff. Love the tropical collection",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-LX-003",
+      "STORE_ID": "PT-LX-001",
+      "SURVEY_DATE": "2026-07-15",
+      "SCORE": 7,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Looking for Tucano Blue flip flops \u2014 they said stock is running low",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-LX-004",
+      "STORE_ID": "PT-LX-001",
+      "SURVEY_DATE": "2026-08-05",
+      "SCORE": 6,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Two items I wanted were out of stock. Hoping for restocking soon",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-LX-005",
+      "STORE_ID": "PT-LX-001",
+      "SURVEY_DATE": "2026-08-20",
+      "SCORE": 6,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Still missing key sizes since the summer campaign launched. Disappointing",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MIA-001",
+      "STORE_ID": "US-FL-001",
+      "SURVEY_DATE": "2026-06-10",
+      "SCORE": 9,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Found Tropic\u00e1lia in Miami! The Tucano Flip Flop is perfect for the beach",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MIA-002",
+      "STORE_ID": "US-FL-001",
+      "SURVEY_DATE": "2026-06-28",
+      "SCORE": 9,
+      "CATEGORY": "SERVICE",
+      "VERBATIM": "Incredible store on Ocean Drive. Staff was amazing, bought three items",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MIA-003",
+      "STORE_ID": "US-FL-001",
+      "SURVEY_DATE": "2026-07-18",
+      "SCORE": 8,
+      "CATEGORY": "PRODUCT",
+      "VERBATIM": "Great brand but some popular styles already running low mid-summer",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MIA-004",
+      "STORE_ID": "US-FL-001",
+      "SURVEY_DATE": "2026-08-08",
+      "SCORE": 7,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Came for the Tucano Blue \u2014 out of stock in my size. Very popular here in Miami",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    },
+    {
+      "NPS_ID": "NPS-MIA-005",
+      "STORE_ID": "US-FL-001",
+      "SURVEY_DATE": "2026-08-22",
+      "SCORE": 6,
+      "CATEGORY": "AVAILABILITY",
+      "VERBATIM": "Love Tropic\u00e1lia but the stockout situation is hurting this store. Needs restock urgently",
+      "RECEIPT_ID": null,
+      "SCENARIO": "BAD"
+    }
+  ]
+}

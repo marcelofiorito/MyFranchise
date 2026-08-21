@@ -1,0 +1,123 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card09.sp.nps",
+    "type": "card",
+    "title": "NPS Score — SP Jardins",
+    "subTitle": "Customer satisfaction this month",
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://customer-financial-fact-sheet"
+    }
+  },
+  "sap.card": {
+    "type": "Object",
+    "configuration": {
+      "parameters": {
+        "store": {
+          "value": "BR-SP-001",
+          "label": "Store ID",
+          "type": "string"
+        }
+      },
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "data": {
+      "request": {
+        "url": "{{destinations.RunMyFranchise-MCP}}/cards/my-nps?store={{parameters.store}}",
+        "method": "GET",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "path": "/summary"
+    },
+    "header": {
+      "type": "Numeric",
+      "title": "NPS Score",
+      "subTitle": "SP Jardins — current scenario",
+      "unitOfMeasurement": "pts",
+      "mainIndicator": {
+        "number": "{nps_score}",
+        "state": "{nps_state}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Promoters",
+          "number": "{promoters}",
+          "unit": "resp"
+        },
+        {
+          "title": "Detractors",
+          "number": "{detractors}",
+          "unit": "resp"
+        }
+      ]
+    },
+    "content": {
+      "groups": [
+        {
+          "title": "NPS Breakdown",
+          "items": [
+            {
+              "label": "Total Responses",
+              "value": "{total_responses}"
+            },
+            {
+              "label": "Promoters (9-10)",
+              "value": "{promoters}",
+              "state": "Success"
+            },
+            {
+              "label": "Passives (7-8)",
+              "value": "{passives}",
+              "state": "Warning"
+            },
+            {
+              "label": "Detractors (0-6)",
+              "value": "{detractors}",
+              "state": "Error"
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "View NPS Details",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "MinhaLoja",
+                  "action": "display"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

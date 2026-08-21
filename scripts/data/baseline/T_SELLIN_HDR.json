@@ -1,0 +1,85 @@
+{
+  "table": "T_SELLIN_HDR",
+  "columns": [
+    "ORDER_ID",
+    "STORE_ID",
+    "ORDER_DATE",
+    "STATUS",
+    "TOTAL_AMOUNT",
+    "CURRENCY",
+    "EXPECTED_DELIVERY",
+    "NOTES"
+  ],
+  "rows": [
+    {
+      "ORDER_ID": "SI-2026-001",
+      "STORE_ID": "BR-SP-001",
+      "ORDER_DATE": "2026-07-15",
+      "STATUS": "DELIVERED",
+      "TOTAL_AMOUNT": 8991.0,
+      "CURRENCY": "BRL",
+      "EXPECTED_DELIVERY": "2026-07-22",
+      "NOTES": "Regular July replenishment"
+    },
+    {
+      "ORDER_ID": "SI-2026-002",
+      "STORE_ID": "BR-RJ-001",
+      "ORDER_DATE": "2026-07-20",
+      "STATUS": "DELIVERED",
+      "TOTAL_AMOUNT": 6293.0,
+      "CURRENCY": "BRL",
+      "EXPECTED_DELIVERY": "2026-07-27",
+      "NOTES": "Regular July replenishment"
+    },
+    {
+      "ORDER_ID": "SI-2026-003",
+      "STORE_ID": "BR-MG-001",
+      "ORDER_DATE": "2026-07-25",
+      "STATUS": "DELIVERED",
+      "TOTAL_AMOUNT": 4495.5,
+      "CURRENCY": "BRL",
+      "EXPECTED_DELIVERY": "2026-08-01",
+      "NOTES": "July replenishment"
+    },
+    {
+      "ORDER_ID": "SI-2026-004",
+      "STORE_ID": "BR-SP-001",
+      "ORDER_DATE": "2026-08-01",
+      "STATUS": "DELIVERED",
+      "TOTAL_AMOUNT": 3596.0,
+      "CURRENCY": "BRL",
+      "EXPECTED_DELIVERY": "2026-08-08",
+      "NOTES": "Emergency top-up before campaign"
+    },
+    {
+      "ORDER_ID": "SI-2026-005",
+      "STORE_ID": "AR-BA-001",
+      "ORDER_DATE": "2026-07-01",
+      "STATUS": "DELIVERED",
+      "TOTAL_AMOUNT": 450000.0,
+      "CURRENCY": "ARS",
+      "EXPECTED_DELIVERY": "2026-07-10",
+      "NOTES": "Argentina quarterly order"
+    },
+    {
+      "ORDER_ID": "SI-2026-006",
+      "STORE_ID": "BR-SP-001",
+      "ORDER_DATE": "2026-08-11",
+      "STATUS": "PENDING",
+      "TOTAL_AMOUNT": 12350.0,
+      "CURRENCY": "BRL",
+      "EXPECTED_DELIVERY": "2026-08-15",
+      "NOTES": "Option A: Full replenishment order"
+    },
+    {
+      "ORDER_ID": "SI-2026-007",
+      "STORE_ID": "BR-SP-001",
+      "ORDER_DATE": "2026-08-11",
+      "STATUS": "DRAFT",
+      "TOTAL_AMOUNT": 2640.0,
+      "CURRENCY": "BRL",
+      "EXPECTED_DELIVERY": "2026-08-18",
+      "NOTES": "Auto-generated: stockout prevention order"
+    }
+  ]
+}

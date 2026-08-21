@@ -1,0 +1,185 @@
+{
+  "table": "T_NPS",
+  "columns": [
+    "NPS_ID",
+    "STORE_ID",
+    "SURVEY_DATE",
+    "SCORE",
+    "CATEGORY",
+    "VERBATIM",
+    "RECEIPT_ID"
+  ],
+  "rows": [
+    {
+      "NPS_ID": "NPS-SP-001",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-06-01",
+      "SCORE": 9,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Love the flip flops! Always find my size.",
+      "RECEIPT_ID": "SO-20260601-SP-001"
+    },
+    {
+      "NPS_ID": "NPS-SP-002",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-06-15",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Great store, amazing colors!",
+      "RECEIPT_ID": null
+    },
+    {
+      "NPS_ID": "NPS-SP-003",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Tucano flip flop is perfect for summer!",
+      "RECEIPT_ID": "SO-20260701-SP-001"
+    },
+    {
+      "NPS_ID": "NPS-SP-004",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-15",
+      "SCORE": 7,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Good experience but some sizes were missing",
+      "RECEIPT_ID": null
+    },
+    {
+      "NPS_ID": "NPS-SP-005",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-20",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Went looking for Tucano Blue 37-38 — out of stock again!",
+      "RECEIPT_ID": null
+    },
+    {
+      "NPS_ID": "NPS-SP-006",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-25",
+      "SCORE": 3,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Third visit this week, still no Tucano in my size. Gave up.",
+      "RECEIPT_ID": "SO-20260715-SP-001"
+    },
+    {
+      "NPS_ID": "NPS-SP-007",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-07-28",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Staff was helpful but the product I wanted was unavailable",
+      "RECEIPT_ID": null
+    },
+    {
+      "NPS_ID": "NPS-SP-008",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-01",
+      "SCORE": 5,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Store is nice but always missing popular sizes",
+      "RECEIPT_ID": "SO-20260801-SP-001"
+    },
+    {
+      "NPS_ID": "NPS-SP-009",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-05",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Came for the campaign but Ipanema Blue is sold out!",
+      "RECEIPT_ID": "SO-20260805-SP-001"
+    },
+    {
+      "NPS_ID": "NPS-SP-010",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-10",
+      "SCORE": 3,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "How can you run a summer campaign with no stock?",
+      "RECEIPT_ID": "SO-20260810-SP-001"
+    },
+    {
+      "NPS_ID": "NPS-SP-011",
+      "STORE_ID": "BR-SP-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 4,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Disappointed - loved the brand but not finding products",
+      "RECEIPT_ID": "SO-20260811-SP-001"
+    },
+    {
+      "NPS_ID": "NPS-RJ-001",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Great store in Ipanema!",
+      "RECEIPT_ID": "SO-20260701-RJ-001"
+    },
+    {
+      "NPS_ID": "NPS-RJ-002",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-08-01",
+      "SCORE": 7,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Good but some sizes low on stock",
+      "RECEIPT_ID": "SO-20260801-RJ-001"
+    },
+    {
+      "NPS_ID": "NPS-RJ-003",
+      "STORE_ID": "BR-RJ-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 5,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "Wanted Tucano Blue 37-38 - out of stock",
+      "RECEIPT_ID": "SO-20260811-RJ-001"
+    },
+    {
+      "NPS_ID": "NPS-MG-001",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 9,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Best flip flops ever!",
+      "RECEIPT_ID": "SO-20260701-MG-001"
+    },
+    {
+      "NPS_ID": "NPS-MG-002",
+      "STORE_ID": "BR-MG-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 5,
+      "CATEGORY": "DETRACTOR",
+      "VERBATIM": "My size was not available",
+      "RECEIPT_ID": "SO-20260811-MG-001"
+    },
+    {
+      "NPS_ID": "NPS-RS-001",
+      "STORE_ID": "BR-RS-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 7,
+      "CATEGORY": "PASSIVE",
+      "VERBATIM": "Good store, could use more inventory",
+      "RECEIPT_ID": "SO-20260811-RS-001"
+    },
+    {
+      "NPS_ID": "NPS-AR-001",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-07-01",
+      "SCORE": 9,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Excelente seleccion!",
+      "RECEIPT_ID": "SO-20260701-AR-001"
+    },
+    {
+      "NPS_ID": "NPS-AR-002",
+      "STORE_ID": "AR-BA-001",
+      "SURVEY_DATE": "2026-08-11",
+      "SCORE": 8,
+      "CATEGORY": "PROMOTER",
+      "VERBATIM": "Amazing product range!",
+      "RECEIPT_ID": "SO-20260811-AR-001"
+    }
+  ]
+}

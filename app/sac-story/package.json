@@ -1,0 +1,12 @@
+{
+  "name": "sac-story",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "@ui5/cli": "^3",
+    "ui5-task-zipper": "^3"
+  },
+  "scripts": {
+    "build": "ui5 build --clean-dest"
+  }
+}

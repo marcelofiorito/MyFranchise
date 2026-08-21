@@ -1,0 +1,175 @@
+{
+  "table": "T_SELLIN_ITM",
+  "columns": [
+    "ORDER_ID",
+    "ITEM_NUM",
+    "MATNR",
+    "COLOR",
+    "SIZE_VAL",
+    "QTY_ORDERED",
+    "QTY_DELIVERED",
+    "UNIT_PRICE"
+  ],
+  "rows": [
+    {
+      "ORDER_ID": "SI-2026-001",
+      "ITEM_NUM": 1,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 30,
+      "QTY_DELIVERED": 30,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-001",
+      "ITEM_NUM": 2,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Tropical Yellow",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 25,
+      "QTY_DELIVERED": 25,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-001",
+      "ITEM_NUM": 3,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "39-40",
+      "QTY_ORDERED": 25,
+      "QTY_DELIVERED": 25,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-001",
+      "ITEM_NUM": 4,
+      "MATNR": "ARA-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 20,
+      "QTY_DELIVERED": 20,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-002",
+      "ITEM_NUM": 1,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 25,
+      "QTY_DELIVERED": 25,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-002",
+      "ITEM_NUM": 2,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Tropical Yellow",
+      "SIZE_VAL": "39-40",
+      "QTY_ORDERED": 20,
+      "QTY_DELIVERED": 20,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-003",
+      "ITEM_NUM": 1,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 20,
+      "QTY_DELIVERED": 20,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-003",
+      "ITEM_NUM": 2,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Tropical Yellow",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 15,
+      "QTY_DELIVERED": 15,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-004",
+      "ITEM_NUM": 1,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 20,
+      "QTY_DELIVERED": 20,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-004",
+      "ITEM_NUM": 2,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Tropical Yellow",
+      "SIZE_VAL": "39-40",
+      "QTY_ORDERED": 20,
+      "QTY_DELIVERED": 20,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-006",
+      "ITEM_NUM": 1,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 40,
+      "QTY_DELIVERED": 0,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-006",
+      "ITEM_NUM": 2,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Tropical Yellow",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 35,
+      "QTY_DELIVERED": 0,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-006",
+      "ITEM_NUM": 3,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "39-40",
+      "QTY_ORDERED": 30,
+      "QTY_DELIVERED": 0,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-006",
+      "ITEM_NUM": 4,
+      "MATNR": "TCO-FLIP-001",
+      "COLOR": "Tropical Yellow",
+      "SIZE_VAL": "39-40",
+      "QTY_ORDERED": 25,
+      "QTY_DELIVERED": 0,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-006",
+      "ITEM_NUM": 5,
+      "MATNR": "ARA-FLIP-001",
+      "COLOR": "Ipanema Blue",
+      "SIZE_VAL": "37-38",
+      "QTY_ORDERED": 20,
+      "QTY_DELIVERED": 0,
+      "UNIT_PRICE": 89.9
+    },
+    {
+      "ORDER_ID": "SI-2026-006",
+      "ITEM_NUM": 6,
+      "MATNR": "IPA-SAND-001",
+      "COLOR": "Forest Green",
+      "SIZE_VAL": "39-40",
+      "QTY_ORDERED": 15,
+      "QTY_DELIVERED": 0,
+      "UNIT_PRICE": 129.9
+    }
+  ]
+}

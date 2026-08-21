@@ -1,0 +1,122 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "myfranchise.minhaLoja",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "Minha Loja",
+    "description": "Visão completa da sua loja — estoque, pedidos e NPS",
+    "dataSources": {
+      "mainService": {
+        "uri": "franqueado/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "MinhaLoja-display": {
+          "semanticObject": "MinhaLoja",
+          "action": "display",
+          "title": "Minha Loja",
+          "subTitle": "Estoque · Pedidos · NPS",
+          "icon": "sap-icon://retail-store",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "sap-icon://retail-store"
+    },
+    "fullWidth": true
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "myfranchise.minhaLoja.i18n.i18n"
+        }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "MyStoreList",
+          "target": "MyStoreList"
+        },
+        {
+          "pattern": "MyStore({key}):?query:",
+          "name": "MyStoreObjectPage",
+          "target": "MyStoreObjectPage"
+        }
+      ],
+      "targets": {
+        "MyStoreList": {
+          "type": "Component",
+          "id": "MyStoreList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "MyStore",
+              "variantManagement": "Page",
+              "initialLoad": true,
+              "navigation": {
+                "MyStore": {
+                  "detail": {
+                    "route": "MyStoreObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "MyStoreObjectPage": {
+          "type": "Component",
+          "id": "MyStoreObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "MyStore"
+            }
+          }
+        }
+      }
+    }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
+  }
+}

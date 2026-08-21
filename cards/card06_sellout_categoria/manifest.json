@@ -1,0 +1,99 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card06.sellout.categoria",
+    "type": "card",
+    "title": "Top Articles Category by Sell-Out",
+    "subTitle": "Revenue share by product category",
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://pie-chart"
+    }
+  },
+  "sap.card": {
+    "type": "Analytical",
+    "designtime": "dt/configuration",
+    "configuration": {
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "header": {
+      "title": "Top Articles Category by Sell-Out",
+      "subTitle": "Full network — all periods",
+      "icon": {
+        "src": "sap-icon://pie-chart"
+      }
+    },
+    "content": {
+      "chartType": "Donut",
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/sellout-by-category",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value"
+      },
+      "dimensions": [
+        {
+          "name": "Category",
+          "value": "{category}"
+        }
+      ],
+      "measures": [
+        {
+          "name": "Sell-Out",
+          "value": "{total_sales}"
+        }
+      ],
+      "feeds": [
+        {
+          "uid": "size",
+          "type": "Measure",
+          "values": ["Sell-Out"]
+        },
+        {
+          "uid": "color",
+          "type": "Dimension",
+          "values": ["Category"]
+        }
+      ],
+      "title": {
+        "text": "Top Articles Category by Sell-Out",
+        "visible": true,
+        "alignment": "Center"
+      },
+      "legend": {
+        "visible": true,
+        "position": "Top",
+        "alignment": "Center"
+      },
+      "plotArea": {
+        "dataLabel": {
+          "visible": true,
+          "type": "Percentage"
+        }
+      }
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

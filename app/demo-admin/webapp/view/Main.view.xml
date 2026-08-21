@@ -1,0 +1,124 @@
+<mvc:View
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:f="sap.ui.layout.form"
+  controllerName="myfranchise.demoAdmin.controller.Main"
+  displayBlock="true">
+
+  <Page title="Demo Admin — Tropicália" showNavButton="false">
+    <content>
+      <VBox class="sapUiSmallMargin" width="100%">
+
+        <!-- ── RESET ─────────────────────────────────── -->
+        <Panel id="panelReset" headerText="🔄 Reset to Baseline" expandable="true" expanded="true"
+               class="sapUiSmallMarginBottom">
+          <content>
+            <VBox class="sapUiSmallMargin">
+              <Text text="Resyncs all tables from the JG source schema back to MF. This undoes all scenario changes." class="sapUiSmallMarginBottom"/>
+              <Button id="btnReset" text="Reset to Baseline" type="Negative"
+                      press=".onReset" width="auto"/>
+              <MessageStrip id="msReset" visible="false" class="sapUiSmallMarginTop"/>
+            </VBox>
+          </content>
+        </Panel>
+
+        <!-- ── STOCKOUT CRISIS ───────────────────────── -->
+        <Panel id="panelStockout" headerText="📦 Simulate Stockout Crisis" expandable="true" expanded="true"
+               class="sapUiSmallMarginBottom">
+          <content>
+            <VBox class="sapUiSmallMargin">
+              <Label text="Store" required="true"/>
+              <Select id="selStockoutStore" width="100%" class="sapUiSmallMarginBottom">
+                <items/>
+              </Select>
+              <Label text="Intensity"/>
+              <SegmentedButton id="sbIntensity" class="sapUiSmallMarginBottom">
+                <items>
+                  <SegmentedButtonItem key="high"   text="High — all SKUs critical"/>
+                  <SegmentedButtonItem key="medium" text="Medium — mix R/Y"/>
+                </items>
+              </SegmentedButton>
+              <Button id="btnStockout" text="Simulate Stockout" type="Emphasized"
+                      press=".onStockoutCrisis" width="auto"/>
+              <MessageStrip id="msStockout" visible="false" class="sapUiSmallMarginTop"/>
+            </VBox>
+          </content>
+        </Panel>
+
+        <!-- ── NPS CRISIS ────────────────────────────── -->
+        <Panel id="panelNps" headerText="📉 Simulate NPS Drop" expandable="true" expanded="true"
+               class="sapUiSmallMarginBottom">
+          <content>
+            <VBox class="sapUiSmallMargin">
+              <Label text="Store" required="true"/>
+              <Select id="selNpsStore" width="100%" class="sapUiSmallMarginBottom">
+                <items/>
+              </Select>
+              <Label text="New NPS Score (0–10)"/>
+              <StepInput id="siNpsScore" min="0" max="10" value="3" step="1"
+                         width="120px" class="sapUiSmallMarginBottom"/>
+              <Button id="btnNps" text="Simulate NPS Drop" type="Emphasized"
+                      press=".onNpsCrisis" width="auto"/>
+              <MessageStrip id="msNps" visible="false" class="sapUiSmallMarginTop"/>
+            </VBox>
+          </content>
+        </Panel>
+
+        <!-- ── CREATE ORDER ──────────────────────────── -->
+        <Panel id="panelCreate" headerText="🛒 Create Replenishment Order" expandable="true" expanded="true"
+               class="sapUiSmallMarginBottom">
+          <content>
+            <VBox class="sapUiSmallMargin">
+              <Label text="Store" required="true"/>
+              <Select id="selCreateStore" width="100%" class="sapUiSmallMarginBottom">
+                <items/>
+              </Select>
+              <Button id="btnCreate" text="Create Pending Order" type="Emphasized"
+                      press=".onCreateOrder" width="auto"/>
+              <MessageStrip id="msCreate" visible="false" class="sapUiSmallMarginTop"/>
+            </VBox>
+          </content>
+        </Panel>
+
+        <!-- ── ORDER LIFECYCLE ───────────────────────── -->
+        <Panel id="panelLifecycle" headerText="✅ Order Lifecycle" expandable="true" expanded="true"
+               class="sapUiSmallMarginBottom">
+          <content>
+            <VBox class="sapUiSmallMargin">
+              <Label text="Order"/>
+              <Select id="selOrder" width="100%" class="sapUiSmallMarginBottom">
+                <items/>
+              </Select>
+              <HBox wrap="Wrap">
+                <Button id="btnApprove"  text="Approve"  type="Emphasized"
+                        press=".onApproveOrder"  class="sapUiSmallMarginEnd"/>
+                <Button id="btnDeliver"  text="Deliver"  type="Success"
+                        press=".onDeliverOrder"  class="sapUiSmallMarginEnd"/>
+                <Button id="btnCancel"   text="Cancel"   type="Negative"
+                        press=".onCancelOrder"/>
+              </HBox>
+              <MessageStrip id="msLifecycle" visible="false" class="sapUiSmallMarginTop"/>
+            </VBox>
+          </content>
+        </Panel>
+
+        <!-- ── DEMO SCENARIO SWITCH ──────────────────── -->
+        <Panel id="panelScenario" headerText="🎬 Demo Scenario" expandable="true" expanded="true"
+               class="sapUiSmallMarginBottom">
+          <content>
+            <VBox class="sapUiSmallMargin">
+              <Text text="Switch the active scenario for SP Jardins between crisis (BAD) and recovery (GOOD). Reflects immediately in all cards and SAC." class="sapUiSmallMarginBottom"/>
+              <HBox>
+                <Button id="btnBad"  text="🔴 BAD (Crisis)"    type="Negative" press=".onScenarioBad"  class="sapUiSmallMarginEnd"/>
+                <Button id="btnGood" text="🟢 GOOD (Recovery)" type="Success"  press=".onScenarioGood"/>
+              </HBox>
+              <MessageStrip id="msScenario" visible="false" class="sapUiSmallMarginTop"/>
+            </VBox>
+          </content>
+        </Panel>
+
+      </VBox>
+    </content>
+  </Page>
+
+</mvc:View>

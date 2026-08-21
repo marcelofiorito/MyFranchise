@@ -1,0 +1,96 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card07.revenue.by.store",
+    "type": "card",
+    "title": "Revenue at Risk by Store",
+    "subTitle": "Projected loss — critical & attention SKUs",
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://bar-chart"
+    }
+  },
+  "sap.card": {
+    "type": "Analytical",
+    "designtime": "dt/configuration",
+    "configuration": {
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "header": {
+      "title": "Revenue at Risk by Store",
+      "subTitle": "Projected loss — critical & attention SKUs",
+      "icon": {
+        "src": "sap-icon://bar-chart"
+      }
+    },
+    "content": {
+      "chartType": "bar",
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/revenue-at-risk",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value"
+      },
+      "dimensions": [
+        {
+          "name": "Store",
+          "value": "{store_name}"
+        }
+      ],
+      "measures": [
+        {
+          "name": "Revenue at Risk",
+          "value": "{revenue_at_risk}"
+        }
+      ],
+      "feeds": [
+        {
+          "uid": "valueAxis",
+          "type": "Measure",
+          "values": ["Revenue at Risk"]
+        },
+        {
+          "uid": "categoryAxis",
+          "type": "Dimension",
+          "values": ["Store"]
+        }
+      ],
+      "title": {
+        "text": "Revenue at Risk by Store",
+        "visible": true,
+        "alignment": "Center"
+      },
+      "legend": {
+        "visible": false
+      },
+      "plotArea": {
+        "dataLabel": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

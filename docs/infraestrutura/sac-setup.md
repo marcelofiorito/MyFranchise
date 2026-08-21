@@ -1,117 +1,178 @@
-# SAC Live Connection Setup — RunMyFranchise
+[← README](../../README.md)
 
-**HANA Cloud:** `70ddf6e8-ee91-4a59-aa45-f2009a7e6ff9.hna1.prod-us10.hanacloud.ondemand.com`  
-**HDI Schema:** `2177F43B75D34848AE3EA84FAB461E66`  
-**BTP Subaccount:** `sa-build-platform-org / DEV` (us10)  
-**SAC Tenant:** `https://demo-presalesbrazil.us10.sapanalytics.cloud/`
+# SAC Story Design — Franchise Network Dashboard
 
----
-
-## Status
-
-- [x] Trusted IDP configurado no SAC (BTP como IDP)
-- [x] Conexão `MFRANCHISE` criada no SAC (usuário `_RT`)
-- [x] `access_role` do HDI concedido ao `_RT` via DBADMIN
-- [x] Estrutura correta do projeto HDI identificada (`exemplo/MyFranchiseDB.tar`)
-- [ ] Calculation Views CUBE criadas e configuradas no BAS
-- [ ] Deploy das Calculation Views no HDI container
-- [ ] SAC Live Data Model criado
+**Story name:** `Tropicália Co. — Franchise Network`
+**Audience:** Franchisor (HQ) — Carlos Mendes persona
+**Layout:** Responsive Page
+**Live Connection:** SAP Datasphere | Space `I831004` | Tenant `demo-presaleslad.us10.hcs.cloud.sap`
+**Models:** `AM_INVENTORY_JG` · `AM_SELLOUT_JG` · `AM_NPS_JG` · `AM_FORECAST_JG`
 
 ---
 
-## Estrutura correta do projeto HDI (via BAS wizard)
+## Conexão ao Datasphere
 
-```
-myfranchise-analytics/
-  db/
-    src/
-      .hdiconfig          ← gerado pelo BAS (inclui minimum_feature_version: "1015")
-      .hdinamespace       ← namespace do projeto
-      CV_*.hdbcalculationview  ← Calculation Views tipo CUBE
-    .env                  ← credenciais HDI (gerado pelo Bind All)
-    package.json          ← @sap/hdi-deploy + @sap/hana-client
-  mta.yaml
-```
+1. SAC → **Connections** → **+** → **SAP Datasphere**
+2. Tenant URL: `https://demo-presaleslad.us10.hcs.cloud.sap`
+3. Space: `I831004`
+4. Testar → Salvar
 
-## .hdinamespace
-```json
-{
-    "name": "myfranchise",
-    "subfolder": "append"
-}
-```
+### Adicionar modelos à Story
 
-## package.json (db/)
-```json
-{
-  "name": "deploy",
-  "dependencies": {
-    "@sap/hdi-deploy": "^5.*",
-    "@sap/hana-client": "^2.*"
-  },
-  "scripts": {
-    "start": "node node_modules/@sap/hdi-deploy/deploy.js"
-  }
-}
-```
+**Data** (ícone cilindro) → **Add Model** — adicionar os 4:
+- `AM_INVENTORY_JG`
+- `AM_SELLOUT_JG`
+- `AM_NPS_JG`
+- `AM_FORECAST_JG`
 
 ---
 
-## Como abrir o projeto existente no BAS (MyFranchise)
+## Filtros Globais (topo do canvas)
 
-1. Clone o projeto: `git clone https://github.com/marcelofiorito/MyFranchise.git`
-2. **File → Open Folder → /home/user/MyFranchise**
-3. No **SAP HANA Projects** panel (ícone de banco de dados na barra lateral):
-   - Clica em **Unbind** no módulo `db`
-   - Depois clica em **Bind** → seleciona `myfranchise-db`
-   - O `.env` é criado automaticamente e o editor gráfico fica editável
-
----
-
-## Como criar Calculation Views no BAS
-
-1. Com o projeto aberto no BAS
-2. **Command Palette → Create SAP HANA Database Artifact**
-3. Path: `db/src`
-4. Type: **Calculation View (hdbcalculationview)**
-5. Data Category: **CUBE**
-6. Star Join: **No**
-7. O editor gráfico abre — adicione datasources (tabelas do HDI via sinônimos)
-
----
-
-## Calculation Views planejadas
-
-| View | Tabelas base | Dimensions | Measures |
+| Label | Dimensão | Modelo | Default |
 |---|---|---|---|
-| `CV_NETWORK_HEALTH_CUBE` | `MYFRANCHISE_SAUDE_UNIDADE` + `MYFRANCHISE_UNIDADES` | UNIDADE_ID, REGION, CLUSTER | HEALTH_SCORE, COMPLIANCE_PCT |
-| `CV_KPI_PERFORMANCE_CUBE` | `MYFRANCHISE_KPI_UNIDADE` + `MYFRANCHISE_UNIDADES` | UNIDADE_ID, PERIODO, REGION | REVENUE, AVG_TICKET, NPS |
-| `CV_INVENTORY_CUBE` | `MYFRANCHISE_ESTOQUE_UNIDADE` | UNIDADE_ID, SKU, CATEGORY | CURRENT_STOCK, COVERAGE_DAYS |
+| Country | COUNTRY_NAME | AM_INVENTORY_JG | All |
+| Store | STORE_NAME | AM_INVENTORY_JG | All |
+| Period | SNAPSHOT_DATE | AM_INVENTORY_JG | Últimos 30 dias |
+
+> Adicionar filtros por último — após todos os gráficos estarem funcionando.
 
 ---
 
-## Grant access_role ao usuário RT (feito)
+## Banda 1 — KPI Tiles (6 indicadores, linha única)
+
+| # | Label | Medida | Modelo | Filtro adicional | Cor |
+|---|---|---|---|---|---|
+| 1 | **Revenue at Risk** | SUM(REVENUE_AT_RISK) | AM_INVENTORY_JG | STOCK_STATUS = 'R' | Vermelho |
+| 2 | **Critical Stores** | COUNT DISTINCT STORE_ID | AM_INVENTORY_JG | STOCK_STATUS = 'R' | Vermelho |
+| 3 | **SKUs at Risk** | COUNT DISTINCT MATNR+COLOR+SIZE | AM_INVENTORY_JG | STOCK_STATUS IN ('R','Y') | Laranja |
+| 4 | **Network Sell-out** | SUM(NET_AMOUNT) | AM_SELLOUT_JG | — | Azul |
+| 5 | **Network NPS** | AVG(SCORE) | AM_NPS_JG | — | Azul |
+| 6 | **Campaign Demand Impact** | MAX(CAMPAIGN_IMPACT_PCT) × 100 | AM_FORECAST_JG | — | Azul |
+
+---
+
+## Banda 2 — Stockout Risk (2 gráficos lado a lado)
+
+### Gráfico A — Store Risk Overview (esquerda, ~60%)
+**Tipo:** Tabela com conditional formatting
+**Fonte:** AM_INVENTORY_JG | **Ordenação:** REVENUE_AT_RISK desc
+
+| Coluna | Medida/Dimensão | Conditional Formatting |
+|---|---|---|
+| Store | STORE_NAME | — |
+| Country | COUNTRY_NAME | — |
+| Critical SKUs | COUNT onde STOCK_STATUS='R' | Vermelho se > 0 |
+| At-Risk SKUs | COUNT onde STOCK_STATUS='Y' | Amarelo se > 0 |
+| Revenue at Risk | SUM(REVENUE_AT_RISK) | Vermelho se > 0 |
+| Days to Stockout | MIN(DAYS_TO_STOCKOUT) | Vermelho se ≤ 3, amarelo se ≤ 7 |
+| Status | STOCK_STATUS_LABEL | Ícone semáforo |
+
+### Gráfico B — Revenue at Risk by Store (direita, ~40%)
+**Tipo:** Barra horizontal
+**Fonte:** AM_INVENTORY_JG
+- Eixo X: SUM(REVENUE_AT_RISK)
+- Eixo Y: STORE_NAME (ordenado desc por valor)
+- Cor: STOCK_STATUS (vermelho=R, amarelo=Y, verde=G)
+
+---
+
+## Banda 3 — Performance & NPS (3 gráficos)
+
+### Gráfico C — Sell-out by Store (esquerda, ~35%)
+**Tipo:** Barra vertical | **Fonte:** AM_SELLOUT_JG
+- X: STORE_NAME | Y: SUM(NET_AMOUNT)
+
+### Gráfico D — NPS Trend by Store (centro, ~35%)
+**Tipo:** Linha | **Fonte:** AM_NPS_JG
+- X: SURVEY_DATE (agrupado por semana) | Y: AVG(SCORE)
+- Série: STORE_NAME (uma linha por loja)
+- Destacar SP Jardins com traço mais espesso
+
+### Gráfico E — Top Articles by Sell-out (direita, ~30%)
+**Tipo:** Barra horizontal | **Fonte:** AM_SELLOUT_JG
+- X: SUM(NET_AMOUNT) | Y: ARTICLE_NAME (top 8)
+- Cor: CATEGORY_NAME
+
+---
+
+## Banda 4 — Demand Forecast (2 gráficos)
+
+### Gráfico F — Forecast vs. Stock by Article (esquerda, ~55%)
+**Abordagem:** 2 gráficos adjacentes com filtro vinculado por ARTICLE_NAME
+- Barras: SUM(QTY_ON_HAND) — fonte AM_INVENTORY_JG
+- Linha: SUM(QTY_FORECAST) — fonte AM_FORECAST_JG
+- Quando a linha ultrapassa as barras: risco visual de ruptura
+
+### Gráfico G — Demand Impact Factors (direita, ~45%)
+**Tipo:** Barra agrupada | **Fonte:** AM_FORECAST_JG
+- X: ARTICLE_NAME (top 5 por REVENUE_AT_RISK)
+- Barras agrupadas: WEATHER_IMPACT_PCT × 100, CAMPAIGN_IMPACT_PCT × 100, SEASONALITY_IMPACT_PCT × 100
+
+---
+
+## Banda 5 — SKU Detail Table (rodapé, largura total)
+
+**Tipo:** Tabela expansível | **Fonte:** AM_INVENTORY_JG
+**Filtro default:** STOCK_STATUS IN ('R','Y') | **Ordenação:** REVENUE_AT_RISK desc
+
+| Coluna | Campo |
+|---|---|
+| Store | STORE_NAME |
+| Article | ARTICLE_NAME |
+| Color | COLOR |
+| Size | SIZE_VAL |
+| Stock on Hand | QTY_ON_HAND |
+| 7-Day Forecast | QTY_FORECAST |
+| Shortfall | QTY_SHORTAGE |
+| Days to Stockout | DAYS_TO_STOCKOUT |
+| Revenue at Risk | REVENUE_AT_RISK |
+| Status | STOCK_STATUS_LABEL |
+
+---
+
+## Ordem de Build (recomendada)
+
+1. **KPI tiles** (Banda 1) — valida que os 4 modelos estão conectados
+2. **Store Risk table** (Gráfico A) — valida dados de estoque; SP Jardins deve aparecer em vermelho
+3. **NPS trend** (Gráfico D) — valida dados de NPS; SP Jardins com curva descendente
+4. **Revenue at Risk bar** (Gráfico B) — rápido após Gráfico A
+5. **Sell-out charts** (Gráficos C e E)
+6. **Forecast charts** (Gráficos F e G) — mais complexos, dois modelos
+7. **Detail table** (Banda 5)
+8. **Filtros globais** — adicionar por último; testar cascata Country → Store
+
+---
+
+## Valores Esperados Após Build
 
 ```sql
--- Executado como DBADMIN no HANA Database Explorer
-GRANT "2177F43B75D34848AE3EA84FAB461E66::access_role" 
-  TO "2177F43B75D34848AE3EA84FAB461E66_69KR5XWBL7FPU3Y9DLP4VIT7D_RT";
+CALL "RUNMYFRANCHISE_JG"."P_STOCKOUT_ALERT"('BR-SP-001', '2026-08-11', ?);
 ```
 
+| Tile / Gráfico | Valor esperado |
+|---|---|
+| Revenue at Risk (tile) | R$ 125.000 (rede) |
+| Critical Stores (tile) | 5 |
+| SKUs at Risk (tile) | 87 |
+| SP Jardins — Days to Stockout | 2 |
+| SP Jardins — Revenue at Risk | R$ 42.500 |
+| NPS SP Jardins (mais recente) | 5,4 (era 9,2 em junho) |
+| Campaign Impact (tile) | +25% |
+| Weather Impact (Gráfico G) | +35% |
+
 ---
 
-## SAC — Trusted IDP (feito)
+## Datasphere — Arquitetura de Objetos
 
-- **Name:** `BTP build-platform-rfm61ms1`
-- **Provider Name:** `https://build-platform-rfm61ms1.authentication.us10.hana.ondemand.com`
-- **Signing Certificate:** em `docs/infraestrutura/btp_idp_metadata.xml`
+```
+HANA Cloud (RUNMYFRANCHISE_JG)
+  └── CV_DIM_* / CV_FACT_* views
+       ↓ Remote Tables (8)
+Datasphere Space I831004
+  ├── Dimension Views (4)  D_STORE · D_ARTICLE · D_SKU · D_CAMPAIGN
+  ├── Fact Views      (4)  F_INVENTORY · F_SELLOUT · F_NPS · F_FORECAST
+  └── Analytic Models (4)  AM_INVENTORY_JG · AM_SELLOUT_JG · AM_NPS_JG · AM_FORECAST_JG
+```
 
----
-
-## SAC — Conexão MFRANCHISE (feita)
-
-- **Type:** SAP HANA (Live)
-- **Host:** `70ddf6e8-ee91-4a59-aa45-f2009a7e6ff9.hna1.prod-us10.hanacloud.ondemand.com`
-- **Port:** `443`
-- **User:** `_RT` do binding HDI
-
+**Known issue — Remote Tables via CLI:** O CLI salva a definição mas o binding `remote.entity` não é resolvido automaticamente. Após o `datasphere objects remote-tables create`, abrir cada remote table no Data Builder UI e re-selecionar manualmente: Connection → HANA_Generative_Force → Schema → RUNMYFRANCHISE_JG → View → [nome] → Deploy.

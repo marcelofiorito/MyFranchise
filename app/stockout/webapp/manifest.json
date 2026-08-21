@@ -4,14 +4,18 @@
     "id": "myfranchise.stockout",
     "type": "application",
     "i18n": "i18n/i18n.properties",
-    "applicationVersion": { "version": "1.0.0" },
-    "title": "Alertas de Ruptura",
-    "description": "SKUs críticos e em atenção — toda a rede",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "Stockout Alerts",
+    "description": "Critical and attention SKUs — full network",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
         "type": "OData",
-        "settings": { "odataVersion": "4.0" }
+        "settings": {
+          "odataVersion": "4.0"
+        }
       }
     },
     "crossNavigation": {
@@ -19,7 +23,7 @@
         "StockoutAlerts-display": {
           "semanticObject": "StockoutAlerts",
           "action": "display",
-          "title": "Alertas de Ruptura",
+          "title": "Stockout Alerts",
           "subTitle": "SKUs críticos por loja",
           "icon": "sap-icon://warning",
           "signature": {
@@ -32,7 +36,9 @@
   },
   "sap.ui": {
     "technology": "UI5",
-    "icons": { "icon": "sap-icon://warning" },
+    "icons": {
+      "icon": "sap-icon://warning"
+    },
     "fullWidth": true
   },
   "sap.ui5": {
@@ -58,7 +64,9 @@
       },
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "settings": { "bundleName": "myfranchise.stockout.i18n.i18n" }
+        "settings": {
+          "bundleName": "myfranchise.stockout.i18n.i18n"
+        }
       }
     },
     "routing": {
@@ -86,7 +94,9 @@
               "initialLoad": true,
               "navigation": {
                 "StockoutAlerts": {
-                  "detail": { "route": "StockoutAlertsObjectPage" }
+                  "detail": {
+                    "route": "StockoutAlertsObjectPage"
+                  }
                 }
               }
             }
@@ -104,5 +114,9 @@
         }
       }
     }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
   }
 }

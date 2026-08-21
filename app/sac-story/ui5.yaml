@@ -1,0 +1,16 @@
+specVersion: "3.0"
+metadata:
+  name: sac-story
+type: application
+builder:
+  resources:
+    excludes:
+      - "/test/**"
+      - "/localService/**"
+  customTasks:
+    - name: ui5-task-zipper
+      afterTask: generateBundle
+      configuration:
+        archiveName: sac-story
+        additionalFiles:
+          - xs-app.json

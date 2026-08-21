@@ -1,0 +1,59 @@
+{
+  "_version": "1.14.0",
+  "sap.app": {
+    "id": "tropicalia.card01.custom.test",
+    "type": "card",
+    "title": "Stockout Alerts (Custom)",
+    "subTitle": "Revenue at Risk by Status — Tropicália brand colors",
+    "applicationVersion": { "version": "1.0.0" }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": { "desktop": true, "phone": false, "tablet": true }
+  },
+  "sap.card": {
+    "type": "Component",
+    "configuration": {
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "header": {
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-count",
+          "method": "GET",
+          "headers": { "Accept": "application/json" }
+        },
+        "path": "/value/0"
+      },
+      "title": "SKUs at Risk",
+      "subTitle": "Critical & Attention — full network",
+      "unitOfMeasurement": "SKUs",
+      "mainIndicator": {
+        "number": "{total}",
+        "state": "{= ${critical} > 5 ? 'Error' : ${critical} > 0 ? 'Critical' : 'Good'}"
+      },
+      "sideIndicators": [
+        { "title": "Critical", "number": "{critical}", "state": "Error" },
+        { "title": "Attention", "number": "{attention}", "state": "Critical" }
+      ]
+    }
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.ui.core": {},
+        "sap.m": {},
+        "sap.viz": {}
+      }
+    }
+  },
+  "sap.platform.mobilecards": { "compatible": false }
+}

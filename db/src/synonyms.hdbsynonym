@@ -25,5 +25,35 @@
   },
   "MYFRANCHISE_SUBSTITUTE": {
     "target": { "object": "M_SUBSTITUTE", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_SELLOUTHDR": {
+    "target": { "object": "T_SELLOUT_HDR", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_SELLOUTITM": {
+    "target": { "object": "T_SELLOUT_ITM", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_SALESTARGET": {
+    "target": { "object": "M_SALES_TARGET", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_EXTEVENT": {
+    "target": { "object": "T_EXT_EVENTS", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_CAMPAIGN": {
+    "target": { "object": "M_CAMPAIGN", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_CAMPAIGNITEM": {
+    "target": { "object": "M_CAMPAIGN_ITEM", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_FRANCHISEE": {
+    "target": { "object": "M_FRANCHISEE", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_ARTICLEGRADE": {
+    "target": { "object": "M_ARTICLE_GRADE", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_EXTWEATHER": {
+    "target": { "object": "T_EXT_WEATHER", "schema": "RUNMYFRANCHISE_MF" }
+  },
+  "MYFRANCHISE_COUNTRY": {
+    "target": { "object": "M_COUNTRY", "schema": "RUNMYFRANCHISE_MF" }
   }
 }

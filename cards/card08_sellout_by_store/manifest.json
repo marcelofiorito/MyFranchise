@@ -1,0 +1,105 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card08.sellout.by.store",
+    "type": "card",
+    "title": "Sell-Out by Store (Current Month)",
+    "subTitle": "Net sales vs monthly target",
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://vertical-bar-chart"
+    }
+  },
+  "sap.card": {
+    "type": "Analytical",
+    "designtime": "dt/configuration",
+    "configuration": {
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "header": {
+      "title": "Sell-Out by Store (Current Month)",
+      "subTitle": "Net sales vs monthly target",
+      "icon": {
+        "src": "sap-icon://vertical-bar-chart"
+      }
+    },
+    "content": {
+      "chartType": "column",
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/sellout-by-store",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value"
+      },
+      "dimensions": [
+        {
+          "name": "Store",
+          "value": "{store_name}"
+        }
+      ],
+      "measures": [
+        {
+          "name": "Sell-Out",
+          "value": "{sellout}"
+        },
+        {
+          "name": "Target",
+          "value": "{target}"
+        }
+      ],
+      "feeds": [
+        {
+          "uid": "valueAxis",
+          "type": "Measure",
+          "values": ["Sell-Out"]
+        },
+        {
+          "uid": "categoryAxis",
+          "type": "Dimension",
+          "values": ["Store"]
+        },
+        {
+          "uid": "targetValues",
+          "type": "Measure",
+          "values": ["Target"]
+        }
+      ],
+      "title": {
+        "text": "Sell-Out by Store (Current Month)",
+        "visible": true,
+        "alignment": "Center"
+      },
+      "legend": {
+        "visible": false
+      },
+      "plotArea": {
+        "dataLabel": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

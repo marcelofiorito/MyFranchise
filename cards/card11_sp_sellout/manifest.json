@@ -1,0 +1,115 @@
+{
+  "_version": "1.84.0",
+  "sap.app": {
+    "id": "tropicalia.card11.sp.sellout",
+    "type": "card",
+    "title": "Sellout vs Target — SP Jardins",
+    "subTitle": "Monthly sales performance",
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "phone": true,
+      "tablet": true
+    },
+    "icons": {
+      "icon": "sap-icon://sales-order"
+    }
+  },
+  "sap.card": {
+    "type": "Object",
+    "configuration": {
+      "parameters": {
+        "store": {
+          "value": "BR-SP-001",
+          "label": "Store ID",
+          "type": "string"
+        }
+      },
+      "destinations": {
+        "RunMyFranchise-MCP": {
+          "name": "RunMyFranchise-MCP",
+          "label": "RunMyFranchise MCP",
+          "defaultUrl": "https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com"
+        }
+      }
+    },
+    "data": {
+      "request": {
+        "url": "{{destinations.RunMyFranchise-MCP}}/cards/my-sellout?store={{parameters.store}}",
+        "method": "GET",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "path": "/summary"
+    },
+    "header": {
+      "type": "Numeric",
+      "title": "Sellout vs Target",
+      "subTitle": "SP Jardins — this month",
+      "unitOfMeasurement": "%",
+      "mainIndicator": {
+        "number": "{pct_of_target}",
+        "state": "{sellout_state}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Actual (BRL)",
+          "number": "{sellout}"
+        },
+        {
+          "title": "Target (BRL)",
+          "number": "{target}"
+        }
+      ]
+    },
+    "content": {
+      "groups": [
+        {
+          "title": "Monthly Performance",
+          "items": [
+            {
+              "label": "% of Target",
+              "value": "{pct_of_target}",
+              "state": "{sellout_state}"
+            },
+            {
+              "label": "Actual Sellout (BRL)",
+              "value": "{sellout}"
+            },
+            {
+              "label": "Monthly Target (BRL)",
+              "value": "{target}"
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "actionsStrip": [
+        {
+          "text": "View Store Details",
+          "actions": [
+            {
+              "type": "Navigation",
+              "parameters": {
+                "ibnTarget": {
+                  "semanticObject": "MinhaLoja",
+                  "action": "display"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
+}

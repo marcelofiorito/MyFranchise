@@ -4,14 +4,18 @@
     "id": "myfranchise.orders",
     "type": "application",
     "i18n": "i18n/i18n.properties",
-    "applicationVersion": { "version": "1.0.0" },
-    "title": "Pedidos de Reposição",
-    "description": "Gestão de pedidos sell-in da rede",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "Replenishment Orders",
+    "description": "Network sell-in order management",
     "dataSources": {
       "mainService": {
         "uri": "franqueadora/",
         "type": "OData",
-        "settings": { "odataVersion": "4.0" }
+        "settings": {
+          "odataVersion": "4.0"
+        }
       }
     },
     "crossNavigation": {
@@ -19,7 +23,7 @@
         "MyOrders-display": {
           "semanticObject": "MyOrders",
           "action": "display",
-          "title": "Pedidos de Reposição",
+          "title": "Replenishment Orders",
           "subTitle": "Gestão de pedidos sell-in",
           "icon": "sap-icon://cart",
           "signature": {
@@ -32,7 +36,9 @@
   },
   "sap.ui": {
     "technology": "UI5",
-    "icons": { "icon": "sap-icon://cart" },
+    "icons": {
+      "icon": "sap-icon://cart"
+    },
     "fullWidth": true
   },
   "sap.ui5": {
@@ -58,7 +64,9 @@
       },
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "settings": { "bundleName": "myfranchise.orders.i18n.i18n" }
+        "settings": {
+          "bundleName": "myfranchise.orders.i18n.i18n"
+        }
       }
     },
     "routing": {
@@ -86,7 +94,9 @@
               "initialLoad": true,
               "navigation": {
                 "Orders": {
-                  "detail": { "route": "OrdersObjectPage" }
+                  "detail": {
+                    "route": "OrdersObjectPage"
+                  }
                 }
               }
             }
@@ -100,12 +110,20 @@
             "settings": {
               "entitySet": "Orders",
               "navigation": {
-                "OrderItems": { "detail": { "route": "OrdersObjectPage" } }
+                "OrderItems": {
+                  "detail": {
+                    "route": "OrdersObjectPage"
+                  }
+                }
               }
             }
           }
         }
       }
     }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "myfranchise.service"
   }
 }

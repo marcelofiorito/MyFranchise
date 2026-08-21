@@ -114,6 +114,20 @@ for table in tables:
             pass
 
 cur.close()
+
+# Post-sync: remove DRAFTs so the demo starts clean (DRAFT appears live via Joule)
+print("\nCleaning up DRAFT orders from MF...")
+cleanup_cur = conn.cursor()
+cleanup_cur.execute(f'DELETE FROM "{MF_SCHEMA}"."T_SELLIN_HDR" WHERE STATUS = \'DRAFT\'')
+deleted = cleanup_cur.rowcount
+cleanup_cur.execute(f'''
+    DELETE FROM "{MF_SCHEMA}"."T_SELLIN_ITM"
+    WHERE ORDER_ID NOT IN (SELECT ORDER_ID FROM "{MF_SCHEMA}"."T_SELLIN_HDR")
+''')
+conn.commit()
+cleanup_cur.close()
+print(f"  Removed {deleted} DRAFT header(s) and orphaned items.")
+
 conn.close()
 
 print(f"\n{'='*60}")

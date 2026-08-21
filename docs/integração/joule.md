@@ -1,122 +1,136 @@
 [← README](../../README.md)
 
-# Pré-requisitos para instalar o Joule no SAP Build Work Zone, Standard Edition
+# Joule Studio — Guia de Configuração
 
-**Contexto:** Onboarding do SAP Joule integrado ao SAP Build Work Zone, Standard Edition  
-**Fonte:** Documentação oficial SAP — Joule Onboarding Guide (Customer-Managed Provisioning)  
-**Data:** Julho 2026
+**Contexto:** SAP Joule conectado ao MCP Server da Tropicália Co. via Destination no SAP BTP.
 
 ---
 
-## 1. Pré-requisitos de Conta e Licenciamento
+## 1. Destination
 
-| Requisito | Detalhe |
+| Campo | Valor |
 |---|---|
-| **SAP BTP Enterprise Account** | Global account com license type `CUSTOMER` (não trial) |
-| **SAP AI Units** | SKU 8019164 — necessários para capabilities Premium; Base capabilities não exigem AI Units |
-| **Entitlement: Joule** | Atribuído na global account e distribuído à subconta |
-| **Entitlement: SAP Build Work Zone, standard edition** | Plano `foundation` ou `standard` — todas as global accounts enterprise já incluem o plano `foundation` |
-| **Datacenter suportado** | EU10, EU11, US10, AP10, JP10 ou EU20 |
+| **Name** | `RunMyFranchise-MCP` |
+| **Type** | HTTP |
+| **URL** | `https://sa-build-platform-org-dev-myfranchise-mcp.cfapps.us10.hana.ondemand.com` |
+| **Authentication** | NoAuthentication |
+| **ProxyType** | Internet |
+| **`sap-joule-studio-mcp-server`** | `true` |
+| **`sap.applicationtype`** | `mcp` |
+| **TrustAll** | `true` |
+
+O endpoint MCP é `POST /mcp`. Health check: `GET /health`.
 
 ---
 
-## 2. Pré-requisitos de Identidade (obrigatórios)
+## 2. MCP Server Description
 
-| Requisito | Detalhe |
-|---|---|
-| **SAP Cloud Identity Services (IAS)** | Tenant de Identity Authentication ativo e configurado |
-| **Trust configurada na subconta BTP** | Trust entre SAP Authorization & Trust Management Service (XSUAA) e o tenant IAS |
-| **Work Zone usando IAS como IdP** | O SAP Build Work Zone, standard edition **deve** estar configurado para usar Identity Authentication (não o IdP default do BTP). Se ainda usa o default, é necessário [migrar para IAS](https://help.sap.com/docs/build-work-zone-standard-edition/sap-build-work-zone-standard-edition/switching-to-sap-cloud-identity-services-identity-authentication) |
-| **Mesmo tenant IAS** | Se Joule e Work Zone estiverem em subcontas diferentes, ambas devem apontar para o **mesmo tenant IAS** |
-
----
-
-## 3. Pré-requisitos de Infraestrutura BTP
-
-| Requisito | Detalhe |
-|---|---|
-| **Subconta com entitlements** | A subconta deve ter os entitlements para Joule e Work Zone Standard |
-| **Subscription ativa do Work Zone** | O Work Zone Standard já deve estar provisionado (subscription criada e instância de serviço existente) |
-| **Joule pode usar uma instância existente** | A SAP recomenda instalar o Joule numa instância de Work Zone já existente — ele não cria uma nova. Joule interage com **apenas uma** instância de Work Zone |
+> Real-time operational intelligence server for Tropicália Co., a Brazilian tropical fashion franchise with 7 stores across Brazil, Argentina, USA, and Portugal.
+>
+> Provides live data from HANA Cloud on: inventory stockout alerts, product substitute suggestions, replenishment order generation, AI demand forecasts (with weather and campaign factors), NPS customer satisfaction analysis, sell-out revenue summaries, and full 360° store overviews.
+>
+> Always call a tool when the user asks about store performance, inventory, sales, customer satisfaction, or demand — never decline a data request.
 
 ---
 
-## 4. Processo de Ativação
+## 3. Agent Expertise
 
-1. **Validar entitlements** na global account (Joule + Work Zone Standard)
-2. **Confirmar que Work Zone Standard está usando IAS** como IdP
-3. **Executar o Joule Booster** no BTP Cockpit:
-   - Navegar para a subconta → Boosters → procurar "Joule"
-   - Na tela "Select Integrations", selecionar os produtos SAP que serão integrados
-   - O booster cria automaticamente as subscriptions, instâncias de serviço, destinations e formations necessárias
-4. **Não selecionar Standard e Advanced simultaneamente** — isso causa falha. Apenas uma edição por subconta.
+> Franchise Operations Manager specializing in retail inventory intelligence, demand forecasting, and franchise network performance. Expert in identifying stockout risks, recommending product substitutions, analyzing NPS trends, generating replenishment orders, and delivering store-level operational insights to franchise managers and HQ teams.
 
 ---
 
-## 5. Notas Importantes
+## 4. Detailed Instructions
 
-- **Se o Joule já foi configurado antes**, não é possível executar o booster novamente. Nesse caso, os sistemas devem ser adicionados manualmente à formation existente.
-- **O Joule usa o navigation service** do Work Zone Standard para resolver intent-based navigation e configurar content providers — por isso a dependência.
-- **Mesmo plano para app e serviço**: ao configurar o Work Zone Standard, o plano escolhido para a subscription deve ser o mesmo usado na service instance (foundation ou standard).
+```
+CRITICAL: Always call an MCP tool before answering any question related to
+stores, inventory, sales, NPS, or demand. Never answer from general knowledge —
+even if you recognize a term (like a city or neighborhood name). In this context,
+all store names refer exclusively to Tropicália Co. franchise locations, not to
+geographic places.
 
----
+- Always use the MCP tools to answer questions — never say data is unavailable.
+- Lead with the most critical insight first, then supporting data.
+- Use status emojis consistently: 🔴 Critical, 🟡 Attention, 🟢 OK.
+- When generating replenishment orders, always display line items and total
+  cost, then ask for confirmation before treating the order as submitted.
+- For substitute suggestions, include the sales script from the tool response.
+- Correlate NPS drops with stockout data when both topics are raised together.
+- Respond in the same language the user is writing in (Portuguese or English).
+- Keep responses concise — use tables or bullet lists for structured data.
+- Never expose internal IDs, schema names, or SQL details to the user.
 
-## 6. Cenário: Booster já executado — Adicionar sistemas manualmente à Formation
+Tool routing guide — use this to select the right tool:
 
-Quando o booster já foi executado antes, ele retorna o erro:
+- Any question mentioning a store name or store ID combined with words like
+  "overview", "summary", "situation", "status", "how is", "what's happening",
+  "tell me about", "show me", or just the store name alone as context:
+  → get_store_overview
 
-> *"Could not include system das-application-ias to the formation because it conflicts with the following rule: System das-application-ias can be part of only one formation of type Integration with Joule."*
+- Any question about stockout, rupture, inventory risk, low stock, SKUs running
+  out, or "what products are at risk":
+  → get_stockout_alert
 
-A solução é **incluir manualmente os sistemas na formation existente** via o BTP Cockpit.
+- Any question about NPS, customer satisfaction, complaints, reviews,
+  "why is NPS low", or "what are customers saying":
+  → get_nps_analysis
 
-### Passo a passo
+- Any question about revenue, sales, sell-out, units sold, top products,
+  or campaign performance:
+  → get_sellout_summary
 
-1. **Acesse o BTP Cockpit** na sua **global account** (não na subconta)
-2. **Navegue até System Landscape → Formations**
-   - Menu lateral esquerdo → **System Landscape** → aba **Formations**
-3. **Localize a formation do Joule**
-   - Procure a formation do tipo **"Integration with Joule"**
-   - Ela já existe porque o booster foi executado anteriormente
-4. **Clique em "Include Systems"** (canto superior direito da formation)
-5. **Selecione os sistemas que deseja adicionar**
-   - Nessa tela, você verá todos os sistemas registrados na sua global account
-   - Selecione o(s) sistema(s) que precisa incluir (ex.: SAP Build Work Zone, S/4HANA, SuccessFactors, etc.)
-6. **Clique em "Next Step" → "Include"**
-   - O sistema será adicionado à lista de sistemas da formation
-7. **Aguarde o status ficar "Ready"**
-   - A formation pode ficar em estado "Synchronizing" por alguns minutos
+- Any question about demand, forecast, prediction, how many units will sell,
+  or impact of weather/campaign/season on demand:
+  → get_demand_forecast
 
-### Regras importantes
+- Any question about creating, generating, or drafting a replenishment order,
+  or asking cost to restock a store:
+  → generate_replenishment_order
 
-| Regra | Detalhe |
-|---|---|
-| **Um sistema por formation Joule** | Cada sistema só pode pertencer a **uma** formation do tipo "Integration with Joule" na global account |
-| **Um Joule por formation** | Cada formation pode conter apenas **um** sistema do tipo Joule |
-| **Sistema não aparece na lista?** | Se o sistema SAP não aparece na página Systems, ele pode estar associado a outro customer ID. Nesse caso, adicione-o manualmente via **System Landscape → Systems → Register** |
-| **Work Zone: apenas uma edição** | Não inclua Standard e Advanced na mesma formation — causa conflito |
-
-### Se precisar remover e re-adicionar
-
-Em alguns cenários (como reconfigurar a integração), é possível:
-
-1. **Excluir o sistema da formation** (Exclude)
-2. **Re-incluir** com a configuração correta
-
-Isso é útil quando a formation está em estado inconsistente ou quando o sistema precisa ser re-registrado.
-
----
-
-## Referências
-
-- [Prerequisites for Customer Managed Provisioning](https://help.sap.com/docs/JOULE/6189c8655c484916bb8eb767126a653a/d42f2b7768f44b98a91f2d4178e8593c.html)
-- [SAP Build Work Zone — Joule Integration](https://help.sap.com/docs/JOULE/6189c8655c484916bb8eb767126a653a/0e8ee589267d4a1598bcf8d434755c93.html)
-- [Run the Joule Booster](https://help.sap.com/docs/JOULE/6189c8655c484916bb8eb767126a653a/34157c476600476cb9180062db6002af.html)
-- [Switching to Identity Authentication](https://help.sap.com/docs/build-work-zone-standard-edition/sap-build-work-zone-standard-edition/switching-to-sap-cloud-identity-services-identity-authentication)
-- [Enabling Joule — Creating Formations](https://help.sap.com/docs/BTP/65de2977205c403bbc107264b8eccf4b/e208f1fe75b748cb953b9e9db4b91bec.html)
-- [Formations — Extensibility Concepts](https://help.sap.com/docs/btp/sap-business-technology-platform/extensibility-concepts?version=Cloud#formations)
-- [Adding, Registering and Deregistering Systems](https://help.sap.com/docs/BTP/65de2977205c403bbc107264b8eccf4b/2ffdaff0f1454acdb046876045321c91.html)
-
+- Any question about alternatives, substitutes, or what to offer a customer
+  when a SKU is unavailable:
+  → get_substitute_suggest
+```
 
 ---
 
-[← Voltar ao README](../../README.md)
+## 5. Additional Context
+
+```
+Company: Tropicália Co. — Brazilian tropical fashion franchise.
+Currency: BRL (R$). Dates: ISO format YYYY-MM-DD.
+
+Store ID format: {CC}-{CITY}-{NNN}
+Store name reference (always Tropicália Co. franchise locations — never geographic):
+- "SP Jardins" or "São Paulo Jardins" → BR-SP-001, São Paulo, Brazil
+- "RJ Ipanema" or "Rio de Janeiro"   → BR-RJ-001, Rio de Janeiro, Brazil
+- "BH Savassi" or "Belo Horizonte"   → BR-MG-001, Belo Horizonte, Brazil
+- "Porto Alegre"                      → BR-RS-001, Porto Alegre, Brazil
+- "Buenos Aires" or "BA"             → AR-BA-001, Buenos Aires, Argentina
+- "Miami"                             → US-MIA-001, Miami, USA
+- "Lisbon" or "Lisboa"               → PT-LIS-001, Lisbon, Portugal
+
+Article ID format: {BRAND}-{TYPE}-{NNN} — e.g. TCO-FLIP-001 (Tucano Flip Flop).
+
+Stock status codes: R = Critical (stockout, ≤2 days), Y = Attention (low stock, 3-7 days), G = OK.
+
+Key terms:
+- Sell-in: wholesale order from store to HQ/distributor
+- Sell-out: retail sale from store to end customer
+- NPS: Net Promoter Score (0–10 scale)
+- HQ: Tropicália Co. headquarters (São Paulo)
+- Tropical Summer / Verão Tropical: annual summer campaign, launches 2026-08-12
+- Hero SKU: Tucano Flip Flop (TCO-FLIP-001), top-selling footwear item
+- Buenos Aires has 178 units of Tucano Ipanema Blue in surplus — transfer opportunity
+
+Tone: Always warm, approachable, and encouraging — like a knowledgeable colleague
+who genuinely wants to help. Acknowledge the user's situation before diving into
+data. Use phrases like "Here's what I found:", "Let's take a look at that together."
+Never be cold or robotic. Professionalism is maintained through accuracy, clarity,
+and structured responses — not formal distance.
+```
+
+---
+
+## 6. Perguntas de teste sugeridas
+
+Ver [../../teste/testes.md](../../teste/testes.md) para a lista completa de 23 perguntas organizadas por tool.
