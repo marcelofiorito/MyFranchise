@@ -260,50 +260,71 @@ Returns: STORE_NAME, ARTICLE_NAME, MATNR, COLOR, SIZE_VAL, QTY_ON_HAND, QTY_FORE
   server.tool('get_substitute_suggest',
     `Returns product substitution suggestions for an out-of-stock SKU at a specific store.
 Use when asked: "Is there a substitute for product X?", "What alternatives do we have?", "The customer can't find their size — what can I offer?", "Suggest alternatives for...", "What can I sell instead of X?"
+If color or size are not provided, automatically finds all at-risk variants of the product and returns substitutes for each.
 Returns: TARGET_MATNR, TARGET_ARTICLE_NAME, TARGET_COLOR, TARGET_SIZE, SIMILARITY_PCT (>90 = direct substitute), ACCEPTANCE_RATE (historical customer acceptance), QTY_ON_HAND (available at the store), STOCK_STATUS, SUGGEST_SCRIPT (ready-to-use sales pitch).`,
     {
-      store_id: z.string().describe('Store ID or name (e.g. "SP Jardins" or "BR-SP-001")'),
-      matnr:    z.string().describe('Article number (e.g. TCO-FLIP-001) or article name (e.g. "Tucano Flip Flop")'),
-      color:    z.string().describe('Color (e.g. "Ipanema Blue")'),
-      size_val: z.string().describe('Size (e.g. "37-38")'),
+      matnr:    z.string().describe('Article number (e.g. TCO-FLIP-001) or article name (e.g. "Tucano Flip Flop"). Required.'),
+      store_id: z.string().optional().describe('Store ID or name (e.g. "SP Jardins"). Omit to search all stores.'),
+      color:    z.string().optional().describe('Color (e.g. "Ipanema Blue"). Omit to find substitutes for all at-risk colors.'),
+      size_val: z.string().optional().describe('Size (e.g. "37-38"). Omit to find substitutes for all at-risk sizes.'),
     },
-    async ({ store_id, matnr, color, size_val }) => {
+    async ({ matnr, store_id, color, size_val }) => {
       try {
         const conn = await getHanaConn();
-        const sid = await resolveStore(conn, store_id);
-        if (!sid) return err(`Store not found: ${store_id}`);
-
         const resolvedMatnr = await resolveMatnr(conn, matnr) || matnr;
+        const sid = store_id ? await resolveStore(conn, store_id) : null;
 
-        const rows = await hanaExec(conn,
-          `SELECT s.TARGET_MATNR, s.TARGET_COLOR, s.TARGET_SIZE,
-                  s.SIMILARITY_PCT, s.ACCEPTANCE_RATE, s.PRIORITY, s.SUGGEST_SCRIPT,
-                  COALESCE(i.QTY_ON_HAND, 0)                                      AS qty_available,
-                  COALESCE(i.STOCK_STATUS, 'N')                                   AS stock_status,
-                  CASE WHEN COALESCE(i.QTY_ON_HAND, 0) > 0 THEN 'Y' ELSE 'N' END AS is_available,
-                  COALESCE(k.MAKTX, s.TARGET_MATNR)                               AS target_article_name
-           FROM "${MF}"."M_SUBSTITUTE" s
-           CROSS JOIN "${MF}"."M_DEMO_STATE" _D
-           LEFT JOIN "${MF}"."T_INVENTORY_SNAPSHOT" i
-             ON i.STORE_ID = ? AND i.MATNR = s.TARGET_MATNR
-            AND i.COLOR = s.TARGET_COLOR AND i.SIZE_VAL = s.TARGET_SIZE
-            AND i.SCENARIO = CASE WHEN i.STORE_ID = 'BR-SP-001' THEN _D.ACTIVE_SCENARIO ELSE 'BAD' END
-           LEFT JOIN "${MF}"."MAKT" k
-             ON k.MATNR = s.TARGET_MATNR AND k.MANDT = '100' AND k.SPRAS = 'E'
-           WHERE s.SOURCE_MATNR = ? AND s.SOURCE_COLOR = ? AND s.SOURCE_SIZE = ?
-           ORDER BY s.PRIORITY ASC`,
-          [sid, resolvedMatnr, color, size_val]
-        );
+        // When color/size not specified, find all at-risk variants of this product
+        let variants = [];
+        if (!color || !size_val) {
+          const storeFilter = sid ? `AND i.STORE_ID = '${sid}'` : '';
+          variants = await hanaExec(conn,
+            `SELECT DISTINCT i.STORE_ID, i.COLOR, i.SIZE_VAL, i.STOCK_STATUS
+             FROM "${MF}"."T_INVENTORY_SNAPSHOT" i
+             CROSS JOIN "${MF}"."M_DEMO_STATE" _D
+             WHERE i.MATNR = ?
+               AND i.STOCK_STATUS IN ('R','Y')
+               AND i.SCENARIO = CASE WHEN i.STORE_ID = 'BR-SP-001' THEN _D.ACTIVE_SCENARIO ELSE 'BAD' END
+               ${storeFilter}
+             ORDER BY i.STOCK_STATUS ASC`,
+            [resolvedMatnr]
+          );
+          if (!variants.length) return ok({ message: `No at-risk variants found for ${matnr}.`, results: [] });
+        } else {
+          variants = [{ store_id: sid || (store_id || ''), color, size_val }];
+        }
 
-        if (!rows.length) return ok({
-          message: `No substitutes found for ${matnr} ${color} ${size_val}.`,
-          substitutes: [],
-        });
+        const results = [];
+        for (const v of variants) {
+          const effectiveSid = v.store_id || sid;
+          if (!effectiveSid) continue;
+          const rows = await hanaExec(conn,
+            `SELECT s.TARGET_MATNR, s.TARGET_COLOR, s.TARGET_SIZE,
+                    s.SIMILARITY_PCT, s.ACCEPTANCE_RATE, s.PRIORITY, s.SUGGEST_SCRIPT,
+                    COALESCE(i.QTY_ON_HAND, 0)                                      AS qty_available,
+                    COALESCE(i.STOCK_STATUS, 'N')                                   AS stock_status,
+                    CASE WHEN COALESCE(i.QTY_ON_HAND, 0) > 0 THEN 'Y' ELSE 'N' END AS is_available,
+                    COALESCE(k.MAKTX, s.TARGET_MATNR)                               AS target_article_name
+             FROM "${MF}"."M_SUBSTITUTE" s
+             CROSS JOIN "${MF}"."M_DEMO_STATE" _D
+             LEFT JOIN "${MF}"."T_INVENTORY_SNAPSHOT" i
+               ON i.STORE_ID = ? AND i.MATNR = s.TARGET_MATNR
+              AND i.COLOR = s.TARGET_COLOR AND i.SIZE_VAL = s.TARGET_SIZE
+              AND i.SCENARIO = CASE WHEN i.STORE_ID = 'BR-SP-001' THEN _D.ACTIVE_SCENARIO ELSE 'BAD' END
+             LEFT JOIN "${MF}"."MAKT" k
+               ON k.MATNR = s.TARGET_MATNR AND k.MANDT = '100' AND k.SPRAS = 'E'
+             WHERE s.SOURCE_MATNR = ? AND s.SOURCE_COLOR = ? AND s.SOURCE_SIZE = ?
+             ORDER BY s.PRIORITY ASC`,
+            [effectiveSid, resolvedMatnr, v.color, v.size_val]
+          );
+          if (rows.length) results.push({ store: effectiveSid, source_color: v.color, source_size: v.size_val, substitutes: rows });
+        }
 
+        if (!results.length) return ok({ message: `No substitutes found for ${matnr}.`, results: [] });
         return ok({
-          requested: { store: store_id, article: matnr, color, size: size_val },
-          substitutes: rows,
+          article: matnr,
           tip: 'Use the suggest_script field as a natural sales pitch to the customer.',
+          results,
         });
       } catch (e) { LOG.error('get_substitute_suggest', e); return err(e.message); }
     }
