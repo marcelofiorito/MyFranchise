@@ -174,6 +174,12 @@ entity SalesTarget {
 
 @cds.persistence.exists
 @readonly
+entity DemoState {
+  key ACTIVE_SCENARIO : String(4);
+}
+
+@cds.persistence.exists
+@readonly
 entity ExtEvent {
   key EVENT_ID          : String(15);
       COUNTRY_CODE      : String(2);
@@ -434,6 +440,7 @@ view SelloutItemDetail as
 view ActualVsTarget as
   select from SalesTarget as t
   join Store as s on s.STORE_ID = t.STORE_ID
+  cross join DemoState as _D
   left join SelloutHdr as h
     on h.STORE_ID = t.STORE_ID
    and year(h.RECEIPT_DATE)  = t.YEAR
@@ -448,11 +455,18 @@ view ActualVsTarget as
       s.COUNTRY_CODE,
       t.TARGET_AMOUNT,
       t.CURRENCY,
-      coalesce(sum(h.NET_AMOUNT), 0)                              as ACTUAL_AMOUNT    : Decimal(15,2),
+      case when t.STORE_ID = 'BR-SP-001' and _D.ACTIVE_SCENARIO = 'BAD'
+           then round(coalesce(sum(h.NET_AMOUNT), 0) * 0.5, 2)
+           else coalesce(sum(h.NET_AMOUNT), 0)
+      end                                                         as ACTUAL_AMOUNT    : Decimal(15,2),
       case when t.TARGET_AMOUNT > 0
-           then round(coalesce(sum(h.NET_AMOUNT), 0) / t.TARGET_AMOUNT * 100, 1)
+           then round(
+             (case when t.STORE_ID = 'BR-SP-001' and _D.ACTIVE_SCENARIO = 'BAD'
+                   then coalesce(sum(h.NET_AMOUNT), 0) * 0.5
+                   else coalesce(sum(h.NET_AMOUNT), 0)
+              end) / t.TARGET_AMOUNT * 100, 1)
            else 0
       end                                                         as ACHIEVEMENT_PCT  : Decimal(6,1)
 }
 group by t.STORE_ID, t.YEAR, t.MONTH, s.STORE_NAME, s.CITY, s.REGION, s.COUNTRY_CODE,
-         t.TARGET_AMOUNT, t.CURRENCY;
+         t.TARGET_AMOUNT, t.CURRENCY, _D.ACTIVE_SCENARIO;

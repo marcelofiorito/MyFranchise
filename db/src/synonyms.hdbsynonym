@@ -35,6 +35,9 @@
   "MYFRANCHISE_SALESTARGET": {
     "target": { "object": "M_SALES_TARGET", "schema": "RUNMYFRANCHISE_MF" }
   },
+  "MYFRANCHISE_DEMOSTATE": {
+    "target": { "object": "M_DEMO_STATE", "schema": "RUNMYFRANCHISE_MF" }
+  },
   "MYFRANCHISE_EXTEVENT": {
     "target": { "object": "T_EXT_EVENTS", "schema": "RUNMYFRANCHISE_MF" }
   },
