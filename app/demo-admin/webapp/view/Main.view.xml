@@ -6,22 +6,19 @@
 
   <Page title="Demo Admin — Tropicália" showNavButton="false">
     <content>
-      <VBox alignItems="Center" justifyContent="Center"
-            class="sapUiLargeMarginTop" width="100%">
-
-        <Title text="🎬 Demo Scenario" level="H2" class="sapUiMediumMarginBottom"/>
+      <VBox class="sapUiMediumMargin">
 
         <Text text="Switch the active scenario for SP Jardins. Reflects immediately in all cards and Joule."
-              textAlign="Center" class="sapUiSmallMarginBottom"/>
+              class="sapUiSmallMarginBottom"/>
 
-        <HBox justifyContent="Center" class="sapUiMediumMarginTop">
-          <Button id="btnBad"  text="🔴 BAD — Crisis Mode"    type="Negative"
+        <HBox class="sapUiSmallMarginTop">
+          <Button id="btnBad"  text="BAD — Crisis Mode"    type="Negative"
                   press=".onScenarioBad"  class="sapUiSmallMarginEnd"/>
-          <Button id="btnGood" text="🟢 GOOD — Recovery Mode" type="Success"
+          <Button id="btnGood" text="GOOD — Recovery Mode" type="Success"
                   press=".onScenarioGood"/>
         </HBox>
 
-        <MessageStrip id="msScenario" visible="false" class="sapUiMediumMarginTop"/>
+        <MessageStrip id="msScenario" visible="false" class="sapUiSmallMarginTop"/>
 
       </VBox>
     </content>
