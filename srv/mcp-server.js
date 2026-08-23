@@ -650,7 +650,7 @@ Use when asked: "What is the demand forecast?", "How many units will we sell?", 
   // ── TOOL 7: get_nps_analysis ──────────────────────────────────────────────────
   server.tool('get_nps_analysis',
     `Returns NPS (Net Promoter Score) analysis for stores, including promoters, detractors, and customer verbatims.
-Use when asked: "What is the NPS score?", "How satisfied are customers?", "Why is NPS dropping?", "What are customers saying?"
+Use when asked: "What is the NPS score?", "How satisfied are customers?", "Why is NPS dropping?", "What are customers saying?", "What is the store NPS?", "What is the NPS this month?", "What are customers complaining about?", "What are the customer complaints?", "What is the customer feedback?", "Are customers happy?", "What do customers think about the store?", "Show me the NPS for SP Jardins", "Customer satisfaction at my store", "What feedback have customers given?"
 Correlates NPS with stockout data when both are mentioned.`,
     {
       store_id: z.string().optional().describe('Store ID or name. Omit for all stores.'),
