@@ -895,6 +895,7 @@ This is the primary tool for the demo hero story (SP Jardins stockout crisis).`,
              WHERE n.STORE_ID=? AND n.SCORE <= 6
                AND n.SCENARIO = CASE WHEN n.STORE_ID = 'BR-SP-001' THEN _D.ACTIVE_SCENARIO ELSE 'BAD' END
              ORDER BY n.SCORE ASC, n.SURVEY_DATE DESC LIMIT 5`, [sid]),
+        ]);
 
         const store = storeInfo[0] || {};
         const npsData = nps[0] || {};
