@@ -258,8 +258,8 @@ Returns: STORE_NAME, ARTICLE_NAME, MATNR, COLOR, SIZE_VAL, QTY_ON_HAND, QTY_FORE
 
   // ── TOOL 2: get_substitute_suggest ───────────────────────────────────────────
   server.tool('get_substitute_suggest',
-    `Returns product substitution suggestions for an out-of-stock SKU at a specific store.
-Use when asked: "Is there a substitute for product X?", "What alternatives do we have?", "The customer can't find their size — what can I offer?", "Suggest alternatives for...", "What can I sell instead of X?"
+    `Returns product substitution suggestions for an out-of-stock or at-risk SKU at a specific store.
+Use when asked: "Is there a substitute for product X?", "Is there a substitute product available for X?", "What alternatives do we have?", "The customer can't find their size — what can I offer?", "Suggest alternatives for...", "What can I sell instead of X?", "Is there a replacement product?", "What are the substitute options?", "Do we have an alternative to X?", "Can you suggest a replacement?".
 If color or size are not provided, automatically finds all at-risk variants of the product and returns substitutes for each.
 Returns: TARGET_MATNR, TARGET_ARTICLE_NAME, TARGET_COLOR, TARGET_SIZE, SIMILARITY_PCT (>90 = direct substitute), ACCEPTANCE_RATE (historical customer acceptance), QTY_ON_HAND (available at the store), STOCK_STATUS, SUGGEST_SCRIPT (ready-to-use sales pitch).`,
     {
