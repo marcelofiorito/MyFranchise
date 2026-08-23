@@ -832,7 +832,7 @@ This is the primary tool for the demo hero story (SP Jardins stockout crisis).`,
         if (!sid) return err(`Store not found: ${store_id}`);
 
         // Run all queries in parallel
-        const [storeInfo, inventory, nps, sales, forecast, weather] = await Promise.all([
+        const [storeInfo, inventory, nps, sales, forecast, weather, verbatims] = await Promise.all([
           hanaExec(conn,
             `SELECT s.STORE_ID, s.STORE_NAME, s.CITY, s.REGION, s.COUNTRY_CODE,
                     COALESCE(cnt.COUNTRY_NAME, s.COUNTRY_CODE) AS COUNTRY_NAME,
@@ -888,7 +888,13 @@ This is the primary tool for the demo hero story (SP Jardins stockout crisis).`,
              FROM "${MF}"."T_EXT_WEATHER" w
              WHERE w.CITY = (SELECT CITY FROM "${MF}"."M_STORE" WHERE STORE_ID=?)
                AND w.FORECAST_DATE = CURRENT_DATE`, [sid]),
-        ]);
+          hanaExec(conn,
+            `SELECT n.SCORE, n.CATEGORY, n.VERBATIM, n.SURVEY_DATE
+             FROM "${MF}"."T_NPS" n
+             CROSS JOIN "${MF}"."M_DEMO_STATE" _D
+             WHERE n.STORE_ID=? AND n.SCORE <= 6
+               AND n.SCENARIO = CASE WHEN n.STORE_ID = 'BR-SP-001' THEN _D.ACTIVE_SCENARIO ELSE 'BAD' END
+             ORDER BY n.SCORE ASC, n.SURVEY_DATE DESC LIMIT 5`, [sid]),
 
         const store = storeInfo[0] || {};
         const npsData = nps[0] || {};
@@ -924,10 +930,12 @@ This is the primary tool for the demo hero story (SP Jardins stockout crisis).`,
           },
           nps: {
             avg_score:   npsData.responses > 0 ? Number(npsData.avg_nps).toFixed(1) : 'No data',
+            nps_score:   npsData.responses > 0 ? Math.round((Number(npsData.promoters) - Number(npsData.detractors)) / Number(npsData.responses) * 100) : 'No data',
             responses:   npsData.responses,
             promoters:   npsData.promoters,
             detractors:  npsData.detractors,
             health:      Number(npsData.avg_nps) >= 8 ? '🟢 Healthy' : Number(npsData.avg_nps) >= 6 ? '🟡 At risk' : '🔴 Critical',
+            top_complaints: verbatims.map(v => ({ score: v.score, category: v.category, comment: v.verbatim })),
           },
           sales: {
             total_revenue: `R$ ${Number(salesData.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
