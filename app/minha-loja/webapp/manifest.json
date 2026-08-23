@@ -7,8 +7,8 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "title": "Minha Loja",
-    "description": "Visão completa da sua loja — estoque, pedidos e NPS",
+    "title": "My Store",
+    "description": "Full view of your store — inventory, orders and NPS",
     "dataSources": {
       "mainService": {
         "uri": "franqueado/",
@@ -23,8 +23,8 @@
         "MinhaLoja-display": {
           "semanticObject": "MinhaLoja",
           "action": "display",
-          "title": "Minha Loja",
-          "subTitle": "Estoque · Pedidos · NPS",
+          "title": "My Store",
+          "subTitle": "Inventory · Orders · NPS",
           "icon": "sap-icon://retail-store",
           "signature": {
             "parameters": {},

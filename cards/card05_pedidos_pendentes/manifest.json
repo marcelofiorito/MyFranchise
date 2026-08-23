@@ -3,8 +3,8 @@
   "sap.app": {
     "id": "tropicalia.card05.pedidos.pendentes",
     "type": "card",
-    "title": "Meus Pedidos de Reposição",
-    "subTitle": "Status de pedidos — minha loja",
+    "title": "My Replenishment Orders",
+    "subTitle": "Order status — my store",
     "applicationVersion": {
       "version": "2.0.0"
     }
@@ -50,16 +50,16 @@
         },
         "path": "/summary"
       },
-      "title": "Pedidos Pendentes",
-      "subTitle": "Aguardando aprovação da franqueadora",
-      "unitOfMeasurement": "pedidos",
+      "title": "Pending Orders",
+      "subTitle": "Awaiting franchisor approval",
+      "unitOfMeasurement": "orders",
       "mainIndicator": {
         "number": "{pending}",
         "state": "{= ${pending} > 3 ? 'Error' : ${pending} > 0 ? 'Critical' : 'Good'}"
       },
       "sideIndicators": [
         {
-          "title": "Rascunho",
+          "title": "Draft",
           "number": "{draft}"
         }
       ]
@@ -79,18 +79,18 @@
         "highlight": "{status_state}",
         "columns": [
           {
-            "title": "Pedido",
+            "title": "Order",
             "value": "{order_id}",
             "width": "30%",
             "identifier": true
           },
           {
-            "title": "Data",
+            "title": "Date",
             "value": "{= ${order_date} ? ${order_date}.substring(8,10) + '/' + ${order_date}.substring(5,7) : '—'}",
             "width": "20%"
           },
           {
-            "title": "Itens",
+            "title": "Items",
             "value": "{item_count}",
             "hAlign": "End",
             "width": "15%"
@@ -113,7 +113,7 @@
     "footer": {
       "actionsStrip": [
         {
-          "text": "Novo Pedido via Joule",
+          "text": "New Order via Joule",
           "actions": [
             {
               "type": "Navigation",
