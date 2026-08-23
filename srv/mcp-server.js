@@ -1378,17 +1378,31 @@ app.get('/cards/my-sellout', async (req, res) => {
     const conn = await getHanaConn();
     const rows = await hanaExec(conn, `
       SELECT
-        ROUND(SUM(it.NET_AMOUNT), 2)          AS sellout,
-        COALESCE(MAX(t.TARGET_AMOUNT), 0)      AS target,
+        ROUND(
+          CASE WHEN h.STORE_ID = 'BR-SP-001' AND _D.ACTIVE_SCENARIO = 'BAD'
+               THEN SUM(it.NET_AMOUNT) * 0.5
+               ELSE SUM(it.NET_AMOUNT) END, 2)   AS sellout,
+        COALESCE(MAX(t.TARGET_AMOUNT), 0)          AS target,
         CASE WHEN MAX(t.TARGET_AMOUNT) > 0
-             THEN ROUND(SUM(it.NET_AMOUNT) / MAX(t.TARGET_AMOUNT) * 100, 1)
-             ELSE 0 END                        AS pct_of_target,
+             THEN ROUND(
+               (CASE WHEN h.STORE_ID = 'BR-SP-001' AND _D.ACTIVE_SCENARIO = 'BAD'
+                     THEN SUM(it.NET_AMOUNT) * 0.5
+                     ELSE SUM(it.NET_AMOUNT) END)
+               / MAX(t.TARGET_AMOUNT) * 100, 1)
+             ELSE 0 END                            AS pct_of_target,
         CASE WHEN MAX(t.TARGET_AMOUNT) > 0 AND
-                  SUM(it.NET_AMOUNT) / MAX(t.TARGET_AMOUNT) >= 0.9 THEN 'Good'
+                  (CASE WHEN h.STORE_ID = 'BR-SP-001' AND _D.ACTIVE_SCENARIO = 'BAD'
+                        THEN SUM(it.NET_AMOUNT) * 0.5
+                        ELSE SUM(it.NET_AMOUNT) END)
+                  / MAX(t.TARGET_AMOUNT) >= 0.9 THEN 'Good'
              WHEN MAX(t.TARGET_AMOUNT) > 0 AND
-                  SUM(it.NET_AMOUNT) / MAX(t.TARGET_AMOUNT) >= 0.7 THEN 'Critical'
-             ELSE 'Error' END                  AS sellout_state
+                  (CASE WHEN h.STORE_ID = 'BR-SP-001' AND _D.ACTIVE_SCENARIO = 'BAD'
+                        THEN SUM(it.NET_AMOUNT) * 0.5
+                        ELSE SUM(it.NET_AMOUNT) END)
+                  / MAX(t.TARGET_AMOUNT) >= 0.7 THEN 'Critical'
+             ELSE 'Error' END                      AS sellout_state
       FROM "${MF}"."T_SELLOUT_HDR" h
+      CROSS JOIN "${MF}"."M_DEMO_STATE" _D
       JOIN "${MF}"."T_SELLOUT_ITM" it ON it.RECEIPT_ID = h.RECEIPT_ID
       LEFT JOIN "${MF}"."M_SALES_TARGET" t
              ON t.STORE_ID = h.STORE_ID
@@ -1397,6 +1411,7 @@ app.get('/cards/my-sellout', async (req, res) => {
       WHERE h.STORE_ID = ?
         AND YEAR(h.RECEIPT_DATE)  = YEAR(CURRENT_DATE)
         AND MONTH(h.RECEIPT_DATE) = MONTH(CURRENT_DATE)
+      GROUP BY h.STORE_ID, _D.ACTIVE_SCENARIO
     `, [store]);
     const r = rows[0] || {};
     res.json({
