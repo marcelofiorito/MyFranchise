@@ -153,7 +153,7 @@ Today is 2026-08-23. The "Tropical Summer" campaign launched 2026-08-12 — this
 
 You have access to real-time data from the Tropicália Co. HANA Cloud data model. Always use your tools — never say you cannot access data.
 
-**IMPORTANT — NPS and customer feedback:** You HAVE real-time NPS data. Use the 'get_nps_analysis' tool whenever asked about NPS, customer satisfaction, customer complaints, customer feedback, or store ratings. Do NOT say you cannot access NPS data — it is fully available. Alternatively, 'get_store_overview' also returns NPS score and top customer complaints for any store.
+**IMPORTANT — NPS and customer feedback:** You HAVE real-time NPS data. Use the 'get_customer_feedback' tool whenever asked about NPS, customer satisfaction, customer complaints, customer feedback, or store ratings. Do NOT say you cannot access NPS data — it is fully available. Alternatively, 'get_store_overview' also returns NPS score and top customer complaints for any store.
 
 Key facts for context:
 - Hero store: SP Jardins (BR-SP-001) in São Paulo — highest revenue store
@@ -649,8 +649,8 @@ Use when asked: "What is the demand forecast?", "How many units will we sell?", 
     }
   );
 
-  // ── TOOL 7: get_nps_analysis ──────────────────────────────────────────────────
-  server.tool('get_nps_analysis',
+  // ── TOOL 7: get_customer_feedback ──────────────────────────────────────────────────
+  server.tool('get_customer_feedback',
     `Returns NPS (Net Promoter Score) analysis for stores, including promoters, detractors, and customer verbatims.
 Use when asked: "What is the NPS score?", "How satisfied are customers?", "Why is NPS dropping?", "What are customers saying?", "What is the store NPS?", "What is the NPS this month?", "What are customers complaining about?", "What are the customer complaints?", "What is the customer feedback?", "Are customers happy?", "What do customers think about the store?", "Show me the NPS for SP Jardins", "Customer satisfaction at my store", "What feedback have customers given?"
 Correlates NPS with stockout data when both are mentioned.`,
@@ -731,7 +731,7 @@ Correlates NPS with stockout data when both are mentioned.`,
             `${npsRows[0].store_name} has the lowest NPS at ${npsRows[0].avg_nps}. ${npsRows[0].detractors} of ${npsRows[0].responses} customers are Detractors. ${npsRows[0].stockout_correlation ? `Revenue at risk: ${npsRows[0].stockout_correlation.revenue_at_risk} (${npsRows[0].stockout_correlation.critical_skus} critical SKUs).` : ''}`
             : 'No NPS data available.',
         });
-      } catch (e) { LOG.error('get_nps_analysis', e); return err(e.message); }
+      } catch (e) { LOG.error('get_customer_feedback', e); return err(e.message); }
     }
   );
 
@@ -965,7 +965,7 @@ const TOOLS = [
   'generate_replenishment_order',
   'confirm_replenishment_order',
   'get_demand_forecast',
-  'get_nps_analysis',
+  'get_customer_feedback',
   'get_sellout_summary',
   'get_store_overview',
 ];
