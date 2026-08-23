@@ -38,6 +38,9 @@
   "MYFRANCHISE_DEMOSTATE": {
     "target": { "object": "M_DEMO_STATE", "schema": "RUNMYFRANCHISE_MF" }
   },
+  "MYFRANCHISE_ARTICLEIMAGE": {
+    "target": { "object": "M_ARTICLE_IMAGE", "schema": "RUNMYFRANCHISE_MF" }
+  },
   "MYFRANCHISE_EXTEVENT": {
     "target": { "object": "T_EXT_EVENTS", "schema": "RUNMYFRANCHISE_MF" }
   },

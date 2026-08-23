@@ -180,6 +180,14 @@ entity DemoState {
 
 @cds.persistence.exists
 @readonly
+entity ArticleImage {
+  key MATNR     : String(40);
+  key COLOR     : String(30);
+      IMAGE_URL : String(500);
+}
+
+@cds.persistence.exists
+@readonly
 entity ExtEvent {
   key EVENT_ID          : String(15);
       COUNTRY_CODE      : String(2);
@@ -287,6 +295,7 @@ view StockoutAlert as
          on f.STORE_ID = i.STORE_ID and f.MATNR = i.MATNR
         and f.COLOR = i.COLOR and f.SIZE_VAL = i.SIZE_VAL
         and f.SCENARIO = i.SCENARIO
+  left join ArticleImage as img on img.MATNR = i.MATNR and img.COLOR = i.COLOR
 {
   key i.STORE_ID,
   key i.MATNR,
@@ -300,15 +309,15 @@ view StockoutAlert as
       i.QTY_ON_HAND,
       i.QTY_IN_TRANSIT,
       i.STOCK_STATUS,
-      coalesce(d.MAKTX, i.MATNR)                                      as ARTICLE_NAME       : String(40),
+      coalesce(d.MAKTX, i.MATNR)                                                              as ARTICLE_NAME       : String(40),
       m.RETAIL_PRICE,
-      m.IMAGE_URL,
-      coalesce(f.QTY_FORECAST, 0)                                      as QTY_FORECAST       : Integer,
-      coalesce(f.DAYS_TO_STOCKOUT, 0)                                  as DAYS_TO_STOCKOUT   : Integer,
-      coalesce(f.WEATHER_IMPACT_PCT, 0)                                as WEATHER_IMPACT_PCT : Decimal(6,2),
-      coalesce(f.CAMPAIGN_IMPACT_PCT, 0)                               as CAMPAIGN_IMPACT_PCT: Decimal(6,2),
-      round(coalesce(f.QTY_FORECAST, 0) * m.RETAIL_PRICE, 2)          as REVENUE_AT_RISK    : Decimal(15,2),
-      case i.STOCK_STATUS when 'R' then 1 when 'Y' then 2 else 3 end  as CRITICALITY        : Integer
+      coalesce(img.IMAGE_URL, m.IMAGE_URL)                                                    as IMAGE_URL          : String(500),
+      coalesce(f.QTY_FORECAST, 0)                                                             as QTY_FORECAST       : Integer,
+      coalesce(f.DAYS_TO_STOCKOUT, 0)                                                         as DAYS_TO_STOCKOUT   : Integer,
+      coalesce(f.WEATHER_IMPACT_PCT, 0)                                                       as WEATHER_IMPACT_PCT : Decimal(6,2),
+      coalesce(f.CAMPAIGN_IMPACT_PCT, 0)                                                      as CAMPAIGN_IMPACT_PCT: Decimal(6,2),
+      round(greatest(0, coalesce(f.QTY_FORECAST, 0) - i.QTY_ON_HAND) * m.RETAIL_PRICE, 2)   as REVENUE_AT_RISK    : Decimal(15,2),
+      case i.STOCK_STATUS when 'R' then 1 when 'Y' then 2 else 3 end                         as CRITICALITY        : Integer
 }
 where i.STOCK_STATUS in ('R', 'Y');
 
