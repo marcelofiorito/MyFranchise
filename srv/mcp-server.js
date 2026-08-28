@@ -24,23 +24,39 @@ const MF   = 'RUNMYFRANCHISE_MF';
 const ok  = (data) => ({ content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
 const err = (msg)  => ({ isError: true, content: [{ type: 'text', text: JSON.stringify({ error: msg }) }] });
 
-// ── AEM messaging ─────────────────────────────────────────────────────────────
-let _messaging = null;
-const getMessaging = async () => {
-  if (!_messaging) {
-    try {
-      if (!cds.model) cds.model = { definitions: {}, services: {} };
-      _messaging = await cds.connect.to('messaging');
-    } catch (e) { LOG.warn('[AEM] messaging connect failed:', e.message); }
-  }
-  return _messaging;
-};
-const publishOrderEvent = async (topic, payload) => {
+// ── AEM REST publish (direct Solace REST Messaging, no cds.model dependency) ──
+const _aemCreds = (() => {
   try {
-    const msg = await getMessaging();
-    if (msg) await msg.emit(topic, payload);
-    LOG.info(`[AEM] emitted: ${topic}`);
-  } catch (e) { LOG.warn(`[AEM] emit failed (${topic}):`, e.message); }
+    const vcap = JSON.parse(process.env.VCAP_SERVICES || '{}');
+    const ups = (vcap['user-provided'] || []).find(s => s.name === 'advanced-event-mesh');
+    if (!ups) return null;
+    const c = ups.credentials;
+    const base = (c.endpoints?.['advanced-event-mesh']?.uri || c.uri || '').replace(/\/$/, '');
+    const user = c.basic_user || c.consumer_user;
+    const pass = c.basic_pass || c.consumer_pass;
+    if (!base || !user || !pass) return null;
+    LOG.info(`[AEM] REST endpoint: ${base}`);
+    return { base, auth: Buffer.from(`${user}:${pass}`).toString('base64') };
+  } catch (e) { return null; }
+})();
+
+const publishOrderEvent = async (topic, payload) => {
+  if (!_aemCreds) { LOG.warn('[AEM] no credentials — skipping publish'); return; }
+  try {
+    const topicPath = topic.replace(/%2F/g, '/');
+    const url = `${_aemCreds.base}/TOPIC/${topicPath}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${_aemCreds.auth}`,
+        'Content-Type': 'application/json',
+        'Solace-delivery-mode': 'direct',
+      },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) LOG.info(`[AEM] published → ${topic}`);
+    else LOG.warn(`[AEM] publish failed: ${res.status} ${await res.text()}`);
+  } catch (e) { LOG.warn(`[AEM] publish error (${topic}):`, e.message); }
 };
 
 // ── HANA direct connection (DBADMIN) ─────────────────────────────────────────
@@ -1801,6 +1817,6 @@ app.all('/mcp', async (req, res) => {
 });
 
 if (require.main === module) {
-  Promise.all([cds.connect.to('db'), getMessaging()])
+  cds.connect.to('db')
     .then(() => app.listen(PORT, () => LOG.info(`MCP Server on port ${PORT}`)));
 }
