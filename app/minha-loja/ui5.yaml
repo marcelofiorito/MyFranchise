@@ -19,6 +19,7 @@ builder:
     excludes:
       - "/test/**"
       - "/localService/**"
+      - "/images/**"
   customTasks:
     - name: ui5-task-zipper
       afterTask: generateCachebusterInfo
