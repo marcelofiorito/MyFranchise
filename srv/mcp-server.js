@@ -31,7 +31,8 @@ const _aemCreds = (() => {
     const ups = (vcap['user-provided'] || []).find(s => s.name === 'advanced-event-mesh');
     if (!ups) return null;
     const c = ups.credentials;
-    const base = (c.endpoints?.['advanced-event-mesh']?.uri || c.uri || '').replace(/\/$/, '');
+    const rawBase = (c.endpoints?.['advanced-event-mesh']?.uri || c.uri || '').replace(/\/$/, '');
+    const base = rawBase.replace(/:943$/, ':9443');
     const user = c.basic_user || c.consumer_user;
     const pass = c.basic_pass || c.consumer_pass;
     if (!base || !user || !pass) return null;
