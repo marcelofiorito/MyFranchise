@@ -379,6 +379,8 @@ view OrderSummary as
 view OrderItemDetail as
   select from SellinItm as i
   left join MaterialDesc as d on d.MATNR = i.MATNR and d.MANDT = '100' and d.SPRAS = 'E'
+  left join Material as m on m.MATNR = i.MATNR and m.MANDT = '100'
+  left join ArticleImage as img on img.MATNR = i.MATNR and img.COLOR = i.COLOR
 {
   key i.ORDER_ID,
   key i.ITEM_NUM,
@@ -389,7 +391,8 @@ view OrderItemDetail as
       i.QTY_ORDERED,
       i.QTY_DELIVERED,
       i.UNIT_PRICE,
-      round(i.QTY_ORDERED * i.UNIT_PRICE, 2)  as LINE_TOTAL   : Decimal(15,2)
+      round(i.QTY_ORDERED * i.UNIT_PRICE, 2)  as LINE_TOTAL   : Decimal(15,2),
+      coalesce(img.IMAGE_URL, m.IMAGE_URL)     as IMAGE_URL    : String(500)
 };
 
 

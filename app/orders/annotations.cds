@@ -19,6 +19,13 @@ annotate service.Orders with @(
 
   UI.SelectionFields: [STATUS, STORE_NAME, ORDER_DATE, REGION],
 
+  UI.SelectionVariant #SpJardins: {
+    SelectOptions: [{
+      PropertyName: STORE_ID,
+      Ranges: [{ Sign: #I, Option: #EQ, Low: 'BR-SP-001' }]
+    }]
+  },
+
   UI.HeaderInfo: {
     TypeName:       'Replenishment Order',
     TypeNamePlural: 'Replenishment Orders',
@@ -61,6 +68,7 @@ annotate service.Orders with @(
 // ── Order Items sub-table ─────────────────────────────────────
 annotate service.OrderItems with @(
   UI.LineItem: [
+    { $Type: 'UI.DataField', Value: IMAGE_URL,   Label: ''              },
     { Value: ITEM_NUM,      Label: 'Item'          },
     { Value: ARTICLE_NAME,  Label: 'Article'       },
     { Value: COLOR,         Label: 'Color'         },
@@ -113,4 +121,8 @@ annotate service.Orders with {
   TOTAL_AMOUNT      @Common.Label: 'Total Amount';
   CURRENCY          @Common.Label: 'Currency';
   STATUS_CRITICALITY @UI.Hidden;
+};
+
+annotate service.OrderItems with {
+  IMAGE_URL @UI.IsImageURL: true  @Common.Label: '';
 };

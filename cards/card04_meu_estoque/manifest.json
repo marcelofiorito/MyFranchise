@@ -48,7 +48,8 @@
             "Accept": "application/json"
           }
         },
-        "path": "/summary"
+        "path": "/summary",
+        "updateInterval": 10
       },
       "title": "Items at Risk",
       "subTitle": "Attention or stockout — my store",
@@ -77,7 +78,8 @@
             "Accept": "application/json"
           }
         },
-        "path": "/value"
+        "path": "/value",
+        "updateInterval": 10
       },
       "row": {
         "highlight": "{status_state}",

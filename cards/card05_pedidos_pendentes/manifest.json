@@ -1,7 +1,7 @@
 {
-  "_version": "1.84.0",
+  "_version": "1.14.0",
   "sap.app": {
-    "id": "tropicalia.card05.pedidos.pendentes",
+    "id": "tropicalia.card05.orders",
     "type": "card",
     "title": "My Replenishment Orders",
     "subTitle": "Order status — my store",
@@ -22,6 +22,7 @@
   },
   "sap.card": {
     "type": "Table",
+    "designtime": "dt/configuration",
     "configuration": {
       "parameters": {
         "store": {
@@ -48,9 +49,10 @@
             "Accept": "application/json"
           }
         },
-        "path": "/summary"
+        "path": "/summary",
+        "updateInterval": 10
       },
-      "title": "Pending Orders",
+      "title": "Orders",
       "subTitle": "Awaiting franchisor approval",
       "unitOfMeasurement": "orders",
       "mainIndicator": {
@@ -73,7 +75,8 @@
             "Accept": "application/json"
           }
         },
-        "path": "/value"
+        "path": "/value",
+        "updateInterval": 10
       },
       "row": {
         "highlight": "{status_state}",
@@ -113,7 +116,7 @@
     "footer": {
       "actionsStrip": [
         {
-          "text": "New Order via Joule",
+          "text": "Orders",
           "actions": [
             {
               "type": "Navigation",

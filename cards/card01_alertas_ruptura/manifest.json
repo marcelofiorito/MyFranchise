@@ -32,91 +32,95 @@
       }
     },
     "header": {
-  "type": "Numeric",
-  "data": {
-    "request": {
-      "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-count",
-      "method": "GET",
-      "headers": {
-        "Accept": "application/json"
-      }
+      "type": "Numeric",
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-count",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value/0",
+        "updateInterval": 10
+      },
+      "title": "SKUs at Risk",
+      "subTitle": "Critical & Attention — full network",
+      "unitOfMeasurement": "SKUs",
+      "mainIndicator": {
+        "number": "{total}",
+        "state": "{= ${critical} > 5 ? 'Error' : ${critical} > 0 ? 'Critical' : 'Good'}"
+      },
+      "sideIndicators": [
+        {
+          "title": "Critical",
+          "number": "{critical}"
+        },
+        {
+          "title": "Attention",
+          "number": "{attention}"
+        }
+      ]
     },
-    "path": "/value/0"
-  },
-  "title": "SKUs at Risk",
-  "subTitle": "Critical & Attention — full network",
-  "unitOfMeasurement": "SKUs",
-  "mainIndicator": {
-  "number": "{total}",
-  "state": "{= ${critical} > 5 ? 'Error' : ${critical} > 0 ? 'Critical' : 'Good'}"
-},
-  "sideIndicators": [
-  {
-    "title": "Critical",
-    "number": "{critical}"
-  },
-  {
-    "title": "Attention",
-    "number": "{attention}"
-  }
-]
-}
-,
     "content": {
-  "chartType": "bar",
-  "legend": {
-    "visible": false
-  },
-  "plotArea": {
-    "dataLabel": {
-      "visible": true
+      "chartType": "bar",
+      "legend": {
+        "visible": false
+      },
+      "plotArea": {
+        "dataLabel": {
+          "visible": true
+        },
+        "colorPalette": [
+          "#FF5A3C",
+          "#FFCC2E"
+        ]
+      },
+      "title": {
+        "text": "Revenue at Risk by Status",
+        "visible": true,
+        "alignment": "Center"
+      },
+      "data": {
+        "request": {
+          "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-by-status",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/json"
+          }
+        },
+        "path": "/value",
+        "updateInterval": 10
+      },
+      "dimensions": [
+        {
+          "name": "Status",
+          "value": "{status_label}"
+        }
+      ],
+      "measures": [
+        {
+          "name": "Revenue at Risk",
+          "value": "{revenue_at_risk}"
+        }
+      ],
+      "feeds": [
+        {
+          "type": "Dimension",
+          "uid": "categoryAxis",
+          "values": [
+            "Status"
+          ]
+        },
+        {
+          "type": "Measure",
+          "uid": "valueAxis",
+          "values": [
+            "Revenue at Risk"
+          ]
+        }
+      ]
     },
-    "colorPalette": [
-      "#FF5A3C",
-      "#FFCC2E"
-    ]
-  },
-  "title": {
-    "text": "Revenue at Risk by Status",
-    "visible": true,
-    "alignment": "Center"
-  },
-  "data": {
-    "request": {
-      "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-by-status",
-      "method": "GET",
-      "headers": {
-        "Accept": "application/json"
-      }
-    },
-    "path": "/value"
-  },
-  "dimensions": [
-    {
-      "name": "Status",
-      "value": "{status_label}"
-    }
-  ],
-  "measures": [
-    {
-      "name": "Revenue at Risk",
-      "value": "{revenue_at_risk}"
-    }
-  ],
-  "feeds": [
-    {
-      "type": "Dimension",
-      "uid": "categoryAxis",
-      "values": ["Status"]
-    },
-    {
-      "type": "Measure",
-      "uid": "valueAxis",
-      "values": ["Revenue at Risk"]
-    }
-  ]
-}
-,
     "footer": {
       "actionsStrip": [
         {

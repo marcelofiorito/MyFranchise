@@ -49,7 +49,8 @@
             "Accept": "application/json"
           }
         },
-        "path": "/value"
+        "path": "/value",
+        "updateInterval": 10
       },
       "dimensions": [
         {
@@ -67,12 +68,16 @@
         {
           "uid": "valueAxis",
           "type": "Measure",
-          "values": ["Revenue at Risk"]
+          "values": [
+            "Revenue at Risk"
+          ]
         },
         {
           "uid": "categoryAxis",
           "type": "Dimension",
-          "values": ["Store"]
+          "values": [
+            "Store"
+          ]
         }
       ],
       "title": {

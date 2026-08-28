@@ -49,7 +49,8 @@
             "Accept": "application/json"
           }
         },
-        "path": "/value"
+        "path": "/value",
+        "updateInterval": 10
       },
       "dimensions": [
         {
@@ -71,17 +72,23 @@
         {
           "uid": "valueAxis",
           "type": "Measure",
-          "values": ["Sell-Out"]
+          "values": [
+            "Sell-Out"
+          ]
         },
         {
           "uid": "categoryAxis",
           "type": "Dimension",
-          "values": ["Store"]
+          "values": [
+            "Store"
+          ]
         },
         {
           "uid": "targetValues",
           "type": "Measure",
-          "values": ["Target"]
+          "values": [
+            "Target"
+          ]
         }
       ],
       "title": {

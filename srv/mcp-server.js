@@ -24,6 +24,23 @@ const MF   = 'RUNMYFRANCHISE_MF';
 const ok  = (data) => ({ content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
 const err = (msg)  => ({ isError: true, content: [{ type: 'text', text: JSON.stringify({ error: msg }) }] });
 
+// ── AEM messaging ─────────────────────────────────────────────────────────────
+let _messaging = null;
+const getMessaging = async () => {
+  if (!_messaging) {
+    try { _messaging = await cds.connect.to('messaging'); }
+    catch (e) { LOG.warn('[AEM] messaging connect failed:', e.message); }
+  }
+  return _messaging;
+};
+const publishOrderEvent = async (topic, payload) => {
+  try {
+    const msg = await getMessaging();
+    if (msg) await msg.emit(topic, payload);
+    LOG.info(`[AEM] emitted: ${topic}`);
+  } catch (e) { LOG.warn(`[AEM] emit failed (${topic}):`, e.message); }
+};
+
 // ── HANA direct connection (DBADMIN) ─────────────────────────────────────────
 let _hanaConn = null;
 const getHanaConn = async () => {
@@ -156,13 +173,14 @@ You have access to real-time data from the Tropicália Co. HANA Cloud data model
 **IMPORTANT — NPS and customer feedback:** You HAVE real-time NPS data. Use the 'get_customer_feedback' tool whenever asked about NPS, customer satisfaction, customer complaints, customer feedback, or store ratings. Do NOT say you cannot access NPS data — it is fully available. Alternatively, 'get_store_overview' also returns NPS score and top customer complaints for any store.
 
 Key facts for context:
-- Hero store: SP Jardins (BR-SP-001) in São Paulo — highest revenue store
-- Critical SKU: Tucano Flip Flop (TCO-FLIP-001) — especially Ipanema Blue sz 37-38
-- SP Jardins has only 3 units of Tucano Blue 37-38 left — 2 days to stockout
-- NPS at SP Jardins dropped from 9.2 (June) to 5.4 (August) — customers can't find their size
+- Featured store: SP Jardins (BR-SP-001) in São Paulo — highest revenue store
+- Critical SKU at SP Jardins: Tucano Flip Flop (TCO-FLIP-001), Ipanema Blue sz 37-38 — only 3 units left, 2 days to stockout
+- NPS at SP Jardins dropped from 9.2 (June) to 3.7 (August) — customers can't find their size
 - Buenos Aires (AR-BA-001) has 178 units of Tucano Blue in overstock — transfer opportunity
 - Total network revenue at risk: ~R$ 11,200
 - 🌡️ São Paulo is under a Heat Wave today (39°C, +20% demand impact) — this amplifies the stockout urgency
+
+When presenting stockout alerts or inventory data, use ARTICLE_NAME exactly as returned by the tool — do NOT add labels like "(Hero SKU)", "(Critical SKU)" or any other suffix to article names.
 
 When asked about stockout, inventory, NPS, sales, or demand — use the tools and present data clearly with emojis for status (🔴 Critical, 🟡 Attention, 🟢 OK).
 When presenting replenishment orders, always show line items and ask for confirmation before finalizing.
@@ -512,6 +530,13 @@ Always show the order lines and ask for user confirmation before calling confirm
         }
         await new Promise((ok2, ko) => conn.commit(e => e ? ko(e) : ok2()));
 
+        await publishOrderEvent('myfranchise/orders/OrderCreated', {
+          order_id: orderId, store_id: sid, status: 'DRAFT',
+          total_amount: Math.round(totalAmount * 100) / 100, currency,
+          item_count: lines.length, expected_delivery: deliveryDate,
+          timestamp: new Date().toISOString(),
+        });
+
         return ok({
           order_id:           orderId,
           store:              store_id,
@@ -569,6 +594,14 @@ The order will appear immediately in the Orders app with status PENDING.`,
         await new Promise((ok2, ko) => conn.commit(e => e ? ko(e) : ok2()));
 
         const h = hdr[0];
+        await publishOrderEvent('myfranchise/orders/OrderConfirmed', {
+          order_id: targetOrderId, store_id: h.store_id, status: 'PENDING',
+          total_amount: Number(h.total_amount), currency: h.currency,
+          item_count: h.item_count,
+          expected_delivery: h.expected_delivery ? String(h.expected_delivery).substring(0,10) : null,
+          timestamp: today,
+        });
+
         return ok({
           order_id:          targetOrderId,
           store_id:          h.store_id,
@@ -581,6 +614,54 @@ The order will appear immediately in the Orders app with status PENDING.`,
           message:           `Order ${targetOrderId} submitted to HQ. Estimated delivery ${h.expected_delivery ? String(h.expected_delivery).substring(0,10) : 'TBD'}. Tracking available in the Orders app.`,
         });
       } catch (e) { LOG.error('confirm_replenishment_order', e); return err(e.message); }
+    }
+  );
+
+  // ── TOOL 5b: update_order_status ─────────────────────────────────────────────
+  server.tool('update_order_status',
+    `Updates the status of a replenishment order. Valid transitions: PENDING → APPROVED, APPROVED → DELIVERED.
+Use when HQ approves or delivers a pending order, or when asked to mark an order as approved or delivered.
+Returns the updated order details.`,
+    {
+      order_id: z.string().describe('Order ID to update (e.g. SI-2026-001).'),
+      status:   z.enum(['APPROVED','DELIVERED']).describe('New status for the order.'),
+      notes:    z.string().optional().describe('Optional notes to add to the order.'),
+    },
+    async ({ order_id, status, notes }) => {
+      try {
+        const conn = await getHanaConn();
+        const allowed = { APPROVED: ['PENDING'], DELIVERED: ['APPROVED'] };
+        const hdr = await hanaExec(conn,
+          `SELECT ORDER_ID, STORE_ID, STATUS, TOTAL_AMOUNT, CURRENCY, EXPECTED_DELIVERY,
+                  (SELECT COUNT(*) FROM "${MF}"."T_SELLIN_ITM" WHERE ORDER_ID=h.ORDER_ID) AS ITEM_COUNT
+           FROM "${MF}"."T_SELLIN_HDR" h WHERE ORDER_ID=?`, [order_id]);
+        if (!hdr.length) return err(`Order ${order_id} not found.`);
+        const h = hdr[0];
+        if (!allowed[status]?.includes(h.status))
+          return err(`Cannot transition ${h.status} → ${status}. Allowed: ${allowed[status]?.join(', ') || 'none'}.`);
+
+        const today = new Date().toISOString().substring(0, 10);
+        await new Promise((ok2, ko) => conn.exec(
+          `UPDATE "${MF}"."T_SELLIN_HDR" SET STATUS=?${notes ? ', NOTES=?' : ''}, ORDER_DATE=? WHERE ORDER_ID=?`,
+          notes ? [status, notes, today, order_id] : [status, today, order_id],
+          e => e ? ko(e) : ok2()));
+        await new Promise((ok2, ko) => conn.commit(e => e ? ko(e) : ok2()));
+
+        await publishOrderEvent('myfranchise/orders/OrderStatusChanged', {
+          order_id, store_id: h.store_id, previous_status: h.status, status,
+          total_amount: Number(h.total_amount), currency: h.currency,
+          item_count: h.item_count,
+          expected_delivery: h.expected_delivery ? String(h.expected_delivery).substring(0,10) : null,
+          timestamp: today,
+        });
+
+        return ok({
+          order_id, store_id: h.store_id, status,
+          previous_status: h.status,
+          total_cost: `${h.currency} ${Number(h.total_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          message: `Order ${order_id} updated to ${status}.`,
+        });
+      } catch (e) { LOG.error('update_order_status', e); return err(e.message); }
     }
   );
 
@@ -1440,6 +1521,13 @@ app.get('/cards/my-sellout', async (req, res) => {
 // DEMO ADMIN endpoints  —  /admin/*
 // Write access to RUNMYFRANCHISE_MF via DBADMIN for demo scenario control.
 // ═══════════════════════════════════════════════════════════════════════════════
+app.use('/admin', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.sendStatus(204); return; }
+  next();
+});
 
 // GET /admin/stores — list all stores for UI selects
 app.get('/admin/stores', async (_req, res) => {
@@ -1501,6 +1589,13 @@ app.post('/admin/reset', async (_req, res) => {
       results.push({ table, rows: rows.length });
       LOG.info(`reset: restored ${table} (${rows.length} rows)`);
     }
+
+    // Force BAD scenario in both schemas after restore
+    for (const schema of [MF, JG]) {
+      await new Promise((ok, ko) =>
+        conn.exec(`UPDATE "${schema}"."M_DEMO_STATE" SET ACTIVE_SCENARIO = 'BAD'`, [], e => e ? ko(e) : ok()));
+    }
+    await new Promise((ok, ko) => conn.commit(e => e ? ko(e) : ok()));
 
     res.json({ ok: true, source: 'baseline', restoredTables, totalRows, results });
   } catch (e) { LOG.error('admin/reset', e); res.status(500).json({ error: e.message }); }
@@ -1667,6 +1762,8 @@ app.post('/admin/switch-scenario', async (req, res) => {
       await exec(`UPDATE "${MF}"."T_NPS" SET VERBATIM = NULL WHERE SCENARIO = 'BAD'`);
       // Reset BAD scenario inventory to G so the CAP view shows no alerts in GOOD state
       await exec(`UPDATE "${MF}"."T_INVENTORY_SNAPSHOT" SET STOCK_STATUS = 'G' WHERE SCENARIO = 'BAD' AND STOCK_STATUS IN ('R', 'Y')`);
+      // Mark all open replenishment orders for BR-SP-001 as DELIVERED — simulates HQ approval + delivery
+      await exec(`UPDATE "${MF}"."T_SELLIN_HDR" SET STATUS = 'DELIVERED' WHERE STORE_ID = 'BR-SP-001' AND STATUS IN ('DRAFT', 'PENDING', 'APPROVED')`);
     }
 
     await new Promise((ok, ko) => conn.commit(e => e ? ko(e) : ok()));
@@ -1702,5 +1799,6 @@ app.all('/mcp', async (req, res) => {
 });
 
 if (require.main === module) {
-  cds.connect.to('db').then(() => app.listen(PORT, () => LOG.info(`MCP Server on port ${PORT}`)));
+  Promise.all([cds.connect.to('db'), getMessaging()])
+    .then(() => app.listen(PORT, () => LOG.info(`MCP Server on port ${PORT}`)));
 }

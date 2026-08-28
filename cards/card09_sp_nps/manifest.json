@@ -46,7 +46,8 @@
           "Accept": "application/json"
         }
       },
-      "path": "/summary"
+      "path": "/summary",
+      "updateInterval": 10
     },
     "header": {
       "type": "Numeric",

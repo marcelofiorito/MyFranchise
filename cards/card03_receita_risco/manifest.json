@@ -41,7 +41,8 @@
             "Accept": "application/json"
           }
         },
-        "path": "/value/0"
+        "path": "/value/0",
+        "updateInterval": 10
       },
       "title": "Total Revenue at Risk",
       "subTitle": "Projected loss — critical SKUs",
@@ -67,18 +68,39 @@
             "Accept": "application/json"
           }
         },
-        "path": "/value"
+        "path": "/value",
+        "updateInterval": 10
       },
       "row": {
         "highlight": "{= ${revenue_at_risk} > 5000 ? 'Error' : ${revenue_at_risk} > 1000 ? 'Warning' : 'None'}",
         "columns": [
-          { "title": "Store", "value": "{store_name}", "width": "40%", "identifier": true },
-          { "title": "Critical", "value": "{critical_skus}", "hAlign": "End", "width": "20%",
-            "state": "{= ${critical_skus} > 0 ? 'Error' : 'None'}" },
-          { "title": "Attention", "value": "{attention_skus}", "hAlign": "End", "width": "20%",
-            "state": "{= ${attention_skus} > 0 ? 'Warning' : 'None'}" },
-          { "title": "Revenue R$", "value": "{revenue_at_risk}", "hAlign": "End", "width": "20%",
-            "state": "{= ${revenue_at_risk} > 5000 ? 'Error' : ${revenue_at_risk} > 1000 ? 'Warning' : 'None'}" }
+          {
+            "title": "Store",
+            "value": "{store_name}",
+            "width": "40%",
+            "identifier": true
+          },
+          {
+            "title": "Critical",
+            "value": "{critical_skus}",
+            "hAlign": "End",
+            "width": "20%",
+            "state": "{= ${critical_skus} > 0 ? 'Error' : 'None'}"
+          },
+          {
+            "title": "Attention",
+            "value": "{attention_skus}",
+            "hAlign": "End",
+            "width": "20%",
+            "state": "{= ${attention_skus} > 0 ? 'Warning' : 'None'}"
+          },
+          {
+            "title": "Revenue R$",
+            "value": "{revenue_at_risk}",
+            "hAlign": "End",
+            "width": "20%",
+            "state": "{= ${revenue_at_risk} > 5000 ? 'Error' : ${revenue_at_risk} > 1000 ? 'Warning' : 'None'}"
+          }
         ]
       }
     },

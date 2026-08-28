@@ -244,6 +244,6 @@ annotate service.MyNps with {
   NPS_CATEGORY @Common.Label: 'Category';
   CATEGORY     @Common.Label: 'Raw Category';
   SURVEY_DATE  @Common.Label: 'Survey Date';
-  VERBATIM     @Common.Label: 'Comment';
+  VERBATIM     @Common.Label: 'Comment'  @UI.MultiLineText: true;
   CRITICALITY  @UI.Hidden;
 };

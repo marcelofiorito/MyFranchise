@@ -57,7 +57,7 @@
       "SURVEY_DATE": "2026-07-20",
       "SCORE": 4,
       "CATEGORY": "DETRACTOR",
-      "VERBATIM": "Went looking for Tucano Blue 37-38 \u2014 out of stock again!",
+      "VERBATIM": "Went looking for the Tucano Flip Flop Ipanema Blue 37-38 again — fourth time this month and still out of stock. I really love this product but if it keeps being unavailable I'll have to find another store. Please fix your replenishment.",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -67,7 +67,7 @@
       "SURVEY_DATE": "2026-07-25",
       "SCORE": 3,
       "CATEGORY": "DETRACTOR",
-      "VERBATIM": "Third visit this week, still no Tucano in my size. Gave up.",
+      "VERBATIM": "Third visit this week and still no Tucano flip flop in my size (37-38). The staff was very kind and apologetic, but there's nothing they can do without stock. I ended up leaving empty-handed again. Gave up and ordered online from a competitor.",
       "RECEIPT_ID": "SO-20260715-SP-001",
       "SCENARIO": "BAD"
     },
@@ -97,7 +97,7 @@
       "SURVEY_DATE": "2026-08-05",
       "SCORE": 4,
       "CATEGORY": "DETRACTOR",
-      "VERBATIM": "Came for the campaign but Ipanema Blue is sold out!",
+      "VERBATIM": "Came specifically because of the summer campaign promotion for the Tucano Ipanema Blue collection, but the size 37-38 is completely sold out. Disappointing — the campaign drives demand but the stock doesn't follow. Left without buying anything.",
       "RECEIPT_ID": "SO-20260805-SP-001",
       "SCENARIO": "BAD"
     },
@@ -107,7 +107,7 @@
       "SURVEY_DATE": "2026-08-10",
       "SCORE": 3,
       "CATEGORY": "DETRACTOR",
-      "VERBATIM": "How can you run a summer campaign with no stock?",
+      "VERBATIM": "How can you run a major summer campaign and not have the featured products in stock? The Tucano Ipanema Blue 37-38 has been out of stock for weeks. I told three friends to come here and now we're all disappointed. This is hurting the brand image.",
       "RECEIPT_ID": "SO-20260810-SP-001",
       "SCENARIO": "BAD"
     },
@@ -327,7 +327,7 @@
       "SURVEY_DATE": "2026-08-14",
       "SCORE": 5,
       "CATEGORY": "AVAILABILITY",
-      "VERBATIM": "Wanted the Tucano Flip Flop \u2014 three visits this week, still out of stock",
+      "VERBATIM": "Wanted the Tucano Flip Flop — three visits this week, still out of stock",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -387,7 +387,7 @@
       "SURVEY_DATE": "2026-08-26",
       "SCORE": 7,
       "CATEGORY": "SERVICE",
-      "VERBATIM": "Pleasant experience. Staff mentioned stock transfers might be coming \u2014 fingers crossed",
+      "VERBATIM": "Pleasant experience. Staff mentioned stock transfers might be coming — fingers crossed",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -417,7 +417,7 @@
       "SURVEY_DATE": "2026-08-25",
       "SCORE": 5,
       "CATEGORY": "AVAILABILITY",
-      "VERBATIM": "Love Tropic\u00e1lia but the inventory issues this season are really hurting the experience",
+      "VERBATIM": "Love Tropicália but the inventory issues this season are really hurting the experience",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -467,7 +467,7 @@
       "SURVEY_DATE": "2026-07-20",
       "SCORE": 4,
       "CATEGORY": "DETRACTOR",
-      "VERBATIM": "Went looking for Tucano Blue 37-38 \u2014 out of stock again!",
+      "VERBATIM": "Went looking for the Tucano Flip Flop Ipanema Blue 37-38 again — fourth time this month and still out of stock. I really love this product but if it keeps being unavailable I'll have to find another store. Please fix your replenishment.",
       "RECEIPT_ID": null,
       "SCENARIO": "GOOD"
     },
@@ -477,7 +477,7 @@
       "SURVEY_DATE": "2026-07-25",
       "SCORE": 3,
       "CATEGORY": "DETRACTOR",
-      "VERBATIM": "Third visit this week, still no Tucano in my size. Gave up.",
+      "VERBATIM": "Third visit this week and still no Tucano flip flop in my size (37-38). The staff was very kind and apologetic, but there's nothing they can do without stock. I ended up leaving empty-handed again. Gave up and ordered online from a competitor.",
       "RECEIPT_ID": null,
       "SCENARIO": "GOOD"
     },
@@ -517,7 +517,7 @@
       "SURVEY_DATE": "2026-06-05",
       "SCORE": 9,
       "CATEGORY": "PRODUCT",
-      "VERBATIM": "Pre-campaign visit \u2014 great selection, found everything on my list",
+      "VERBATIM": "Pre-campaign visit — great selection, found everything on my list",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -647,7 +647,7 @@
       "SURVEY_DATE": "2026-08-14",
       "SCORE": 3,
       "CATEGORY": "AVAILABILITY",
-      "VERBATIM": "Fourth visit this month \u2014 Tucano Blue still not available. Losing patience",
+      "VERBATIM": "Fourth visit this month — Tucano Blue still not available. Losing patience",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -677,7 +677,7 @@
       "SURVEY_DATE": "2026-06-08",
       "SCORE": 9,
       "CATEGORY": "PRODUCT",
-      "VERBATIM": "Amazing Brazilian brand \u2014 the flip flops are perfect for Lisbon summer",
+      "VERBATIM": "Amazing Brazilian brand — the flip flops are perfect for Lisbon summer",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -697,7 +697,7 @@
       "SURVEY_DATE": "2026-07-15",
       "SCORE": 7,
       "CATEGORY": "AVAILABILITY",
-      "VERBATIM": "Looking for Tucano Blue flip flops \u2014 they said stock is running low",
+      "VERBATIM": "Looking for Tucano Blue flip flops — they said stock is running low",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -727,7 +727,7 @@
       "SURVEY_DATE": "2026-06-10",
       "SCORE": 9,
       "CATEGORY": "PRODUCT",
-      "VERBATIM": "Found Tropic\u00e1lia in Miami! The Tucano Flip Flop is perfect for the beach",
+      "VERBATIM": "Found Tropicália in Miami! The Tucano Flip Flop is perfect for the beach",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -757,7 +757,7 @@
       "SURVEY_DATE": "2026-08-08",
       "SCORE": 7,
       "CATEGORY": "AVAILABILITY",
-      "VERBATIM": "Came for the Tucano Blue \u2014 out of stock in my size. Very popular here in Miami",
+      "VERBATIM": "Came for the Tucano Blue — out of stock in my size. Very popular here in Miami",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     },
@@ -767,7 +767,7 @@
       "SURVEY_DATE": "2026-08-22",
       "SCORE": 6,
       "CATEGORY": "AVAILABILITY",
-      "VERBATIM": "Love Tropic\u00e1lia but the stockout situation is hurting this store. Needs restock urgently",
+      "VERBATIM": "Love Tropicália but the stockout situation is hurting this store. Needs restock urgently",
       "RECEIPT_ID": null,
       "SCENARIO": "BAD"
     }

@@ -30,12 +30,7 @@
   },
   "sap.ui5": {
     "flexEnabled": false,
-    "rootView": {
-      "viewName": "myfranchise.demoAdmin.view.Main",
-      "type": "XML",
-      "id": "mainView"
-    },
-    "dependencies": {
+"dependencies": {
       "minUI5Version": "1.120.0",
       "libs": {
         "sap.m": {},

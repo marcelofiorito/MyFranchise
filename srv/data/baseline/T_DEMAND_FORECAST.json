@@ -21,7 +21,7 @@
       "COLOR": "Ipanema Blue",
       "SIZE_VAL": "37-38",
       "FORECAST_DATE": "2026-08-12",
-      "QTY_FORECAST": 28,
+      "QTY_FORECAST": 48,
       "CONFIDENCE_SCORE": 0.95,
       "WEATHER_IMPACT_PCT": 35.0,
       "CAMPAIGN_IMPACT_PCT": 25.0,
@@ -60,7 +60,7 @@
     {
       "STORE_ID": "BR-SP-001",
       "MATNR": "TCO-FLIP-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "37-38",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 22,
@@ -102,7 +102,7 @@
     {
       "STORE_ID": "BR-SP-001",
       "MATNR": "IPA-SAND-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "39-40",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 21,
@@ -228,7 +228,7 @@
     {
       "STORE_ID": "BR-SP-001",
       "MATNR": "CCO-BAG-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "M",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 18,
@@ -312,7 +312,7 @@
     {
       "STORE_ID": "BR-RJ-001",
       "MATNR": "ARA-FLIP-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "39-40",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 22,
@@ -368,7 +368,7 @@
     {
       "STORE_ID": "BR-RJ-001",
       "MATNR": "TRO-BCK-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "L",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 11,
@@ -452,7 +452,7 @@
     {
       "STORE_ID": "BR-RJ-001",
       "MATNR": "COQ-SAND-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "35-36",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 17,
@@ -550,7 +550,7 @@
     {
       "STORE_ID": "BR-MG-001",
       "MATNR": "MNG-CRS-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "M",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 12,
@@ -648,7 +648,7 @@
     {
       "STORE_ID": "BR-RS-001",
       "MATNR": "ARA-FLIP-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "37-38",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 20,
@@ -718,7 +718,7 @@
     {
       "STORE_ID": "BR-RS-001",
       "MATNR": "IPA-SAND-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "35-36",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 18,
@@ -802,7 +802,7 @@
     {
       "STORE_ID": "AR-BA-001",
       "MATNR": "IPA-SAND-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "37-38",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 10,
@@ -858,7 +858,7 @@
     {
       "STORE_ID": "BR-SP-001",
       "MATNR": "ARA-FLIP-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "35-36",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 12,
@@ -942,7 +942,7 @@
     {
       "STORE_ID": "BR-RJ-001",
       "MATNR": "MNG-DRS-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "S",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 11,
@@ -1012,7 +1012,7 @@
     {
       "STORE_ID": "BR-MG-001",
       "MATNR": "PIN-TOT-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "L",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 9,
@@ -1026,7 +1026,7 @@
     {
       "STORE_ID": "BR-MG-001",
       "MATNR": "TCO-FLIP-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "35-36",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 13,
@@ -1096,7 +1096,7 @@
     {
       "STORE_ID": "BR-RS-001",
       "MATNR": "TRO-BCK-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "S",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 9,
@@ -1110,7 +1110,7 @@
     {
       "STORE_ID": "AR-BA-001",
       "MATNR": "ARA-FLIP-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "37-38",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 7,
@@ -1166,7 +1166,7 @@
     {
       "STORE_ID": "AR-BA-001",
       "MATNR": "MNG-CRS-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "S",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 8,
@@ -1278,7 +1278,7 @@
     {
       "STORE_ID": "BR-SP-001",
       "MATNR": "CCO-BAG-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "M",
       "FORECAST_DATE": "2026-08-27",
       "QTY_FORECAST": 8,
@@ -1306,7 +1306,7 @@
     {
       "STORE_ID": "BR-SP-001",
       "MATNR": "IPA-SAND-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "39-40",
       "FORECAST_DATE": "2026-08-27",
       "QTY_FORECAST": 8,
@@ -1390,7 +1390,7 @@
     {
       "STORE_ID": "BR-SP-001",
       "MATNR": "TCO-FLIP-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "37-38",
       "FORECAST_DATE": "2026-08-27",
       "QTY_FORECAST": 8,
@@ -1530,7 +1530,7 @@
     {
       "STORE_ID": "PT-LX-001",
       "MATNR": "MNG-PLAT-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "37-38",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 11,
@@ -1572,7 +1572,7 @@
     {
       "STORE_ID": "PT-LX-001",
       "MATNR": "CCO-BAG-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "L",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 8,
@@ -1614,7 +1614,7 @@
     {
       "STORE_ID": "US-FL-001",
       "MATNR": "TCO-FLIP-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "39-40",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 16,
@@ -1642,7 +1642,7 @@
     {
       "STORE_ID": "US-FL-001",
       "MATNR": "IPA-SAND-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "37-38",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 15,
@@ -1684,7 +1684,7 @@
     {
       "STORE_ID": "US-FL-001",
       "MATNR": "MNG-CRS-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "M",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 11,
@@ -1712,7 +1712,7 @@
     {
       "STORE_ID": "US-FL-001",
       "MATNR": "ARC-DRS-001",
-      "COLOR": "A\u00e7a\u00ed Red",
+      "COLOR": "Açaí Red",
       "SIZE_VAL": "S",
       "FORECAST_DATE": "2026-08-12",
       "QTY_FORECAST": 9,

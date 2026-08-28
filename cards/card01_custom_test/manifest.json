@@ -5,11 +5,17 @@
     "type": "card",
     "title": "Stockout Alerts (Custom)",
     "subTitle": "Revenue at Risk by Status — Tropicália brand colors",
-    "applicationVersion": { "version": "1.0.0" }
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
   },
   "sap.ui": {
     "technology": "UI5",
-    "deviceTypes": { "desktop": true, "phone": false, "tablet": true }
+    "deviceTypes": {
+      "desktop": true,
+      "phone": false,
+      "tablet": true
+    }
   },
   "sap.card": {
     "type": "Component",
@@ -28,9 +34,12 @@
         "request": {
           "url": "{{destinations.RunMyFranchise-MCP}}/cards/stockout-count",
           "method": "GET",
-          "headers": { "Accept": "application/json" }
+          "headers": {
+            "Accept": "application/json"
+          }
         },
-        "path": "/value/0"
+        "path": "/value/0",
+        "updateInterval": 10
       },
       "title": "SKUs at Risk",
       "subTitle": "Critical & Attention — full network",
@@ -40,8 +49,16 @@
         "state": "{= ${critical} > 5 ? 'Error' : ${critical} > 0 ? 'Critical' : 'Good'}"
       },
       "sideIndicators": [
-        { "title": "Critical", "number": "{critical}", "state": "Error" },
-        { "title": "Attention", "number": "{attention}", "state": "Critical" }
+        {
+          "title": "Critical",
+          "number": "{critical}",
+          "state": "Error"
+        },
+        {
+          "title": "Attention",
+          "number": "{attention}",
+          "state": "Critical"
+        }
       ]
     }
   },
@@ -55,5 +72,7 @@
       }
     }
   },
-  "sap.platform.mobilecards": { "compatible": false }
+  "sap.platform.mobilecards": {
+    "compatible": false
+  }
 }

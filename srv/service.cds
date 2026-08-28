@@ -15,7 +15,10 @@ service FranqueadoraService {
   @readonly entity NpsResponses    as projection on mf.StoreNps;
 
   // Replenishment orders (header + items)
-  @readonly entity Orders          as projection on mf.OrderSummary;
+  @readonly entity Orders          as projection on mf.OrderSummary {
+    *,
+    OrderItems: Association to many OrderItems on OrderItems.ORDER_ID = $self.ORDER_ID
+  } where STORE_ID = 'BR-SP-001';
   @readonly entity OrderItems      as projection on mf.OrderItemDetail;
 
   // Demand forecast

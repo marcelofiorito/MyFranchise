@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunMyFranchise — Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "72", "SAP72", Arial, sans-serif;
+    background: #f5f6f7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 24px;
+  }
+
+  h1 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6a6d70;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1100px;
+    width: 100%;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-header {
+    padding: 14px 18px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .joule-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0a6ed1 0%, #0070f2 50%, #00b4d8 100%);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .joule-avatar svg { width: 18px; height: 18px; }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0070f2;
+  }
+
+  .card-num {
+    margin-left: auto;
+    font-size: 11px;
+    color: #c0c0c0;
+    font-weight: 400;
+  }
+
+  .card-body {
+    padding: 16px 18px 18px;
+    flex: 1;
+  }
+
+  .question {
+    font-size: 12px;
+    color: #89919a;
+    font-style: italic;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    background: #f7f8f9;
+    border-radius: 6px;
+    border-left: 3px solid #d1d1d1;
+  }
+
+  .answer {
+    font-size: 13px;
+    color: #32363a;
+    line-height: 1.65;
+  }
+
+  .answer strong { color: #0070f2; font-weight: 600; }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .tag {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+
+  .tag-blue  { background: #e8f2ff; color: #0064d9; }
+  .tag-green { background: #e8f5e9; color: #1a7a3c; }
+  .tag-gold  { background: #fff8e1; color: #b45309; }
+  .tag-purple{ background: #f3e8ff; color: #7c3aed; }
+  .tag-teal  { background: #e0f7fa; color: #00695c; }
+
+  .divider {
+    height: 1px; background: #f0f0f0;
+    margin: 10px 0;
+  }
+
+  .arch-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #555;
+    margin-top: 8px;
+  }
+
+  .arch-row .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-blue   { background: #0070f2; }
+  .dot-green  { background: #1a7a3c; }
+  .dot-gold   { background: #f59e0b; }
+  .dot-purple { background: #7c3aed; }
+  .dot-teal   { background: #00897b; }
+  .dot-orange { background: #ea580c; }
+
+  .shimmer {
+    display: inline-block;
+    width: 80px; height: 10px;
+    background: linear-gradient(90deg, #e8ecef 25%, #f5f6f7 50%, #e8ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .processing {
+    font-size: 11px;
+    color: #89919a;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .processing .dot-anim {
+    display: flex; gap: 3px;
+  }
+  .processing .dot-anim span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #0070f2;
+    animation: bounce 1.2s infinite;
+  }
+  .processing .dot-anim span:nth-child(2) { animation-delay: 0.2s; }
+  .processing .dot-anim span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%,80%,100% { transform: translateY(0); opacity: 0.4; }
+    40%          { transform: translateY(-4px); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<h1>RunMyFranchise — How it works</h1>
+
+<p style="font-size:15px; color:#32363a; font-weight:500; margin-bottom:28px; letter-spacing:0;">
+  Hello guys, my name is <strong style="color:#0070f2;">Marcelo Fiorito</strong>, and I am a <strong style="color:#0070f2;">Business AI Platform Solution Advisor</strong>.
+</p>
+
+<div class="grid">
+
+  <!-- Card 1 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="joule-avatar">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="white" fill-opacity="0.3"/><path d="M8 12h8M12 8v8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <span class="card-title">Solution Overview</span>
+      <span class="card-num">01 / 06</span>
+    </div>
+    <div class="card-body">
+      <div class="question">"What is RunMyFranchise?"</div>
+      <div class="answer">
+        So what we're looking at here is <strong>RunMyFranchise</strong> — basically an AI assistant for franchise store owners, all running on <strong>SAP Business AI Platform</strong>. The idea is simple: instead of digging through dashboards, the franchisee just asks Joule in plain language. What's running out? What should I reorder? And the system pulls from inventory, demand forecasts, NPS — everything — and gives you a straight answer.
+      </div>
+      <div class="tag-row">
+        <span class="tag tag-blue">Business AI Platform</span>
+        <span class="tag tag-green">Joule AI</span>
+        <span class="tag tag-gold">HANA Cloud</span>
+        <span class="tag tag-purple">Work Zone</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="joule-avatar">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h10M4 18h13" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <span class="card-title">The AI Layer</span>
+      <span class="card-num">02 / 06</span>
+    </div>
+    <div class="card-body">
+      <div class="question">"How does Joule know what tools to call?"</div>
+      <div class="answer">
+        Joule consumes tools via <strong>MCP servers</strong> — in production, those servers sit behind the <strong>Integration Suite MCP Gateway</strong>, which handles auth, rate limiting and auditing. For this demo, no tenant was available for that, so we built the MCP server in <strong>Node.js</strong> running on <strong>Business AI Platform Cloud Foundry</strong>, exposed in a way that <strong>Joule Studio, classic edition</strong> could consume directly — same result, different path.
+      </div>
+      <div class="divider"></div>
+      <div class="arch-row"><span class="dot dot-blue"></span> SAP AI Core → Language Model</div>
+      <div class="arch-row"><span class="dot dot-green"></span> MCP Tools → Franchise Data</div>
+      <div class="arch-row"><span class="dot dot-gold"></span> Response → Joule in Work Zone</div>
+    </div>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="joule-avatar">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="card-title">BDC Knowledge Graph</span>
+      <span class="card-num">03 / 06</span>
+    </div>
+    <div class="card-body">
+      <div class="question">"How does Joule give such precise, context-aware answers?"</div>
+      <div class="answer">
+        Actually, this solution already runs on <strong>SAP Business Data Cloud</strong> — HANA Cloud, Datasphere, and SAC are all BDC components. What's not available yet is the <strong>Knowledge Graph</strong>. When it is, Joule will be able to understand business semantics — how products relate to categories, how stores connect to regions, what a stockout actually costs in context. That richer layer will make every AI answer even more precise and business-aware.
+      </div>
+      <div class="tag-row">
+        <span class="tag tag-blue">Business Data Cloud</span>
+        <span class="tag tag-teal">Knowledge Graph</span>
+        <span class="tag tag-green">Business Semantics</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="joule-avatar">
+        <svg viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="8" rx="9" ry="4" stroke="white" stroke-width="2"/><path d="M3 8v4c0 2.21 4.03 4 9 4s9-1.79 9-4V8" stroke="white" stroke-width="2"/><path d="M3 12v4c0 2.21 4.03 4 9 4s9-1.79 9-4v-4" stroke="white" stroke-width="2"/></svg>
+      </div>
+      <span class="card-title">Data Foundation</span>
+      <span class="card-num">04 / 06</span>
+    </div>
+    <div class="card-body">
+      <div class="question">"Where does all the franchise data live?"</div>
+      <div class="answer">
+        All the data Joule just read — inventory levels, demand forecasts, NPS scores — that all lives in a custom schema on <strong>SAP HANA Cloud</strong>. It's an in-memory cloud database, and we're using it as the operational backbone for the entire franchise network. The MCP server talks to it directly, no extra layers. And <strong>SAP Analytics Cloud</strong> is connected live to that same schema, so the franchisor sees the exact same numbers in their executive dashboards.
+      </div>
+      <div class="tag-row">
+        <span class="tag tag-gold">HANA Cloud</span>
+        <span class="tag tag-blue">Custom Schema</span>
+        <span class="tag tag-purple">SAC Live</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="joule-avatar">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="white" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="white" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="white" stroke-width="2"/><path d="M17.5 14v7M14 17.5h7" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <span class="card-title">S/4HANA Integration</span>
+      <span class="card-num">05 / 06</span>
+    </div>
+    <div class="card-body">
+      <div class="question">"What happens when Joule creates a replenishment order?"</div>
+      <div class="answer">
+        When Joule creates a replenishment order, the ideal path would post a real <strong>Purchase Order to S/4HANA for Retail</strong> via OData — triggering warehouse picking, logistics scheduling, and delivery confirmation. For this demo, we're <em>simulating</em> that step: the order is recorded locally and the franchisee gets a reference number in the chat. In future releases, with access to an <strong>S/4HANA for Retail</strong> tenant, this becomes a real end-to-end supply chain execution.
+      </div>
+      <div class="divider"></div>
+      <div class="arch-row"><span class="dot dot-blue"></span> Joule → MCP Tool → Business AI Platform srv</div>
+      <div class="arch-row"><span class="dot dot-orange"></span> Business AI Platform → OData → S/4HANA Retail</div>
+      <div class="arch-row"><span class="dot dot-green"></span> Purchase Order created in SAP</div>
+    </div>
+  </div>
+
+  <!-- Card 6 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="joule-avatar">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="card-title">Full Architecture</span>
+      <span class="card-num">06 / 06</span>
+    </div>
+    <div class="card-body">
+      <div class="answer" style="font-size:12px;">
+        To be clear about what's actually running here: <strong>Joule Agents</strong> + <strong>MCP Servers</strong> + <strong>HANA Cloud</strong> — that's the real stack. And since HANA Cloud, Datasphere and SAC are all part of <strong>SAP Business Data Cloud</strong>, we're already inside that ecosystem. What's still ahead: S/4HANA events flowing via <strong>Advanced Event Mesh</strong> for real-time supply chain reactions, the <strong>BDC Knowledge Graph</strong> for richer business semantics, and <strong>SAP AI Core with the RPT foundation model</strong> for demand predictions and financial forecasts — AI-driven, not just historical.
+      </div>
+      <div class="arch-row" style="margin-top:10px;"><span class="dot dot-purple"></span> <strong>Work Zone</strong> — franchisor + franchisee portals</div>
+      <div class="arch-row"><span class="dot dot-blue"></span> <strong>Joule / AI Core</strong> — NLP + MCP tool orchestration</div>
+      <div class="arch-row"><span class="dot dot-teal"></span> <strong>Integration Suite</strong> — MCP Gateway (prod)</div>
+      <div class="arch-row"><span class="dot dot-gold"></span> <strong>HANA Cloud</strong> — custom franchise DB</div>
+      <div class="arch-row"><span class="dot dot-orange"></span> <strong>S/4HANA Retail</strong> — PO creation, supply chain</div>
+      <div class="arch-row"><span class="dot dot-green"></span> <strong>SAC</strong> — executive analytics, live data</div>
+      <div class="processing">
+        <div class="dot-anim"><span></span><span></span><span></span></div>
+        Joule is processing your request…
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -91,7 +91,7 @@
             "settings": {
               "entitySet": "MyStore",
               "variantManagement": "Page",
-              "initialLoad": true,
+              "initialLoad": "Enabled",
               "navigation": {
                 "MyStore": {
                   "detail": {

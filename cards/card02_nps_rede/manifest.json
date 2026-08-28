@@ -1,5 +1,5 @@
 {
-  "_version": "1.84.0",
+  "_version": "1.14.0",
   "sap.app": {
     "id": "tropicalia.card02.nps.rede",
     "type": "card",
@@ -22,6 +22,7 @@
   },
   "sap.card": {
     "type": "List",
+    "designtime": "dt/configuration",
     "configuration": {
       "destinations": {
         "RunMyFranchise-MCP": {
@@ -41,7 +42,8 @@
             "Accept": "application/json"
           }
         },
-        "path": "/value/0"
+        "path": "/value/0",
+        "updateInterval": 10
       },
       "title": "Network Average NPS",
       "subTitle": "Scale 0–10 — all active stores",
@@ -58,7 +60,7 @@
       ]
     },
     "content": {
-      "maxItems": 5,
+      "maxItems": 2,
       "data": {
         "request": {
           "url": "{{destinations.RunMyFranchise-MCP}}/cards/nps-summary",
@@ -67,7 +69,8 @@
             "Accept": "application/json"
           }
         },
-        "path": "/value"
+        "path": "/value",
+        "updateInterval": 10
       },
       "item": {
         "icon": {
