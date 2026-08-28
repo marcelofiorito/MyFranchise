@@ -20,7 +20,7 @@
       "[production]": {
         "kind": "advanced-event-mesh",
         "impl": "./srv/aem-patched.js",
-        "skipManagement": true,
+        "skipManagement": false,
         "queue": {
           "name": "myfranchise-srv/f3901205"
         },
