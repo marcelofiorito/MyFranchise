@@ -28,8 +28,10 @@ const err = (msg)  => ({ isError: true, content: [{ type: 'text', text: JSON.str
 let _messaging = null;
 const getMessaging = async () => {
   if (!_messaging) {
-    try { _messaging = await cds.connect.to('messaging'); }
-    catch (e) { LOG.warn('[AEM] messaging connect failed:', e.message); }
+    try {
+      if (!cds.model) cds.model = { definitions: {}, services: {} };
+      _messaging = await cds.connect.to('messaging');
+    } catch (e) { LOG.warn('[AEM] messaging connect failed:', e.message); }
   }
   return _messaging;
 };
