@@ -67,8 +67,8 @@ modules:
     requires:
       - name: myfranchise-db
       - name: myfranchise-uaa
-
-  # -------------------- DB DEPLOYER (HANA) --------------------
+      - name: myfranchise-aem-managed
+      - name: advanced-event-mesh
   - name: myfranchise-db-deployer
     type: hdb
     path: gen/db
