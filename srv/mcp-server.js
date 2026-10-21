@@ -1573,7 +1573,7 @@ app.get('/admin/orders', async (_req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// POST /admin/reset — restore demo baseline from JSON files (scripts/data/baseline/)
+// POST /admin/reset — restore demo baseline from JSON files (srv/data/baseline/)
 app.post('/admin/reset', async (_req, res) => {
   try {
     const conn = await getHanaConn();

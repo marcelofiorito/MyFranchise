@@ -24,7 +24,7 @@
 | Portal | SAP Build Work Zone Advanced — UI Integration Cards + Apps |
 | Backend | SAP CAP (Node.js) — `myfranchise-srv` |
 | MCP / Joule | Node.js Express + `@modelcontextprotocol/sdk` — `myfranchise-mcp` |
-| Frontend | SAP Fiori Elements (UI5) — 9 apps |
+| Frontend | SAP Fiori Elements (UI5) — 7 apps |
 | AI | SAP Joule via MCP + SAP AI Core |
 | Eventos | Advanced Event Mesh (AEM) |
 | Deploy | SAP BTP Cloud Foundry — org `sa-build-platform-org`, space `DEV` |
@@ -33,21 +33,23 @@
 
 ## Arquitetura de Dados
 
-O schema `RUNMYFRANCHISE_JG` (HANA Cloud) é a fonte de verdade para toda a plataforma:
+A plataforma usa dois schemas no HANA Cloud:
+
+- **`RUNMYFRANCHISE_JG`** — lido pelo SAC via Datasphere (Live Connection). Também atualizado pelo admin app (M_DEMO_STATE).
+- **`RUNMYFRANCHISE_MF`** — lido pelo MCP Server (Joule). Contém as mesmas tabelas transacionais e a tabela de controle `M_DEMO_STATE`.
 
 ```
-Tabelas S/4HANA Fashion   →  MARA, MAKT, MAW1, FSH_COLLECTIONS, KLAH, KSSK, AUSP
 Tabelas Master (M_*)      →  M_STORE, M_CAMPAIGN, M_SUBSTITUTE, M_ARTICLE_GRADE...
-Tabelas Transacionais     →  T_INVENTORY_SNAPSHOT, T_NPS, T_SELLOUT_HDR/ITM...
+Tabelas Transacionais     →  T_INVENTORY_SNAPSHOT, T_NPS, T_SELLIN_HDR/ITM, T_DEMAND_FORECAST
+Controle de Demo          →  M_DEMO_STATE (ACTIVE_SCENARIO: BAD | GOOD)
          ↓
-Semantic Layer: CV_DIM_* (4 views dimensão) + CV_FACT_* (4 views fato)
-         ↓
-Procedures: P_STOCKOUT_ALERT · P_SUBSTITUTE_SUGGEST · P_GENERATE_SELLIN_ORDER
-         ↓
-Datasphere (Space I831004): Remote Tables → Dimension Views → Fact Views → Analytic Models
+Schema JG: Semantic Layer (CV_DIM_* + CV_FACT_*) → Datasphere (Space I831004) → SAC
+Schema MF: queries diretas pelo MCP Server (Node.js, sem stored procedures)
          ↓
 SAC (Live Connection) + Work Zone (Cards) + Joule (MCP — 7 tools)
 ```
+
+> **Switch BAD/GOOD:** o app `demo-admin` (botões BAD/GOOD) chama `POST /admin/switch-scenario` no MCP Server, que atualiza `M_DEMO_STATE` e ajusta `STOCK_STATUS` / verbatims de NPS via SQL direto. Nenhum script externo é chamado durante a demo.
 
 ---
 
@@ -125,7 +127,10 @@ O Joule acessa dados em tempo real via MCP Server deployado no CF.
 ## Deploy
 
 ```bash
-# MCP Server (standalone, sem mtar)
+# Full deploy via mtar (all modules: srv, mcp, db, apps)
+mbt build && cf deploy mta_archives/*.mtar
+
+# Para atualizar só o MCP Server rapidamente
 cf push myfranchise-mcp
 
 # Configurar senha HANA (NUNCA commitar)

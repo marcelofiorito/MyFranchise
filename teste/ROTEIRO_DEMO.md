@@ -165,7 +165,7 @@ Marina clica em **"Confirmar Pedido"** → status muda para PENDING → matriz r
 
 ## Checklist Pré-Demo
 
-- [ ] Verificar HANA: `CALL "RUNMYFRANCHISE_JG"."P_STOCKOUT_ALERT"('BR-SP-001', '2026-08-11', ?)`
+- [ ] Demo em estado BAD: abrir o app `demo-admin` e clicar em **BAD** (ou `POST /admin/reset` + `POST /admin/switch-scenario {"scenario":"BAD"}`)
 - [ ] SAC carregado: 5 lojas críticas visíveis, SP Jardins em vermelho
 - [ ] Joule respondendo: pergunta de teste "quais lojas têm risco de ruptura hoje?"
 - [ ] Work Zone logado como Carlos Mendes (rede toda) — aba 1

@@ -43,7 +43,7 @@ cds.on('bootstrap', (app) => {
     try {
       const db = await cds.connect.to('db');
       const [{ CNT }] = await db.run(
-        `SELECT COUNT(*) CNT FROM MYFRANCHISE_ESTOQUE_UNIDADE WHERE STATUS_CODE='RUPTURA'`
+        `SELECT COUNT(*) CNT FROM MYFRANCHISE_INVENTORYSNAPSHOT WHERE STOCK_STATUS='R'`
       );
       res.json(Number(CNT));
     } catch (e) {
@@ -55,7 +55,7 @@ cds.on('bootstrap', (app) => {
     try {
       const db = await cds.connect.to('db');
       const [{ CNT }] = await db.run(
-        `SELECT COUNT(*) CNT FROM MYFRANCHISE_PEDIDOS_REPOSICAO WHERE STATUS_CODE='PENDENTE'`
+        `SELECT COUNT(*) CNT FROM MYFRANCHISE_SELLINHDR WHERE STATUS='PENDING'`
       );
       res.json(Number(CNT));
     } catch (e) {
